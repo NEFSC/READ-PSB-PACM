@@ -35,12 +35,3 @@ Deploy the files in `public/` to web server.
 ```
 yarn deploy
 ```
-
-## Notes
-
-[X] Set up vue and vuetify
-[] Add map using leaflet
-[] Add d3 layer on map
-[] Process raw data file, save result to `public/data/narw.csv`
-[] Add crossfilter
-[] Add dc.js plot(s)
