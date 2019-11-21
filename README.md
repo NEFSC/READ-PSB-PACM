@@ -1,24 +1,46 @@
-# narw-map
+NEFSC North American Right Whale Map (Prototype)
+================================================
 
-## Project setup
+Jeffrey D Walker, PhD <jeff@walkerenvres.com>  
+[Walker Environmental Research LLC](https://walkerenvres.com)
+
+## About
+
+This repo contains the source code for the North American Right Whale mapping application. The goal is replicate an existing application that was built using Shiny for R: [https://leviathan.ocean.dal.ca/rw_pam_map/]() (password: `narw123`).
+
+## Data Processing
+
+Data files are processed using various R scripts in the `r/` directory.
+
+## Development
+
+Run rollup in watch mode and serve with livereload:
+
 ```
-yarn install
+yarn dev
 ```
 
-### Compiles and hot-reloads for development
-```
-yarn serve
-```
+## Production
 
-### Compiles and minifies for production
+Builds the application to `public/` folder.
+
 ```
 yarn build
 ```
 
-### Lints and fixes files
+## Deployment
+
+Deploy the files in `public/` to web server.
+
 ```
-yarn lint
+yarn deploy
 ```
 
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+## Notes
+
+[X] Set up vue and vuetify
+[] Add map using leaflet
+[] Add d3 layer on map
+[] Process raw data file, save result to `public/data/narw.csv`
+[] Add crossfilter
+[] Add dc.js plot(s)
