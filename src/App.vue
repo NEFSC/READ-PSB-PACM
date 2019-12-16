@@ -76,15 +76,24 @@
 
     <v-content>
       <v-container class="fill-height" fluid align-start>
-        <l-map
-          ref="map"
-          style="width:1000px;height:600px"
-          :center="[39, -68]"
-          :zoom="5"
-          @moveend="draw"
-          @zoomend="draw">
-          <l-tile-layer url="http://{s}.tile.osm.org/{z}/{x}/{y}.png"></l-tile-layer>
-        </l-map>
+        <v-row>
+          <v-col xs="12">
+            <l-map
+              ref="map"
+              style="width:1000px;height:600px"
+              :center="[39, -68]"
+              :zoom="5"
+              @moveend="draw"
+              @zoomend="draw">
+              <l-tile-layer url="//{s}.tile.osm.org/{z}/{x}/{y}.png"></l-tile-layer>
+            </l-map>
+          </v-col>
+        </v-row>
+        <v-row align="start">
+          <v-col xs="12" >
+            <div id="dc-stack"></div>
+          </v-col>
+        </v-row>
       </v-container>
     </v-content>
 
@@ -98,6 +107,7 @@
 import moment from 'moment'
 import axios from 'axios'
 import * as d3 from 'd3'
+import d3Tip from 'd3-tip'
 import L from 'leaflet'
 import crossfilter from 'crossfilter2'
 import dc from 'dc'
@@ -111,6 +121,8 @@ const dayDim = xf.dimension(d => d.day)
 const deploymentDim = xf.dimension(d => d.deployment_id)
 const deploymentGroup = deploymentDim.group().reduce(
   (p, v) => {
+    p.project = v.project
+    p.site_id = v.site_id
     p.latitude = v.latitude
     p.longitude = v.longitude
     p.count += 1
@@ -129,7 +141,6 @@ const deploymentGroup = deploymentDim.group().reduce(
     detections: 0
   })
 )
-window.group = deploymentGroup
 
 const colorScale = d3.scaleSequential(d3.interpolateViridis).domain([0, 50])
 
@@ -147,7 +158,6 @@ export default {
   }),
   mounted () {
     const map = this.$refs.map.mapObject
-    window.map = map
     const svgLayer = L.svg()
     map.addLayer(svgLayer)
 
@@ -157,6 +167,17 @@ export default {
       .classed('map', true)
       .attr('pointer-events', null)
     this.container = svg.select('g')
+
+    this.tip = d3Tip()
+      .attr('class', 'd3-tip')
+      .direction('e')
+      .html(d => `
+        Project: ${d.value.project}<br>
+        Site ID: ${d.value.site_id}<br>
+        Latitude: ${d.value.latitude.toFixed(4)}<br>
+        Longitude: ${d.value.longitude.toFixed(4)}<br>
+      `)
+    this.container.call(this.tip)
 
     xf.onChange(() => {
       this.count = xf.allFiltered().length
@@ -241,6 +262,56 @@ export default {
 
           chart.render()
         })
+        .then(() => {
+          const dim = xf.dimension(d => d.day)
+          const group = dim.group().reduce(
+            (p, v) => {
+              p[v.presence] = (p[v.presence] || 0) + 1
+              return p
+            },
+            (p, v) => {
+              p[v.presence] = (p[v.presence] || 0) - 1
+              return p
+            },
+            () => {
+              return {
+                yes: 0,
+                no: 0,
+                maybe: 0
+              }
+            }
+          )
+
+          const chart = dc.barChart('#dc-stack')
+            .width(1000)
+            .height(400)
+            .margins({ top: 0, right: 75, bottom: 40, left: 40 })
+            .dimension(dim)
+            .group(group, 'yes', (d) => d.value.yes)
+            .colors(d3.scaleOrdinal().range(['red', 'orange', 'gray']))
+            .elasticY(true)
+            // .brushOn(false)
+            .x(d3.scaleLinear().domain([1, 366]))
+            .xAxisLabel('Day of the Year')
+            .yAxisLabel('# Recorders')
+            .round(dc.round.round)
+            .gap(0)
+            // .title(function (d) {
+            //   return d.key + '[' + this.layer + ']: ' + d.value[this.layer]
+            // })
+            .on('filtered', this.updateFill)
+
+          chart.legend(dc.legend().x(950).y(100))
+
+          dc.override(chart, 'legendables', () => {
+            return chart._legendables().reverse()
+          })
+
+          chart.stack(group, 'maybe', d => d.value.maybe)
+          chart.stack(group, 'no', d => d.value.no)
+
+          chart.render()
+        })
     },
     parseData (csv) {
       const data = d3.csvParse(csv, (d, i) => {
@@ -278,7 +349,9 @@ export default {
         .attr('r', zoom)
         .attr('cx', (d) => map.latLngToLayerPoint(new L.LatLng(d.value.latitude, d.value.longitude)).x)
         .attr('cy', (d) => map.latLngToLayerPoint(new L.LatLng(d.value.latitude, d.value.longitude)).y)
-        .on('click', d => console.log(d.value))
+        // .on('click', d => console.log(d.value))
+        .on('mouseenter', this.tip.show)
+        .on('mouseout', this.tip.hide)
       this.updateFill()
     },
     updateFill () {
@@ -295,5 +368,17 @@ export default {
 svg.map > g {
   pointer-events: visible;
   cursor: pointer;
+}
+
+.d3-tip {
+  line-height: 1;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.5);
+  color: #000;
+  border-radius: 2px;
+  pointer-events: none;
+  font-family: sans-serif;
+  z-index: 1000;
+  margin-left: 20px;
 }
 </style>

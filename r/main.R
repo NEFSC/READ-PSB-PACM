@@ -23,6 +23,7 @@ glimpse(df_csv)
 
 df <- df_csv %>% 
   select(
+    project,
     site_id,
     platform_type,
     latitude,
@@ -41,7 +42,7 @@ df <- df_csv %>%
     monitoring_end_datetime = mdy_hm(monitoring_end_datetime),
     analysis_period_start_date_time = mdy_hm(analysis_period_start_date_time),
     analysis_period_end_date_time = mdy_hm(analysis_period_end_date_time),
-    deployment = str_c(coalesce(site_id, "N/A"), round(latitude, 2), round(longitude, 2), format(monitoring_start_datetime, "%Y%m%d")),
+    deployment = str_c(project, coalesce(site_id, "N/A"), round(latitude, 2), round(longitude, 2), format(monitoring_start_datetime, "%Y%m%d")),
     deployment_id = as.numeric(factor(deployment))
   ) %>% 
   filter(
@@ -51,10 +52,48 @@ df <- df_csv %>%
     !is.na(analysis_period_end_date_time)
   )
 
-# table(df$detection_method)
+# failed to parse
+df_csv %>% 
+  filter(is.na(mdy_hm(monitoring_end_datetime)))
+df_csv %>% 
+  filter(is.na(mdy_hm(analysis_period_start_date_time)))
+df_csv %>% 
+  filter(is.na(mdy_hm(analysis_period_end_date_time)))
+df_csv %>% 
+  filter(is.na(latitude))
+df_csv %>% 
+  filter(is.na(longitude))
+df_csv %>% 
+  filter(is.na(site_id))
+
+# sites with differing lat/lon
+df_csv %>% 
+  mutate(monitoring_start = format(mdy_hm(monitoring_start_datetime), "%Y%m%d")) %>% 
+  select(project, site_id, latitude, longitude, monitoring_start) %>% 
+  distinct() %>% 
+  group_by(project, site_id) %>% 
+  mutate(n = n()) %>% 
+  ungroup() %>% 
+  filter(n > 1)
+
+df_csv %>% 
+  select(project, site_id, latitude, longitude) %>% 
+  distinct() %>% 
+  group_by(site_id)
+
+df_csv %>% 
+  select(project, site_id, latitude, longitude) %>% 
+  distinct() %>% 
+  group_by(project) %>% 
+  mutate(n = n()) %>% 
+  filter(n > 1)
+
+table(df$detection_method)
+table(df$platform_type)
 
 df_out <- df %>% 
   select(
+    project,
     deployment_id,
     site_id,
     latitude,
@@ -76,6 +115,9 @@ df_out <- df %>%
   )
 
 summary(df_out)
+
+table(df_out$deployment_id)
+table(df_out$project)
 table(df_out$site_id)
 table(df_out$presence)
 table(df_out$detections)
@@ -93,10 +135,15 @@ df %>%
 
 df %>% 
   group_by(latitude, longitude) %>% 
-  summarise(
+  mutate(
     n = length(unique(site_id))
   ) %>% 
   filter(n > 1)
+
+df_out %>% 
+  filter(duration_sec > 86400) %>% 
+  select(project, deployment_id, site_id) %>% 
+  distinct()
 
 df_out %>% 
   write_csv("../public/data/narw.csv")
