@@ -6,7 +6,7 @@ Jeffrey D Walker, PhD <jeff@walkerenvres.com>
 
 ## About
 
-This repo contains the source code for the North American Right Whale mapping application. The goal is replicate an existing application that was built using Shiny for R: [https://leviathan.ocean.dal.ca/rw_pam_map/]() (password: `narw123`).
+This repo contains the source code for the North American Right Whale mapping application. The goal is replicate an existing application that was built using Shiny for R: [https://leviathan.ocean.dal.ca/rw_pam_map/]().
 
 ## Data Processing
 
@@ -14,15 +14,15 @@ Data files are processed using various R scripts in the `r/` directory.
 
 ## Development
 
-Run rollup in watch mode and serve with livereload:
+Run development server:
 
 ```
-yarn dev
+yarn serve
 ```
 
 ## Production
 
-Builds the application to `public/` folder.
+Builds the application to `dist/` folder.
 
 ```
 yarn build
@@ -30,8 +30,9 @@ yarn build
 
 ## Deployment
 
-Deploy the files in `public/` to web server.
+Deploy the files in `dist/` to web server.
 
 ```
+# TODO
 yarn deploy
 ```
