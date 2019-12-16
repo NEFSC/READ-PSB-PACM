@@ -75,7 +75,18 @@
     </v-app-bar>
 
     <v-content>
-      <v-container class="fill-height" fluid align-start>
+      <v-container class="fill-height" fluid align-start v-if="!auth.dialog">
+        <v-row v-if="loading">
+          <v-col xs="12">
+            <v-progress-circular
+              :size="50"
+              :width="7"
+              color="primary"
+              indeterminate
+            ></v-progress-circular>
+            <h1>Loading</h1>
+          </v-col>
+        </v-row>
         <v-row>
           <v-col xs="12">
             <l-map
@@ -95,6 +106,51 @@
           </v-col>
         </v-row>
       </v-container>
+      <v-dialog
+        v-model="auth.dialog"
+        fullscreen
+        hide-overlay
+        persistent
+        transition="dialog-bottom-transition"
+        style="z-index:50000">
+        <v-card>
+          <v-card-text>
+            <v-container class="fill-height" fluid>
+              <v-row align="center" justify="center">
+                <v-col cols="12" sm="8" md="4">
+                  <v-card class="elevation-12">
+                    <v-toolbar
+                      color="primary"
+                      dark
+                      flat>
+                      <v-toolbar-title>Login Required</v-toolbar-title>
+                    </v-toolbar>
+                    <v-form @submit.prevent="login">
+                      <v-card-text>
+                        <v-text-field
+                          id="password"
+                          label="Password"
+                          name="password"
+                          v-model="auth.password"
+                          prepend-icon="mdi-lock"
+                          type="password"
+                          required />
+                      </v-card-text>
+                      <v-card-actions>
+                        <v-spacer />
+                        <v-btn color="primary" @click="login">Login</v-btn>
+                      </v-card-actions>
+                    </v-form>
+                    <v-alert type="error" :value="auth.error">
+                      Password is incorrect
+                    </v-alert>
+                  </v-card>
+                </v-col>
+              </v-row>
+            </v-container>
+          </v-card-text>
+        </v-card>
+      </v-dialog>
     </v-content>
 
     <v-footer app>
@@ -151,42 +207,53 @@ export default {
     LTileLayer
   },
   data: () => ({
+    loading: true,
     drawer: true,
     yearSpan: [2008, 2016],
     daySpan: [1, 365],
-    count: 0
+    count: 0,
+    auth: {
+      dialog: true,
+      password: null,
+      error: false
+    }
   }),
   mounted () {
-    const map = this.$refs.map.mapObject
-    const svgLayer = L.svg()
-    map.addLayer(svgLayer)
-
-    const svg = d3.select(svgLayer.getPane()).select('svg')
-      .classed('leaflet-zoom-animated', false)
-      .classed('leaflet-zoom-hide', true)
-      .classed('map', true)
-      .attr('pointer-events', null)
-    this.container = svg.select('g')
-
-    this.tip = d3Tip()
-      .attr('class', 'd3-tip')
-      .direction('e')
-      .html(d => `
-        Project: ${d.value.project}<br>
-        Site ID: ${d.value.site_id}<br>
-        Latitude: ${d.value.latitude.toFixed(4)}<br>
-        Longitude: ${d.value.longitude.toFixed(4)}<br>
-      `)
-    this.container.call(this.tip)
-
-    xf.onChange(() => {
-      this.count = xf.allFiltered().length
-    })
-
-    this.loadData()
-      .then(this.draw)
   },
   methods: {
+    init () {
+      const map = this.$refs.map.mapObject
+      const svgLayer = L.svg()
+      map.addLayer(svgLayer)
+
+      const svg = d3.select(svgLayer.getPane()).select('svg')
+        .classed('leaflet-zoom-animated', false)
+        .classed('leaflet-zoom-hide', true)
+        .classed('map', true)
+        .attr('pointer-events', null)
+      this.container = svg.select('g')
+
+      this.tip = d3Tip()
+        .attr('class', 'd3-tip')
+        .direction('e')
+        .html(d => `
+          Project: ${d.value.project}<br>
+          Site ID: ${d.value.site_id}<br>
+          Latitude: ${d.value.latitude.toFixed(4)}<br>
+          Longitude: ${d.value.longitude.toFixed(4)}<br>
+        `)
+      this.container.call(this.tip)
+
+      xf.onChange(() => {
+        this.count = xf.allFiltered().length
+      })
+
+      this.loadData()
+        .then(this.draw)
+        .then(() => {
+          this.loading = false
+        })
+    },
     inputYear (v) {
       yearDim.filterRange(v)
       this.updateFill()
@@ -284,7 +351,7 @@ export default {
 
           const chart = dc.barChart('#dc-stack')
             .width(1000)
-            .height(400)
+            .height(300)
             .margins({ top: 0, right: 75, bottom: 40, left: 40 })
             .dimension(dim)
             .group(group, 'yes', (d) => d.value.yes)
@@ -359,6 +426,17 @@ export default {
         .selectAll('circle')
         .style('opacity', (d) => d.value.detections > 0 ? 0.9 : 0.2)
         .style('fill', (d) => d.value.detections > 0 ? colorScale(d.value.detections) : '#CCCCCC')
+    },
+    login () {
+      if (this.auth.password === 'narw123') {
+        this.auth.error = false
+        this.auth.dialog = false
+        setTimeout(() => {
+          this.init()
+        }, 500)
+      } else {
+        this.auth.error = true
+      }
     }
   }
 }
