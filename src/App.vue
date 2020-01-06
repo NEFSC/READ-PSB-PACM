@@ -23,12 +23,6 @@
             <div id="dc-month"></div>
           </v-list-item-content>
         </v-list-item>
-        <v-list-item>
-          <v-list-item-content>
-            <v-subheader>Filter by Presence/Absence</v-subheader>
-            <div id="dc-presence"></div>
-          </v-list-item-content>
-        </v-list-item>
         <!-- <v-list-item>
           <v-list-item-content>
             <v-subheader>Select Year Span</v-subheader>
@@ -45,8 +39,8 @@
               class="px-4 pt-8">
             </v-range-slider>
           </v-list-item-content>
-        </v-list-item>
-        <v-list-item>
+        </v-list-item> -->
+        <!-- <v-list-item>
           <v-list-item-content>
             <v-subheader>Select Day Span</v-subheader>
             <v-range-slider
@@ -64,8 +58,50 @@
             </v-range-slider>
           </v-list-item-content>
         </v-list-item> -->
+        <v-list-item>
+          <v-list-item-content>
+            <v-subheader>Season Start/End Day</v-subheader>
+            <div>
+              <v-slider
+                min="1"
+                max="365"
+                step="1"
+                thumb-label="always"
+                thumb-size="32"
+                v-model="dayStart"
+                @input="inputSeasonDay"
+                class="px-4 pt-8">
+                <template v-slot:thumb-label="{ value }">
+                  <div class="text-center" v-html="dayLabel(value)"></div>
+                </template>
+              </v-slider>
+            </div>
+            <div>
+              <v-slider
+                min="1"
+                max="365"
+                step="1"
+                thumb-label="always"
+                thumb-size="32"
+                v-model="dayEnd"
+                @input="inputSeasonDay"
+                class="px-4 pt-8">
+                <template v-slot:thumb-label="{ value }">
+                  <div class="text-center" v-html="dayLabel(value)"></div>
+                </template>
+              </v-slider>
+            </div>
+          </v-list-item-content>
+        </v-list-item>
+        <v-list-item>
+          <v-list-item-content>
+            <v-subheader>Filter by Presence/Absence</v-subheader>
+            <div id="dc-presence"></div>
+          </v-list-item-content>
+        </v-list-item>
       </v-list>
     </v-navigation-drawer>
+
     <v-app-bar
       app
       color="primary"
@@ -92,12 +128,16 @@
             <l-map
               ref="map"
               style="width:1000px;height:600px"
-              :center="[39, -68]"
-              :zoom="5"
+              :center="[46, -60]"
+              :zoom="3"
               @moveend="draw"
               @zoomend="draw">
               <l-tile-layer url="//{s}.tile.osm.org/{z}/{x}/{y}.png"></l-tile-layer>
             </l-map>
+            <p>
+              red = detection (at least one) <br>
+              blue = no detection
+            </p>
           </v-col>
         </v-row>
         <v-row align="start">
@@ -174,7 +214,7 @@ const xf = crossfilter()
 
 const yearDim = xf.dimension(d => d.year)
 const dayDim = xf.dimension(d => d.day)
-const deploymentDim = xf.dimension(d => d.deployment_id)
+const deploymentDim = xf.dimension(d => `${d.project}::${d.site_id}`)
 const deploymentGroup = deploymentDim.group().reduce(
   (p, v) => {
     p.project = v.project
@@ -198,7 +238,7 @@ const deploymentGroup = deploymentDim.group().reduce(
   })
 )
 
-const colorScale = d3.scaleSequential(d3.interpolateViridis).domain([0, 50])
+// const colorScale = d3.scaleSequential(d3.interpolateViridis).domain([0, 50])
 
 export default {
   name: 'App',
@@ -211,6 +251,8 @@ export default {
     drawer: true,
     yearSpan: [2008, 2016],
     daySpan: [1, 365],
+    dayStart: 1,
+    dayEnd: 365,
     count: 0,
     auth: {
       dialog: true,
@@ -219,6 +261,12 @@ export default {
     }
   }),
   mounted () {
+    if (process.env.NODE_ENV === 'development') {
+      this.auth.dialog = false
+      this.$nextTick(() => {
+        this.init()
+      })
+    }
   },
   methods: {
     init () {
@@ -262,6 +310,16 @@ export default {
       dayDim.filterRange(v)
       this.updateFill()
     },
+    inputSeasonDay (v) {
+      // console.log('inputSeasonDay', this.dayStart, this.dayEnd)
+      if (this.dayStart <= this.dayEnd) {
+        dayDim.filterRange([this.dayStart, this.dayEnd])
+      } else {
+        dayDim.filterFunction(d => d >= this.dayStart || d <= this.dayEnd)
+      }
+      this.updateFill()
+      dc.redrawAll()
+    },
     loadData () {
       return axios.get('data/narw.csv')
         .then((response) => response.data)
@@ -296,7 +354,7 @@ export default {
         .then(() => {
           const dim = xf.dimension(d => d.month)
           const group = dim.group().reduceCount()
-          const timeExtent = [1, 12]
+          const timeExtent = [0, 12]
 
           const chart = dc.barChart('#dc-month')
             .width(468)
@@ -422,10 +480,18 @@ export default {
       this.updateFill()
     },
     updateFill () {
+      if (!this.container) return
       this.container
         .selectAll('circle')
-        .style('opacity', (d) => d.value.detections > 0 ? 0.9 : 0.2)
-        .style('fill', (d) => d.value.detections > 0 ? colorScale(d.value.detections) : '#CCCCCC')
+        .style('opacity', (d) => d.value.count === 0 ? 0 : 0.8) // only show site if there is at least one observed day
+        // .style('fill', (d) => d.value.detections > 0 ? colorScale(d.value.detections) : '#CCCCCC')
+        .style('fill', (d) => d.value.detections > 0 ? 'red' : 'blue')
+        // rearrange points so that detections appear on top
+        // .each(function (d, i) {
+        //   if (d.value.count > 0 && d.value.detections > 0) {
+        //     this.parentNode.appendChild(this)
+        //   }
+        // })
     },
     login () {
       if (this.auth.password === 'narw123') {
