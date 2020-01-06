@@ -1,5 +1,14 @@
 # Notes and Questions
 
+## Jan 6, 2020
+
+Dataset:
+
+- What to do with small clusters of sites? For example, project=BERCHOK_SAMANA_200901_CH{2,3,4} with site_id={2,3,4} are all very close together.
+- Check for longitude > 0 (should be easterly)
+
+## Dec 16, 2019
+
 Dataset Questions:
 
 - Some rows are missing monitoring_end_datetime (n = 12), analysis_period_start_date_time/analysis_period_end_date_time (3,769), latitude/longitude (77). These rows are removed from the dataset.
