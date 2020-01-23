@@ -23,3 +23,5 @@ yarn-error.log*
 
 .Rproj.user
 .Rhistory
+
+r/rds/*.rds
