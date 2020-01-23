@@ -7,6 +7,14 @@ Dataset:
 - What to do with small clusters of sites? For example, project=BERCHOK_SAMANA_200901_CH{2,3,4} with site_id={2,3,4} are all very close together.
 - Check for longitude > 0 (should be easterly)
 
+Questions:
+
+- How far does each station represent? How far does sound travel?
+- What happened in 2010? Any theories aside from general warming of GOM?
+- For spatial aggregation by region, what to calculate? # detection days would be influenced by # observation days. Probability of detection? % of total days with detection?
+- Davis 2017 focuses on # detection days, but dataset has # detections? Is that # individuals? Or # calls?
+- Presence/absence vs abundance
+
 ## Dec 16, 2019
 
 Dataset Questions:

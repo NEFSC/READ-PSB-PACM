@@ -1,505 +1,392 @@
 <template>
   <v-app>
-    <v-navigation-drawer
-      v-model="drawer"
+    <v-app-bar
       app
+      color="light-blue darken-3"
+      clipped-left
+      dark>
+      <v-icon color="white" dark class="mr-4">$whale</v-icon>
+      <v-toolbar-title>North Atlantic Right Whale PAM Map</v-toolbar-title>
+
+      <v-spacer></v-spacer>
+
+      <v-dialog v-model="dialogs.about" max-width="800">
+        <template v-slot:activator="{ on }">
+          <v-btn color="default" dark text max-width="120" class="mr-4" v-on="on">
+            <v-icon left>mdi-information</v-icon> About
+          </v-btn>
+        </template>
+        <v-card>
+          <v-img src="./assets/img/noaa-logo.gif" height="54px" width="54px" style="float:right" class="ma-2"></v-img>
+          <v-list-item>
+            <v-list-item-content>
+              <v-list-item-title class="headline">Welcome to the North Atlantic Right Whale PAM Map</v-list-item-title>
+              <v-list-item-subtitle>by the <a href="https://www.nefsc.noaa.gov/psb/acoustics/index.html">NOAA Northeast Fisheries Science Center</a></v-list-item-subtitle>
+            </v-list-item-content>
+          </v-list-item>
+          <v-img
+            src="./assets/img/whale.jpg"
+            height="200px">
+          </v-img>
+          <v-card-text class="mt-8 body-1 grey--text text--darken-4">
+            <p class="font-weight-medium">
+              The North American Right Whale PAM Map shows you when and where specific whale species were observed in the Atlantic Ocean
+              based on Passive Acoustic Monitoring (PAM).
+            </p>
+            <p>
+              This application provides interactive data visualization tools for exploring PAM-based whale detection data.
+            </p>
+            <p>
+              The dataset was compiled by the NOAA NEFSC Passive Acoustic Research Lab using observations collected from many collaborators.
+            </p>
+            <p>Designed and built by <a href="https://walkerenvres.com" target="_blank">Walker Environmental Research LLC</a>.</p>
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn color="primary" text @click.native="dialogs.about = false">Close</v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+
+      <v-btn color="default" dark text max-width="120" @click="startTour" data-v-step="3">
+        <v-icon left>mdi-help-circle</v-icon> Help
+      </v-btn>
+
+      <div>
+        <v-img src="./assets/img/noaa-logo.gif" height="50px" width="50px" class="ma-2"></v-img>
+      </div>
+    </v-app-bar>
+
+    <v-navigation-drawer
+      app
+      dark
       clipped
-      width="500">
-      <v-list>
-        <v-list-item>
+      permanent
+      color="blue-grey darken-4"
+      width="500"
+      v-if="auth.isAuth">
+      <v-list v-if="!loading">
+        <v-list-item class="mt-3" data-v-step="1">
           <v-list-item-content>
-            <v-subheader>Filter Count: {{ count.toLocaleString() }}</v-subheader>
+            <v-select
+              outlined
+              :items="species.options"
+              v-model="species.selected"
+              label="Select a species"
+              item-text="label"
+              item-value="id"
+              hide-details
+            ></v-select>
           </v-list-item-content>
         </v-list-item>
-        <v-list-item>
+
+        <v-divider class="my-4"></v-divider>
+
+        <v-list-item class="mt-3" data-v-step="1">
           <v-list-item-content>
-            <v-subheader>Filter by Year</v-subheader>
-            <div id="dc-year"></div>
+            <v-select
+              outlined
+              :items="platforms.options"
+              v-model="platforms.selected"
+              label="Select platform type(s)"
+              item-text="label"
+              item-value="id"
+              hide-details
+              multiple
+              chips
+              deletable-chips
+            ></v-select>
           </v-list-item-content>
         </v-list-item>
-        <v-list-item>
+
+        <v-list-item class="mt-2">
           <v-list-item-content>
-            <v-subheader>Filter by Month</v-subheader>
-            <div id="dc-month"></div>
+            <SeasonFilter @update="setSeason"></SeasonFilter>
           </v-list-item-content>
         </v-list-item>
+
+        <v-list-item data-v-step="2" class="mt-2">
+          <v-list-item-content class="py-0">
+            <YearFilter></YearFilter>
+          </v-list-item-content>
+        </v-list-item>
+
         <!-- <v-list-item>
-          <v-list-item-content>
-            <v-subheader>Select Year Span</v-subheader>
-            <v-range-slider
-              min="2004"
-              max="2019"
-              step="1"
-              ticks
-              tick-size="2"
-              thumb-label="always"
-              :tick-labels="[2004, '', '', '', '', '', '', '', '', '', '', '', '', '', '', 2019]"
-              v-model="yearSpan"
-              @input="inputYear"
-              class="px-4 pt-8">
-            </v-range-slider>
+          <v-list-item-content class="py-2">
+            <div class="subtitle-1 font-weight-bold">Filter By Month</div>
+            <MonthFilter></MonthFilter>
           </v-list-item-content>
         </v-list-item> -->
-        <!-- <v-list-item>
-          <v-list-item-content>
-            <v-subheader>Select Day Span</v-subheader>
-            <v-range-slider
-              min="1"
-              max="365"
-              step="1"
-              thumb-label="always"
-              thumb-size="32"
-              v-model="daySpan"
-              @input="inputDay"
-              class="px-4 pt-8">
-              <template v-slot:thumb-label="{ value }">
-                <div class="text-center" v-html="dayLabel(value)"></div>
-              </template>
-            </v-range-slider>
+
+        <v-list-item class="mt-2">
+          <v-list-item-content class="py-0">
+            <DetectionFilter></DetectionFilter>
           </v-list-item-content>
-        </v-list-item> -->
-        <v-list-item>
-          <v-list-item-content>
-            <v-subheader>Season Start/End Day</v-subheader>
-            <div>
-              <v-slider
-                min="1"
-                max="365"
-                step="1"
-                thumb-label="always"
-                thumb-size="32"
-                v-model="dayStart"
-                @input="inputSeasonDay"
-                class="px-4 pt-8">
-                <template v-slot:thumb-label="{ value }">
-                  <div class="text-center" v-html="dayLabel(value)"></div>
-                </template>
-              </v-slider>
+        </v-list-item>
+
+        <v-list-item class="mt-2">
+          <v-list-item-content class="py-0">
+            <v-list-item-title class="subtitle-1 font-weight-medium">Dataset Summary</v-list-item-title>
+            <div class="ml-4 body-2">
+              {{ counts.detections.filtered.toLocaleString() }} of {{ counts.detections.total.toLocaleString() }} Recorded Days
             </div>
-            <div>
-              <v-slider
-                min="1"
-                max="365"
-                step="1"
-                thumb-label="always"
-                thumb-size="32"
-                v-model="dayEnd"
-                @input="inputSeasonDay"
-                class="px-4 pt-8">
-                <template v-slot:thumb-label="{ value }">
-                  <div class="text-center" v-html="dayLabel(value)"></div>
-                </template>
-              </v-slider>
+            <div class="ml-4 body-2">
+              {{ counts.deployments.filtered.toLocaleString() }} of {{ counts.deployments.total.toLocaleString() }} Monitoring Stations
             </div>
           </v-list-item-content>
         </v-list-item>
-        <v-list-item>
+
+        <!-- DEBUG -->
+        <!-- <v-list-item>
           <v-list-item-content>
-            <v-subheader>Filter by Presence/Absence</v-subheader>
-            <div id="dc-presence"></div>
+            <pre>species: {{ species.selected }}</pre>
+            <pre>deployments: {{ deployments.length }}</pre>
+            <pre>counts: {{ counts }}</pre>
+          </v-list-item-content>
+        </v-list-item> -->
+      </v-list>
+      <v-list v-else>
+        <v-list-item>
+          <v-progress-circular
+            indeterminate
+            :size="40"
+            :width="10"
+            color="white"
+            class="mr-4"
+          ></v-progress-circular>
+          <v-list-item-content>
+            <v-list-item-title class="title">Loading</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
       </v-list>
     </v-navigation-drawer>
 
-    <v-app-bar
-      app
-      color="primary"
-      clipped-left
-      dark>
-      <v-toolbar-title>North American Right Whale PAM</v-toolbar-title>
-    </v-app-bar>
-
-    <v-content>
-      <v-container class="fill-height" fluid align-start v-if="!auth.dialog">
-        <v-row v-if="loading">
-          <v-col xs="12">
-            <v-progress-circular
-              :size="50"
-              :width="7"
-              color="primary"
-              indeterminate
-            ></v-progress-circular>
-            <h1>Loading</h1>
-          </v-col>
-        </v-row>
-        <v-row>
-          <v-col xs="12">
-            <l-map
-              ref="map"
-              style="width:1000px;height:600px"
-              :center="[46, -60]"
-              :zoom="3"
-              @moveend="draw"
-              @zoomend="draw">
-              <l-tile-layer url="//{s}.tile.osm.org/{z}/{x}/{y}.png"></l-tile-layer>
-            </l-map>
-            <p>
-              red = detection (at least one) <br>
-              blue = no detection
-            </p>
-          </v-col>
-        </v-row>
-        <v-row align="start">
-          <v-col xs="12" >
-            <div id="dc-stack"></div>
-          </v-col>
-        </v-row>
-      </v-container>
-      <v-dialog
-        v-model="auth.dialog"
-        fullscreen
-        hide-overlay
-        persistent
-        transition="dialog-bottom-transition"
-        style="z-index:50000">
-        <v-card>
-          <v-card-text>
-            <v-container class="fill-height" fluid>
-              <v-row align="center" justify="center">
-                <v-col cols="12" sm="8" md="4">
-                  <v-card class="elevation-12">
-                    <v-toolbar
-                      color="primary"
-                      dark
-                      flat>
-                      <v-toolbar-title>Login Required</v-toolbar-title>
-                    </v-toolbar>
-                    <v-form @submit.prevent="login">
-                      <v-card-text>
-                        <v-text-field
-                          id="password"
-                          label="Password"
-                          name="password"
-                          v-model="auth.password"
-                          prepend-icon="mdi-lock"
-                          type="password"
-                          required />
-                      </v-card-text>
-                      <v-card-actions>
-                        <v-spacer />
-                        <v-btn color="primary" @click="login">Login</v-btn>
-                      </v-card-actions>
-                    </v-form>
-                    <v-alert type="error" :value="auth.error">
-                      Password is incorrect
-                    </v-alert>
-                  </v-card>
-                </v-col>
-              </v-row>
-            </v-container>
-          </v-card-text>
+    <v-content data-v-step="0" style="z-index:0">
+      <Map :points="deployments.data" v-if="auth.isAuth"></Map>
+      <div v-else>
+        <v-card class="mx-auto mt-8" max-width="600px" elevation="12">
+          <v-toolbar
+            color="light-blue darken-3"
+            dark
+            flat>
+            <v-toolbar-title>Login Required</v-toolbar-title>
+          </v-toolbar>
+          <v-form @submit.prevent="login">
+            <v-card-text>
+              <v-text-field
+                id="password"
+                label="Password"
+                name="password"
+                v-model="auth.password"
+                prepend-icon="mdi-lock"
+                type="password"
+                required />
+            </v-card-text>
+            <v-card-actions>
+              <v-spacer />
+              <v-btn color="light-blue darken-3" dark @click="login">Login</v-btn>
+            </v-card-actions>
+          </v-form>
+          <v-alert type="error" :value="auth.error">
+            Password is incorrect
+          </v-alert>
         </v-card>
-      </v-dialog>
+      </div>
     </v-content>
 
-    <v-footer app>
-      <span>&copy; 2019</span>
-    </v-footer>
+    <v-tour name="tour" :steps="steps"></v-tour>
   </v-app>
 </template>
 
 <script>
-import moment from 'moment'
-import axios from 'axios'
-import * as d3 from 'd3'
-import d3Tip from 'd3-tip'
-import L from 'leaflet'
-import crossfilter from 'crossfilter2'
 import dc from 'dc'
+import * as d3 from 'd3'
+import moment from 'moment'
+import debounce from 'debounce'
 
-import { LMap, LTileLayer } from 'vue2-leaflet'
+import Map from '@/components/Map'
+import YearFilter from '@/components/YearFilter'
+// import MonthFilter from '@/components/MonthFilter'
+import SeasonFilter from '@/components/SeasonFilter'
+import DetectionFilter from '@/components/DetectionFilter'
 
-const xf = crossfilter()
-
-const yearDim = xf.dimension(d => d.year)
-const dayDim = xf.dimension(d => d.day)
-const deploymentDim = xf.dimension(d => `${d.project}::${d.site_id}`)
-const deploymentGroup = deploymentDim.group().reduce(
-  (p, v) => {
-    p.project = v.project
-    p.site_id = v.site_id
-    p.latitude = v.latitude
-    p.longitude = v.longitude
-    p.count += 1
-    p.detections += v.detections
-    return p
-  },
-  (p, v) => {
-    p.count -= 1
-    p.detections -= v.detections
-    return p
-  },
-  () => ({
-    latitude: null,
-    longitude: null,
-    count: 0,
-    detections: 0
-  })
-)
-
-// const colorScale = d3.scaleSequential(d3.interpolateViridis).domain([0, 50])
+import evt from '@/lib/events'
+import { fetchData } from '@/lib/utils'
+import { xf, setData, speciesDim } from '@/lib/crossfilter'
+import { speciesOptions, platformOptions } from '@/lib/constants'
 
 export default {
   name: 'App',
   components: {
-    LMap,
-    LTileLayer
+    Map,
+    YearFilter,
+    // MonthFilter,
+    SeasonFilter,
+    DetectionFilter
   },
-  data: () => ({
-    loading: true,
-    drawer: true,
-    yearSpan: [2008, 2016],
-    daySpan: [1, 365],
-    dayStart: 1,
-    dayEnd: 365,
-    count: 0,
-    auth: {
-      dialog: true,
-      password: null,
-      error: false
+  data () {
+    return {
+      auth: {
+        isAuth: false,
+        password: null,
+        error: null
+      },
+      loading: true,
+      deployments: {
+        data: [],
+        dim: null
+      },
+      counts: {
+        detections: {
+          filtered: 0,
+          total: 0,
+          totals: {}
+        },
+        deployments: {
+          filtered: 0,
+          total: 0,
+          totals: {}
+        }
+      },
+      season: {
+        start: 1,
+        end: 365,
+        dim: null
+      },
+      species: {
+        selected: speciesOptions[0].id,
+        options: speciesOptions
+      },
+      platforms: {
+        selected: platformOptions.map(d => d.id),
+        options: platformOptions
+      },
+      dialogs: {
+        about: false
+      },
+      steps: [
+        {
+          target: '[data-v-step="0"]',
+          content: `
+          <h1 class="title">Welcome!</h1>
+          The map shows which stations the whales were detected.<br>
+          <i>Hover over a station to view its metadata.</i>
+          `,
+          params: {
+            highlight: false,
+            placement: 'bottom'
+          }
+        },
+        {
+          target: '[data-v-step="1"]',
+          content: `Switch species here`,
+          params: {
+            highlight: true,
+            placement: 'bottom'
+          }
+        },
+        {
+          target: '[data-v-step="2"]',
+          content: 'Click and drag on the charts to filter dataset for a specific time period',
+          params: {
+            highlight: true,
+            placement: 'bottom'
+          }
+        },
+        {
+          target: '[data-v-step="3"]',
+          content: 'Click here to start the tour again',
+          params: {
+            highlight: true,
+            placement: 'bottom'
+          }
+        }
+      ]
     }
-  }),
+  },
   mounted () {
-    if (process.env.NODE_ENV === 'development') {
-      this.auth.dialog = false
-      this.$nextTick(() => {
-        this.init()
-      })
+    evt.$on('render:map', this.updateCounts)
+  },
+  beforeDestroy () {
+    evt.$off('render:map', this.updateCounts)
+    this.season.dim && this.season.dim.dispose()
+    this.deployments.dim && this.deployments.dim.dispose()
+  },
+  watch: {
+    'species.selected' () {
+      this.setSpecies()
     }
   },
   methods: {
     init () {
-      const map = this.$refs.map.mapObject
-      const svgLayer = L.svg()
-      map.addLayer(svgLayer)
+      fetchData()
+        .then(([deployments, detections]) => {
+          this.deployments.data = deployments
 
-      const svg = d3.select(svgLayer.getPane()).select('svg')
-        .classed('leaflet-zoom-animated', false)
-        .classed('leaflet-zoom-hide', true)
-        .classed('map', true)
-        .attr('pointer-events', null)
-      this.container = svg.select('g')
+          d3.nest()
+            .key(d => d.species)
+            .rollup(v => v.length)
+            .entries(detections)
+            .forEach(d => {
+              this.counts.detections.totals[d.key] = d.value
+            })
 
-      this.tip = d3Tip()
-        .attr('class', 'd3-tip')
-        .direction('e')
-        .html(d => `
-          Project: ${d.value.project}<br>
-          Site ID: ${d.value.site_id}<br>
-          Latitude: ${d.value.latitude.toFixed(4)}<br>
-          Longitude: ${d.value.longitude.toFixed(4)}<br>
-        `)
-      this.container.call(this.tip)
+          d3.nest()
+            .key(d => d.species)
+            .key(d => d.deployment)
+            .rollup(v => v.length)
+            .entries(detections)
+            .forEach(d => {
+              this.counts.deployments.totals[d.key] = d.values.length
+            })
 
-      xf.onChange(() => {
-        this.count = xf.allFiltered().length
-      })
+          setData(detections)
 
-      this.loadData()
-        .then(this.draw)
-        .then(() => {
+          this.season.dim = xf.dimension(d => moment(d.date).dayOfYear())
+          this.deployments.dim = xf.dimension(d => d.deployment)
+          this.deployments.group = this.deployments.dim.group().reduceCount()
+
           this.loading = false
+          this.setSpecies()
+
+          this.$nextTick(() => {
+            evt.$emit('render:filter')
+            evt.$emit('render:map')
+            // this.startTour()
+          })
         })
     },
-    inputYear (v) {
-      yearDim.filterRange(v)
-      this.updateFill()
-    },
-    inputDay (v) {
-      dayDim.filterRange(v)
-      this.updateFill()
-    },
-    inputSeasonDay (v) {
-      // console.log('inputSeasonDay', this.dayStart, this.dayEnd)
-      if (this.dayStart <= this.dayEnd) {
-        dayDim.filterRange([this.dayStart, this.dayEnd])
-      } else {
-        dayDim.filterFunction(d => d >= this.dayStart || d <= this.dayEnd)
-      }
-      this.updateFill()
+    setSpecies () {
+      speciesDim.filterExact(this.species.selected)
+      evt.$emit('render:map')
       dc.redrawAll()
+      this.counts.detections.total = this.counts.detections.totals[this.species.selected]
+      this.counts.deployments.total = this.counts.deployments.totals[this.species.selected]
+      this.updateCounts()
     },
-    loadData () {
-      return axios.get('data/narw.csv')
-        .then((response) => response.data)
-        .then(this.parseData)
-        .then((data) => {
-          xf.add(data)
-        })
-        .then(() => {
-          const dim = xf.dimension(d => d.year)
-          const group = dim.group().reduceCount()
-          const timeExtent = d3.extent(xf.all().map(d => d.year))
-          timeExtent[0] = timeExtent[0] - 1
-          timeExtent[1] = timeExtent[1] + 1
-
-          const chart = dc.barChart('#dc-year')
-            .width(468)
-            .height(160)
-            .margins({ top: 0, right: 40, bottom: 40, left: 40 })
-            .dimension(dim)
-            .group(group)
-            .elasticY(true)
-            .x(d3.scaleLinear().domain(timeExtent))
-            .round(dc.round.floor)
-            .on('filtered', this.updateFill)
-          chart.xAxis().ticks(10).tickFormat(v => {
-            return (v % 2 > 0) ? '' : d3.format('d')(v)
-          })
-          // chart.yAxis().ticks(0)
-
-          chart.render()
-        })
-        .then(() => {
-          const dim = xf.dimension(d => d.month)
-          const group = dim.group().reduceCount()
-          const timeExtent = [0, 12]
-
-          const chart = dc.barChart('#dc-month')
-            .width(468)
-            .height(160)
-            .margins({ top: 0, right: 40, bottom: 40, left: 40 })
-            .dimension(dim)
-            .group(group)
-            .elasticY(true)
-            .x(d3.scaleLinear().domain(timeExtent))
-            .round(dc.round.round)
-            .on('filtered', this.updateFill)
-
-          chart.render()
-        })
-        .then(() => {
-          const dim = xf.dimension(d => d.presence)
-          const group = dim.group().reduceCount()
-
-          const chart = dc.rowChart('#dc-presence')
-            .width(468)
-            .height(160)
-            // .margins({ top: 20, right: 20, bottom: 0, left: 20 })
-            .dimension(dim)
-            .group(group)
-            .elasticX(true)
-            .ordinalColors(d3.range(3).map(d => d3.schemeCategory10[0]))
-            // .gap(5)
-            // .fixedBarHeight(20)
-            .on('filtered', this.updateFill)
-
-          chart.render()
-        })
-        .then(() => {
-          const dim = xf.dimension(d => d.day)
-          const group = dim.group().reduce(
-            (p, v) => {
-              p[v.presence] = (p[v.presence] || 0) + 1
-              return p
-            },
-            (p, v) => {
-              p[v.presence] = (p[v.presence] || 0) - 1
-              return p
-            },
-            () => {
-              return {
-                yes: 0,
-                no: 0,
-                maybe: 0
-              }
-            }
-          )
-
-          const chart = dc.barChart('#dc-stack')
-            .width(1000)
-            .height(300)
-            .margins({ top: 0, right: 75, bottom: 40, left: 40 })
-            .dimension(dim)
-            .group(group, 'yes', (d) => d.value.yes)
-            .colors(d3.scaleOrdinal().range(['red', 'orange', 'gray']))
-            .elasticY(true)
-            // .brushOn(false)
-            .x(d3.scaleLinear().domain([1, 366]))
-            .xAxisLabel('Day of the Year')
-            .yAxisLabel('# Recorders')
-            .round(dc.round.round)
-            .gap(0)
-            // .title(function (d) {
-            //   return d.key + '[' + this.layer + ']: ' + d.value[this.layer]
-            // })
-            .on('filtered', this.updateFill)
-
-          chart.legend(dc.legend().x(950).y(100))
-
-          dc.override(chart, 'legendables', () => {
-            return chart._legendables().reverse()
-          })
-
-          chart.stack(group, 'maybe', d => d.value.maybe)
-          chart.stack(group, 'no', d => d.value.no)
-
-          chart.render()
-        })
+    setSeason: debounce(function ([start, end]) {
+      this.season.start = start
+      this.season.end = end === 365 ? 366 : end
+      if (this.season.start <= this.season.end) {
+        this.season.dim.filterRange([this.season.start, this.season.end + 0.01])
+      } else {
+        this.season.dim.filterFunction(d => d >= this.season.start || d <= this.season.end)
+      }
+      evt.$emit('render:map')
+      dc.redrawAll()
+    }, 1, true),
+    updateCounts () {
+      this.counts.detections.filtered = xf.allFiltered().length
+      this.counts.deployments.filtered = this.deployments.group.all().filter(d => d.value > 0).length
     },
-    parseData (csv) {
-      const data = d3.csvParse(csv, (d, i) => {
-        d.$index = i
-        d.latitude = +d.latitude
-        d.longitude = +d.longitude
-        d.detections = +d.detections
-        d.duration_sec = +d.duration_sec
-        d.start = moment.utc(d.start)
-        d.end = moment.utc(d.end)
-        d.year = d.start.year()
-        d.day = d.start.dayOfYear()
-        d.month = d.start.month()
-        return d
-      })
-      return data
-    },
-    dayLabel (value) {
-      return moment('2000-12-31').add(value, 'days').format('MMM D').replace(' ', '<br>')
-    },
-    draw () {
-      if (!this.container) return
-      const map = this.$refs.map.mapObject
-      const zoom = map.getZoom()
-
-      this.container
-        .selectAll('circle')
-        // .data(coord.slice(0, Math.floor(Math.random() * coord.length)))
-        .data(deploymentGroup.all(), d => d.key)
-        .join(
-          enter => enter.append('circle'),
-          update => update,
-          exit => exit.remove()
-        )
-        .attr('r', zoom)
-        .attr('cx', (d) => map.latLngToLayerPoint(new L.LatLng(d.value.latitude, d.value.longitude)).x)
-        .attr('cy', (d) => map.latLngToLayerPoint(new L.LatLng(d.value.latitude, d.value.longitude)).y)
-        // .on('click', d => console.log(d.value))
-        .on('mouseenter', this.tip.show)
-        .on('mouseout', this.tip.hide)
-      this.updateFill()
-    },
-    updateFill () {
-      if (!this.container) return
-      this.container
-        .selectAll('circle')
-        .style('opacity', (d) => d.value.count === 0 ? 0 : 0.8) // only show site if there is at least one observed day
-        // .style('fill', (d) => d.value.detections > 0 ? colorScale(d.value.detections) : '#CCCCCC')
-        .style('fill', (d) => d.value.detections > 0 ? 'red' : 'blue')
-        // rearrange points so that detections appear on top
-        // .each(function (d, i) {
-        //   if (d.value.count > 0 && d.value.detections > 0) {
-        //     this.parentNode.appendChild(this)
-        //   }
-        // })
+    startTour () {
+      this.$tours['tour'].start()
     },
     login () {
       if (this.auth.password === 'narw123') {
+        this.auth.isAuth = true
         this.auth.error = false
-        this.auth.dialog = false
-        setTimeout(() => {
-          this.init()
-        }, 500)
+        this.init()
       } else {
         this.auth.error = true
       }
@@ -509,20 +396,42 @@ export default {
 </script>
 
 <style>
-svg.map > g {
-  pointer-events: visible;
-  cursor: pointer;
+a {
+  text-decoration:none;
 }
-
-.d3-tip {
-  line-height: 1;
-  padding: 10px;
-  background: rgba(255, 255, 255, 0.5);
-  color: #000;
-  border-radius: 2px;
-  pointer-events: none;
-  font-family: sans-serif;
-  z-index: 1000;
-  margin-left: 20px;
+.dc-chart .axis path, .dc-chart .axis line {
+  stroke: hsl(0, 0%, 75%) !important;
+}
+.dc-chart rect.bar {
+  fill: #CFD8DC !important;
+}
+.dc-chart rect.bar.deselected {
+  fill: #455A64 !important;
+}
+.dc-chart rect {
+  fill-opacity: 0.8;
+}
+.dc-chart .row rect.deselected {
+  fill: #455A64 !important;
+}
+.dc-chart .y-axis-label.y-label {
+  fill: hsl(0, 0%, 90%) !important;
+  font-weight: 600 !important;
+  font-size: 10pt !important;
+}
+.dc-chart .x-axis-label {
+  fill: hsl(0, 0%, 90%) !important;
+  font-weight: 600 !important;
+  font-size: 10pt !important;
+}
+.dc-chart .axis.y text {
+  fill: hsl(0, 0%, 90%) !important;
+  font-weight: 600 !important;
+}
+.dc-chart .axis.x text {
+  fill: hsl(0, 0%, 90%) !important;
+  font-weight: 400 !important;
+  font-size: 10pt !important;
+  text-anchor: middle;
 }
 </style>
