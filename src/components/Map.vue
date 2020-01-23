@@ -6,7 +6,10 @@
     :zoom="5"
     @moveend="drawPoints"
     @zoomend="drawPoints">
-    <l-tile-layer url="//{s}.tile.osm.org/{z}/{x}/{y}.png"></l-tile-layer>
+    <l-tile-layer
+      url="//server.arcgisonline.com/ArcGIS/rest/services/Ocean_Basemap/MapServer/tile/{z}/{y}/{x}"
+      attribution="Tiles &copy; Esri &mdash; Sources: GEBCO, NOAA, CHS, OSU, UNH, CSUMB, National Geographic, DeLorme, NAVTEQ, and Esri'">
+    </l-tile-layer>
   </l-map>
 </template>
 
@@ -19,10 +22,11 @@ import moment from 'moment'
 
 import evt from '@/lib/events'
 import { deploymentMap } from '@/lib/crossfilter'
+import { detectionTypes, detectionTypesMap, platformTypesMap } from '@/lib/constants'
 
 const colorScale = d3.scaleOrdinal()
-  .domain(['yes', 'maybe', 'no'])
-  .range(['#CC3833', '#78B334', '#0277BD'])
+  .domain(detectionTypes.map(d => d.id))
+  .range(detectionTypes.map(d => d.color))
 
 function createColorLegend (map) {
   const legend = L.control({ position: 'bottomright' })
@@ -54,12 +58,6 @@ function createColorLegend (map) {
       .attr('r', radius)
       .style('fill', colorScale)
 
-    const labels = {
-      yes: 'Positive',
-      maybe: 'Possible',
-      no: 'Negative'
-    }
-
     svg.selectAll('text.color')
       .data(['yes', 'maybe', 'no'])
       .join(
@@ -70,7 +68,7 @@ function createColorLegend (map) {
       .attr('x', 40)
       .attr('y', (d, i) => i * (radius + padding) + 45)
       .attr('dy', '0.3em')
-      .text(d => labels[d])
+      .text(d => detectionTypesMap.get(d).label)
     return div
   }
   legend.addTo(map)
@@ -149,6 +147,15 @@ export default {
     this.tip = d3Tip()
       .attr('class', 'd3-tip')
       .direction('e')
+      .direction(function (d) {
+        const viewBox = svg.attr('viewBox').split(' ').map(d => +d)
+        const mapWidth = map.getSize().x
+        const svgWidth = viewBox[2]
+        const offsetX = viewBox[0]
+        const pointX = +d3.select(this).attr('cx')
+        const mapX = Math.round((mapWidth - svgWidth) / 2 - offsetX + pointX)
+        return (mapWidth - mapX) < (0.5 * mapWidth) ? 'w' : 'e'
+      })
       .html(d => {
         const value = deploymentMap.get(d.deployment)
         const startDate = moment.utc(d.monitoring_start_datetime).startOf('date')
@@ -158,14 +165,15 @@ export default {
           &nbsp;&nbsp;Project: ${d.project}<br>
           &nbsp;&nbsp;Site ID: ${d.site_id}<br>
           Unit Type: ${d.instrument_type}<br>
+          &nbsp;Platform: ${platformTypesMap.get(d.platform_type).label}<br>
           &nbsp;Position: ${d.latitude.toFixed(4)}, ${d.longitude.toFixed(4)}<br>
           &nbsp;Deployed: ${startDate.format('ll')} to ${endDate.format('ll')}<br>
           &nbsp;Duration: ${duration.asDays() + 1} days<br>
           <br>
           <u>Detection Days</u><br>
-          &nbsp;Positive: ${value.yes.toLocaleString()}<br>
-          &nbsp;Possible: ${value.maybe.toLocaleString()}<br>
-          &nbsp;Negative: ${value.no.toLocaleString()}
+          &nbsp;${detectionTypesMap.get('yes').label}: ${value.yes.toLocaleString()}<br>
+          &nbsp;${detectionTypesMap.get('maybe').label}: ${value.maybe.toLocaleString()}<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;${detectionTypesMap.get('no').label}: ${value.no.toLocaleString()}
         `
       })
     this.container.call(this.tip)
@@ -266,10 +274,9 @@ circle:hover {
   color: #000;
   border-radius: 4px;
   pointer-events: none;
-  font-family: 'Courier New', Courier, monospace;
-  font-weight: 600;
+  font-family: 'Roboto Mono', monospace;
+  font-weight: 400;
   z-index: 1000;
-  margin-left: 20px;
 }
 .legend {
   background: #EEE;

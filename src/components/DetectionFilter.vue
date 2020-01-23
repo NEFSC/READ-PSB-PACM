@@ -12,6 +12,7 @@ import dc from 'dc'
 import ChartMixin from '@/mixins/ChartMixin'
 import evt from '@/lib/events'
 import { xf } from '@/lib/crossfilter'
+import { detectionTypesMap, detectionTypes } from '@/lib/constants'
 
 export default {
   name: 'DetectionFilter',
@@ -22,12 +23,7 @@ export default {
     }
   },
   mounted () {
-    const detectionLabels = {
-      no: 'Negative',
-      yes: 'Positive',
-      maybe: 'Possible'
-    }
-    const dim = xf.dimension(d => detectionLabels[d.detection])
+    const dim = xf.dimension(d => detectionTypesMap.get(d.detection).label)
     const group = dim.group().reduceCount()
 
     this.chart = dc.rowChart(this.$el.appendChild(document.createElement('div')))
@@ -39,7 +35,7 @@ export default {
       .elasticX(true)
       .labelOffsetX(-60)
       .ordering(d => {
-        return ['Positive', 'Possible', 'Negative'].indexOf(d.key)
+        return detectionTypes.map(d => d.label).indexOf(d.key)
       })
       .ordinalColors(['#CC3833', '#78B334', '#0277BD'])
       .on('filtered', () => evt.$emit('render:map'))

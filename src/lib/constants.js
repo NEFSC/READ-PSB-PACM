@@ -1,4 +1,4 @@
-export const speciesOptions = [
+export const speciesTypes = [
   {
     id: 'narw',
     label: 'North Atlantic Right Whale'
@@ -16,18 +16,40 @@ export const speciesOptions = [
     label: 'Humpback Whale'
   }
 ]
+export const speciesTypesMap = new Map(speciesTypes.map(d => [d.id, d]))
 
-export const platformOptions = [
+export const platformTypes = [
   {
     id: 'mooring',
-    label: 'Mooring'
+    label: 'Bottom Mooring'
   },
   {
-    id: 'slocum',
-    label: 'Slocum'
+    id: 'glider',
+    label: 'Glider'
   },
   {
     id: 'buoy',
-    label: 'Buoy'
+    label: 'Surface Buoy'
   }
 ]
+export const platformTypesMap = new Map(platformTypes.map(d => [d.id, d]))
+
+export const detectionTypes = [
+  {
+    id: 'yes',
+    label: 'Detected',
+    color: '#CC3833'
+  },
+  {
+    id: 'maybe',
+    label: 'Possibly',
+    color: '#78B334'
+  },
+  {
+    id: 'no',
+    label: 'None',
+    color: '#0277BD'
+  }
+]
+
+export const detectionTypesMap = new Map(detectionTypes.map(d => [d.id, d]))

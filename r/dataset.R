@@ -90,6 +90,7 @@ df <- df_csv %>%
     site_id = coalesce(site_id, "N/A"),
     longitude = if_else(longitude > 0, -1 * longitude, longitude),
     submission_date = ymd(submission_date),
+    platform_type = tolower(platform_type),
     monitoring_start_datetime = ymd_hms(monitoring_start_datetime),
     monitoring_end_datetime = ymd_hms(monitoring_end_datetime),
     analysis_period_start_date_time = ymd_hms(analysis_period_start_date_time),

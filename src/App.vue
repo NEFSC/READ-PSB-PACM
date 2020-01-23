@@ -6,7 +6,7 @@
       clipped-left
       dark>
       <v-icon color="white" dark class="mr-4">$whale</v-icon>
-      <v-toolbar-title>North Atlantic Right Whale PAM Map</v-toolbar-title>
+      <v-toolbar-title>Passive Acoustic Whale Map</v-toolbar-title>
 
       <v-spacer></v-spacer>
 
@@ -20,7 +20,7 @@
           <v-img src="./assets/img/noaa-logo.gif" height="54px" width="54px" style="float:right" class="ma-2"></v-img>
           <v-list-item>
             <v-list-item-content>
-              <v-list-item-title class="headline">Welcome to the North Atlantic Right Whale PAM Map</v-list-item-title>
+              <v-list-item-title class="headline">Welcome to the Passive Acoustic Whale Map</v-list-item-title>
               <v-list-item-subtitle>by the <a href="https://www.nefsc.noaa.gov/psb/acoustics/index.html">NOAA Northeast Fisheries Science Center</a></v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
@@ -30,7 +30,7 @@
           </v-img>
           <v-card-text class="mt-8 body-1 grey--text text--darken-4">
             <p class="font-weight-medium">
-              The North American Right Whale PAM Map shows you when and where specific whale species were observed in the Atlantic Ocean
+              The Passive Acoustic Whale Map shows you when and where specific whale species were observed in the Atlantic Ocean
               based on Passive Acoustic Monitoring (PAM).
             </p>
             <p>
@@ -213,7 +213,7 @@ import DetectionFilter from '@/components/DetectionFilter'
 import evt from '@/lib/events'
 import { fetchData } from '@/lib/utils'
 import { xf, setData, speciesDim } from '@/lib/crossfilter'
-import { speciesOptions, platformOptions } from '@/lib/constants'
+import { speciesTypes, platformTypes } from '@/lib/constants'
 
 export default {
   name: 'App',
@@ -254,12 +254,12 @@ export default {
         dim: null
       },
       species: {
-        selected: speciesOptions[0].id,
-        options: speciesOptions
+        selected: speciesTypes[0].id,
+        options: speciesTypes
       },
       platforms: {
-        selected: platformOptions.map(d => d.id),
-        options: platformOptions
+        selected: platformTypes.map(d => d.id),
+        options: platformTypes
       },
       dialogs: {
         about: false
@@ -305,6 +305,10 @@ export default {
     }
   },
   mounted () {
+    if (process.env.NODE_ENV === 'development') {
+      this.auth.isAuth = true
+      this.init()
+    }
     evt.$on('render:map', this.updateCounts)
   },
   beforeDestroy () {
