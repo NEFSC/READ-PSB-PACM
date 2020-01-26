@@ -25,12 +25,19 @@ export const deploymentGroup = deploymentDim.group().reduce(
 )
 
 export let deploymentMap = new Map()
-window.deploymentMap = deploymentMap
+
 export function setData (data) {
   xf.remove(() => true)
+  data.forEach((d, i) => {
+    d.$index = i
+  })
   xf.add(data)
   deploymentMap.clear()
   deploymentGroup.all().forEach(d => {
     deploymentMap.set(d.key, d.value)
   })
+}
+
+export function isFiltered (d) {
+  return xf.isElementFiltered(d.$index)
 }

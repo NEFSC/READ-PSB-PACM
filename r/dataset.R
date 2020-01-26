@@ -110,7 +110,7 @@ table(df$platform_type)
 table(df$instrument_type)
 
 deployment_variables <- names(df)[1:26]
-detection_variables <- c("project", "site_id", names(df)[27:length(names(df))])
+detection_variables <- c("project", "site_id", "platform_type", names(df)[27:length(names(df))])
 
 df_deployments <- df %>% 
   select(deployment_variables) %>% 
@@ -129,32 +129,32 @@ stopifnot(
 df_detections <- df %>% 
   select(detection_variables) %>% 
   transmute(
-    project = project,
-    site_id = site_id,
+    project,
+    site_id,
+    platform_type,
     date = as_date(analysis_period_start_date_time),
-    narw_presence = narw_presence,
-    blue_presence = blue_presence,
-    sei_presence = sei_presence,
-    humpback_presence = humpback_presence
-    # fin_presence = fin_presence
+    narw_presence,
+    blue_presence,
+    sei_presence,
+    humpback_presence
+    # fin_presence
   ) %>% 
   distinct() %>% 
-  pivot_longer(ends_with("_presence"), names_to = "species", values_to = "presence") %>% 
+  pivot_longer(ends_with("_presence"), names_to = "species", values_to = "detection", values_drop_na = TRUE) %>% 
   mutate(
     species = str_replace(species, "_presence", ""),
-    presence = case_when(
-      presence == "Detected" ~ "yes",
-      presence == "Not Detected" ~ "no",
-      presence == "Possibly Detected" ~ "maybe",
+    detection = case_when(
+      detection == "Detected" ~ "yes",
+      detection == "Not Detected" ~ "no",
+      detection == "Possibly Detected" ~ "maybe",
       TRUE ~ NA_character_
     )
   ) %>%
-  pivot_wider(names_from = species, values_from = presence) %>% 
-  arrange(project, site_id, date)
+  arrange(project, site_id, date, species)
 
 stopifnot(
   df_detections %>% 
-    group_by(project, site_id, date) %>% 
+    group_by(project, site_id, date, species) %>% 
     count() %>% 
     filter(n > 1) %>% 
     nrow() == 0
@@ -166,9 +166,7 @@ glimpse(df_deployments)
 glimpse(df_detections)
 
 df_detections %>% 
-  select(-project, -site_id, -date) %>% 
-  pivot_longer(cols = everything(), names_to = "species", values_to = "value") %>% 
-  janitor::tabyl(value, species) %>% 
+  janitor::tabyl(detection, species) %>% 
   janitor::adorn_percentages("row") %>% 
   janitor::adorn_pct_formatting(digits = 0)
 
@@ -176,8 +174,7 @@ df_detections %>%
 
 df_deployments %>% 
   write_csv("../public/data/deployments.csv", na = "")
-df_detections %>% 
-  pivot_longer(-c(project, site_id, date), names_to = "species", values_to = "detection", values_drop_na = TRUE) %>%
+df_detections %>%
   write_csv("../public/data/detections.csv", na = "")
 
 list(

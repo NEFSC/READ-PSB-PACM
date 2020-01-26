@@ -29,11 +29,11 @@ export default {
     this.chart = dc.rowChart(this.$el.appendChild(document.createElement('div')))
       .width(468)
       .height(140)
-      .margins({ top: 10, right: 10, bottom: 40, left: 60 })
+      .margins({ top: 10, right: 10, bottom: 40, left: 80 })
       .dimension(dim)
       .group(group)
       .elasticX(true)
-      .labelOffsetX(-60)
+      .labelOffsetX(-10)
       .ordering(d => {
         return detectionTypes.map(d => d.label).indexOf(d.key)
       })
@@ -73,6 +73,7 @@ export default {
 .detection-filter .row text{
   font-weight: 600 !important;
   font-size: 10pt !important;
+  text-anchor: end;
 }
 .detection-filter .x-axis-label {
   fill: hsl(0, 0%, 90%) !important;

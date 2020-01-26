@@ -24,13 +24,13 @@ export const platformTypes = [
     label: 'Bottom Mooring'
   },
   {
-    id: 'glider',
+    id: 'slocum',
     label: 'Glider'
-  },
-  {
-    id: 'buoy',
-    label: 'Surface Buoy'
   }
+  // {
+  //   id: 'buoy',
+  //   label: 'Surface Buoy'
+  // }
 ]
 export const platformTypesMap = new Map(platformTypes.map(d => [d.id, d]))
 
@@ -47,7 +47,7 @@ export const detectionTypes = [
   },
   {
     id: 'no',
-    label: 'None',
+    label: 'Undetected',
     color: '#0277BD'
   }
 ]

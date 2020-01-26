@@ -84,18 +84,7 @@
 
         <v-list-item class="mt-3" data-v-step="1">
           <v-list-item-content>
-            <v-select
-              outlined
-              :items="platforms.options"
-              v-model="platforms.selected"
-              label="Select platform type(s)"
-              item-text="label"
-              item-value="id"
-              hide-details
-              multiple
-              chips
-              deletable-chips
-            ></v-select>
+            <PlatformTypeFilter @update="setPlatformTypes"></PlatformTypeFilter>
           </v-list-item-content>
         </v-list-item>
 
@@ -131,7 +120,7 @@
               {{ counts.detections.filtered.toLocaleString() }} of {{ counts.detections.total.toLocaleString() }} Recorded Days
             </div>
             <div class="ml-4 body-2">
-              {{ counts.deployments.filtered.toLocaleString() }} of {{ counts.deployments.total.toLocaleString() }} Monitoring Stations
+              {{ counts.deployments.filtered.toLocaleString() }} of {{ counts.deployments.total.toLocaleString() }} Deployments
             </div>
           </v-list-item-content>
         </v-list-item>
@@ -149,8 +138,8 @@
         <v-list-item>
           <v-progress-circular
             indeterminate
-            :size="40"
-            :width="10"
+            :size="32"
+            :width="4"
             color="white"
             class="mr-4"
           ></v-progress-circular>
@@ -162,7 +151,7 @@
     </v-navigation-drawer>
 
     <v-content data-v-step="0" style="z-index:0">
-      <Map :points="deployments.data" v-if="auth.isAuth"></Map>
+      <Map :points="deployments.data" :tracks="glider.tracks" v-if="auth.isAuth"></Map>
       <div v-else>
         <v-card class="mx-auto mt-8" max-width="600px" elevation="12">
           <v-toolbar
@@ -206,21 +195,21 @@ import debounce from 'debounce'
 
 import Map from '@/components/Map'
 import YearFilter from '@/components/YearFilter'
-// import MonthFilter from '@/components/MonthFilter'
+import PlatformTypeFilter from '@/components/PlatformTypeFilter'
 import SeasonFilter from '@/components/SeasonFilter'
 import DetectionFilter from '@/components/DetectionFilter'
 
 import evt from '@/lib/events'
 import { fetchData } from '@/lib/utils'
 import { xf, setData, speciesDim } from '@/lib/crossfilter'
-import { speciesTypes, platformTypes } from '@/lib/constants'
+import { speciesTypes } from '@/lib/constants'
 
 export default {
   name: 'App',
   components: {
     Map,
     YearFilter,
-    // MonthFilter,
+    PlatformTypeFilter,
     SeasonFilter,
     DetectionFilter
   },
@@ -257,9 +246,8 @@ export default {
         selected: speciesTypes[0].id,
         options: speciesTypes
       },
-      platforms: {
-        selected: platformTypes.map(d => d.id),
-        options: platformTypes
+      glider: {
+        tracks: []
       },
       dialogs: {
         about: false
@@ -324,8 +312,25 @@ export default {
   methods: {
     init () {
       fetchData()
-        .then(([deployments, detections]) => {
-          this.deployments.data = deployments
+        .then(([staticDeployments, staticDetections, gliders]) => {
+          const gliderDetections = gliders.map(glider => {
+            return glider.data.map(d => ({
+              deployment: glider.project,
+              platform_type: glider.platform_type,
+              date: new Date(d.date),
+              latitude: d.latitude,
+              longitude: d.longitude,
+              species: d.species,
+              detection: d.detection
+            }))
+          }).flat()
+
+          console.log(staticDetections[0], gliderDetections[0])
+
+          const deployments = [...staticDeployments, ...gliders]
+          const detections = [...staticDetections, ...gliderDetections]
+
+          this.deployments.data = Object.freeze(deployments)
 
           d3.nest()
             .key(d => d.species)
@@ -343,6 +348,8 @@ export default {
             .forEach(d => {
               this.counts.deployments.totals[d.key] = d.values.length
             })
+
+          this.glider.tracks = Object.freeze(gliders)
 
           setData(detections)
 
@@ -366,6 +373,11 @@ export default {
       dc.redrawAll()
       this.counts.detections.total = this.counts.detections.totals[this.species.selected]
       this.counts.deployments.total = this.counts.deployments.totals[this.species.selected]
+      this.updateCounts()
+    },
+    setPlatformTypes () {
+      evt.$emit('render:map')
+      dc.redrawAll()
       this.updateCounts()
     },
     setSeason: debounce(function ([start, end]) {

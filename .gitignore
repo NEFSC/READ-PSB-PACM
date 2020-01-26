@@ -25,3 +25,6 @@ yarn-error.log*
 .Rhistory
 
 r/rds/*.rds
+
+public/data/*.csv
+public/data/*.json

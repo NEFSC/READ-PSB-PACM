@@ -191,49 +191,48 @@ export default {
 </script>
 
 <style>
-
-.ticks {
+.season-filter .ticks {
   font: 10px sans-serif;
 }
 
-.track,
-.track-inset,
-.track-overlay {
+.season-filter .track,
+.season-filter .track-inset,
+.season-filter .track-overlay {
   stroke-linecap: round;
 }
 
-.track {
+.season-filter .track {
   stroke: #000;
   stroke-opacity: 0.3;
   stroke-width: 10px;
 }
 
-.track-inset {
+.season-filter .track-inset {
   stroke: #455A64;
   stroke-width: 8px;
 }
 
-.track-overlay {
+.season-filter .track-overlay {
   pointer-events: stroke;
   stroke-width: 20px;
   stroke: transparent;
   cursor: move;
 }
 
-.track-highlight {
+.season-filter .track-highlight {
   stroke: #CFD8DC;
   stroke-width: 4px;
   stroke-linecap: round;
 }
 
-.handle circle {
+.season-filter .handle circle {
   fill: #FFF;
   stroke: #FFF;
   stroke-opacity: 0.5;
   stroke-width: 1.25px;
 }
 
-.handle text {
+.season-filter .handle text {
   text-anchor: middle;
   font-variant: small-caps;
   font-size: 12pt;
