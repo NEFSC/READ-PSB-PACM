@@ -20,7 +20,7 @@ export default {
     }
   },
   mounted () {
-    console.log('MonthFilter:mounted')
+    // console.log('MonthFilter:mounted')
     const dim = xf.dimension(d => d.date.getMonth())
     const group = dim.group().reduceCount()
 

@@ -1,7 +1,8 @@
 <template>
   <div class="year-filter">
     <v-btn icon x-small class="mt-1 float-right" color="grey" @click="reset"><v-icon>mdi-sync</v-icon></v-btn>
-    <div class="subtitle-1 font-weight-medium">Filter by Years ({{ filter[0] }} to {{ filter[1] - 1 }})</div>
+    <div class="subtitle-1 mb-2 font-weight-medium">
+      Years: <span class="filter-value">{{ filter[0] }}</span> to <span class="filter-value">{{ filter[1] - 1 }}</span></div>
   </div>
 </template>
 
@@ -12,6 +13,7 @@ import dc from 'dc'
 import ChartMixin from '@/mixins/ChartMixin'
 import evt from '@/lib/events'
 import { xf } from '@/lib/crossfilter'
+import { detectionTypes } from '@/lib/constants'
 
 export default {
   name: 'YearFilter',
@@ -23,9 +25,26 @@ export default {
     }
   },
   mounted () {
-    console.log('YearFilter:mounted', this.chart, this.$el)
+    // console.log('YearFilter:mounted', this.chart, this.$el)
     const dim = xf.dimension(d => d.date.getFullYear())
-    const group = dim.group().reduceCount()
+    // const group = dim.group().reduceCount()
+    const group = dim.group().reduce(
+      (p, v) => {
+        p[v.detection] = (p[v.detection] || 0) + 1
+        return p
+      },
+      (p, v) => {
+        p[v.detection] = (p[v.detection] || 0) - 1
+        return p
+      },
+      () => {
+        return {
+          yes: 0,
+          no: 0,
+          maybe: 0
+        }
+      }
+    )
     const timeExtent = d3.extent(xf.all().map(d => d.date.getFullYear()))
     timeExtent[1] += 1
     this.filter = timeExtent
@@ -35,12 +54,14 @@ export default {
       .height(160)
       .margins({ top: 10, right: 10, bottom: 40, left: 40 })
       .dimension(dim)
-      .group(group)
+      // .group(group)
+      .group(group, 'yes', (d) => d.value.yes)
       .elasticY(true)
       .x(d3.scaleLinear().domain(timeExtent))
       .xAxisLabel('Year')
       .yAxisLabel('# Days Recorded')
       .round(dc.round.round)
+      .colors(d3.scaleOrdinal().range(detectionTypes.map(d => d.color)))
       .on('filtered', () => {
         const filter = this.chart.filter() || timeExtent
         this.filter = [filter[0], filter[1]]
@@ -55,6 +76,8 @@ export default {
           .attr('transform', `translate(${Math.floor(width / n / 2)} 0)`)
       })
 
+    this.chart.stack(group, 'maybe', d => d.value.maybe)
+    this.chart.stack(group, 'no', d => d.value.no)
     this.chart.xAxis().ticks(20).tickFormat(v => {
       return (v % 2 > 0) || v >= timeExtent[1] ? '' : d3.format('d')(v)
     })

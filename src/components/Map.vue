@@ -19,6 +19,7 @@ import * as d3 from 'd3'
 import d3Tip from 'd3-tip'
 import L from 'leaflet'
 import moment from 'moment'
+import pad from 'pad'
 
 import evt from '@/lib/events'
 import { xf, deploymentMap, isFiltered } from '@/lib/crossfilter'
@@ -152,7 +153,7 @@ export default {
     this.container.append('g').attr('class', 'static points')
 
     this.tip = d3Tip()
-      .attr('class', 'd3-tip')
+      .attr('class', 'd3-tip map')
       .direction(function (d) {
         const viewBox = svg.attr('viewBox').split(' ').map(d => +d)
         const mapWidth = map.getSize().x
@@ -177,16 +178,16 @@ export default {
         const duration = moment.duration(endDate.diff(startDate))
         if (isGlider) {
           let html = `
-            &nbsp;&nbsp;&nbsp;Project: ${deployment.project}<br>
-            &nbsp;Unit Type: ${deployment.instrument_type}<br>
-            &nbsp;&nbsp;Platform: ${platformTypesMap.get(deployment.platform_type).label}<br>
-            &nbsp;&nbsp;Deployed: ${startDate.format('ll')} to ${endDate.format('ll')}<br>
-            &nbsp;&nbsp;Duration: ${duration.asDays() + 1} days<br>
+            ${pad(10, 'Project', '&nbsp;')}: ${deployment.project}<br>
+            ${pad(10, 'Unit Type', '&nbsp;')}: ${deployment.instrument_type}<br>
+            ${pad(10, 'Platform', '&nbsp;')}: ${platformTypesMap.get(deployment.platform_type).label}<br>
+            ${pad(10, 'Deployed', '&nbsp;')}: ${startDate.format('ll')} to ${endDate.format('ll')}<br>
+            ${pad(10, 'Duration', '&nbsp;')}: ${duration.asDays() + 1} days<br>
             <br>
             <u>Total Detection Days</u><br>
-            &nbsp;&nbsp;${detectionTypesMap.get('yes').label}: ${value.yes.toLocaleString()}<br>
-            &nbsp;&nbsp;${detectionTypesMap.get('maybe').label}: ${value.maybe.toLocaleString()}<br>
-            ${detectionTypesMap.get('no').label}: ${value.no.toLocaleString()}
+            ${pad(10, detectionTypesMap.get('no').label, '&nbsp;')}: ${value.no.toLocaleString()}<br>
+            ${pad(10, detectionTypesMap.get('maybe').label, '&nbsp;')}: ${value.maybe.toLocaleString()}<br>
+            ${pad(10, detectionTypesMap.get('yes').label, '&nbsp;')}: ${value.yes.toLocaleString()}
           `
           if (!isGliderTrack) {
             const analysisDate = moment.utc(d.date)
@@ -194,9 +195,9 @@ export default {
               <br>
               <br>
               <u>Selected Date</u><br>
-              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Date: ${analysisDate.format('ll')}<br>
-              &nbsp;&nbsp;Position: ${d.latitude.toFixed(4)}, ${d.longitude.toFixed(4)}<br>
-              &nbsp;&nbsp;&nbsp;&nbsp;Result: ${detectionTypesMap.get(d.detection).label}
+              ${pad(10, 'Date', '&nbsp;')}: ${analysisDate.format('ll')}<br>
+              ${pad(10, 'Position', '&nbsp;')}: ${d.latitude.toFixed(4)}, ${d.longitude.toFixed(4)}<br>
+              ${pad(10, 'Result', '&nbsp;')}: ${detectionTypesMap.get(d.detection).label}
             `
           } else {
             // reposition tip for glider track from bbox to mouse
@@ -214,18 +215,18 @@ export default {
           return html
         }
         return `
-          &nbsp;&nbsp;&nbsp;Project: ${deployment.project}<br>
-          &nbsp;&nbsp;&nbsp;Site ID: ${deployment.site_id}<br>
-          &nbsp;Unit Type: ${deployment.instrument_type}<br>
-          &nbsp;&nbsp;Platform: ${platformTypesMap.get(deployment.platform_type).label}<br>
-          &nbsp;&nbsp;Position: ${deployment.latitude.toFixed(4)}, ${deployment.longitude.toFixed(4)}<br>
-          &nbsp;&nbsp;Deployed: ${startDate.format('ll')} to ${endDate.format('ll')}<br>
-          &nbsp;&nbsp;Duration: ${duration.asDays() + 1} days<br>
+          ${pad(10, 'Project', '&nbsp;')}: ${deployment.project}<br>
+          ${pad(10, 'Site', '&nbsp;')}: ${deployment.site_id}<br>
+          ${pad(10, 'Unit', '&nbsp;')}: ${deployment.instrument_type}<br>
+          ${pad(10, 'Platform', '&nbsp;')}: ${platformTypesMap.get(deployment.platform_type).label}<br>
+          ${pad(10, 'Position', '&nbsp;')}: ${deployment.latitude.toFixed(4)}, ${deployment.longitude.toFixed(4)}<br>
+          ${pad(10, 'Deployed', '&nbsp;')}: ${startDate.format('ll')} to ${endDate.format('ll')}<br>
+          ${pad(10, 'Duration', '&nbsp;')}: ${duration.asDays() + 1} days<br>
           <br>
           <u>Total Detection Days</u><br>
-          &nbsp;&nbsp;${detectionTypesMap.get('yes').label}: ${value.yes.toLocaleString()}<br>
-          &nbsp;&nbsp;${detectionTypesMap.get('maybe').label}: ${value.maybe.toLocaleString()}<br>
-          ${detectionTypesMap.get('no').label}: ${value.no.toLocaleString()}
+          ${pad(10, detectionTypesMap.get('no').label, '&nbsp;')}: ${value.no.toLocaleString()}<br>
+          ${pad(10, detectionTypesMap.get('maybe').label, '&nbsp;')}: ${value.maybe.toLocaleString()}<br>
+          ${pad(10, detectionTypesMap.get('yes').label, '&nbsp;')}: ${value.yes.toLocaleString()}
         `
       })
     this.container.call(this.tip)
@@ -235,7 +236,7 @@ export default {
   },
   beforeDestroy () {
     evt.$off('render:map', this.render)
-    d3.selectAll('.d3-tip').remove()
+    d3.selectAll('.d3-tip.map').remove()
   },
   watch: {
     points () {

@@ -1,7 +1,7 @@
 <template>
   <div class="detection-filter">
     <v-btn icon x-small class="mt-1 float-right" color="grey" @click="reset"><v-icon>mdi-sync</v-icon></v-btn>
-    <div class="subtitle-1 font-weight-medium">Filter By Detection Result</div>
+    <div class="subtitle-1 font-weight-medium">Total Detection Days</div>
   </div>
 </template>
 

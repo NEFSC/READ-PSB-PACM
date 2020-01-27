@@ -40,7 +40,7 @@ export default {
   },
   methods: {
     setFilter () {
-      console.log(`setFilter: ${this.selected}`)
+      // console.log(`setFilter: ${this.selected}`)
       if (!this.dim) return
 
       this.dim.filter(d => this.selected.includes(d))

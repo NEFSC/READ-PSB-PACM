@@ -1,7 +1,10 @@
 <template>
   <div class="season-filter">
     <v-btn icon x-small class="mt-1 float-right" color="grey" @click="reset"><v-icon>mdi-sync</v-icon></v-btn>
-    <div class="subtitle-1 font-weight-medium mb-2">Filter by Season ({{ start | dayLabel }} to {{ end | dayLabel }})</div>
+    <div class="subtitle-1 mb-2 font-weight-medium">
+      Season: <span class="filter-value">{{ start | dayLabel }}</span> to <span class="filter-value">{{ end | dayLabel }}</span></div>
+    <SeasonChart></SeasonChart>
+    <svg class="season-filter-container"></svg>
   </div>
 </template>
 
@@ -11,8 +14,13 @@
 import * as d3 from 'd3'
 import moment from 'moment'
 
+import SeasonChart from '@/components/SeasonChart'
+
 export default {
   name: 'SeasonFilter',
+  components: {
+    SeasonChart
+  },
   data () {
     return {
       start: 1,
@@ -29,8 +37,8 @@ export default {
   },
   mounted () {
     const margins = {
-      left: 20,
-      right: 20,
+      left: 52,
+      right: 10,
       top: 20,
       bottom: 20
     }
@@ -40,11 +48,9 @@ export default {
 
     this.x.range([0, width])
 
-    this.svg = d3.select(this.$el)
-      .append('svg')
+    this.svg = d3.select(this.$el).select('svg.season-filter-container')
       .attr('width', width + margins.left + margins.right)
       .attr('height', height)
-    console.log('width', this.$el.clientWidth, width)
 
     const axisScale = d3.scaleTime()
       .domain([new Date(2001, 0, 1), new Date(2001, 11, 31)])
@@ -240,7 +246,7 @@ export default {
   font-weight: 500;
 }
 
-.season-filter svg .axis .tick text {
+.season-filter svg.season-filter-container .axis .tick text {
   font-weight: 400;
   font-size: 10pt;
   fill: hsl(0, 0%, 90%);

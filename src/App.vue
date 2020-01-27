@@ -80,16 +80,16 @@
           </v-list-item-content>
         </v-list-item>
 
-        <v-divider class="my-4"></v-divider>
-
         <v-list-item class="mt-3" data-v-step="1">
           <v-list-item-content>
             <PlatformTypeFilter @update="setPlatformTypes"></PlatformTypeFilter>
           </v-list-item-content>
         </v-list-item>
 
-        <v-list-item class="mt-2">
-          <v-list-item-content>
+        <v-divider class="my-4"></v-divider>
+
+        <v-list-item class="mt-0">
+          <v-list-item-content class="pt-1">
             <SeasonFilter @update="setSeason"></SeasonFilter>
           </v-list-item-content>
         </v-list-item>
@@ -325,8 +325,6 @@ export default {
             }))
           }).flat()
 
-          console.log(staticDetections[0], gliderDetections[0])
-
           const deployments = [...staticDeployments, ...gliders]
           const detections = [...staticDetections, ...gliderDetections]
 
@@ -418,9 +416,6 @@ a {
 .dc-chart .axis path, .dc-chart .axis line {
   stroke: hsl(0, 0%, 75%) !important;
 }
-.dc-chart rect.bar {
-  fill: #CFD8DC !important;
-}
 .dc-chart rect.bar.deselected {
   fill: #455A64 !important;
 }
@@ -449,5 +444,10 @@ a {
   font-weight: 400 !important;
   font-size: 10pt !important;
   text-anchor: middle;
+}
+
+.filter-value {
+  border-bottom: 1px solid #546E7A;
+  border-bottom-style: dashed;
 }
 </style>
