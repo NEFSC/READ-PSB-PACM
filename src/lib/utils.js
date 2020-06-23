@@ -1,68 +1,46 @@
 import axios from 'axios'
 import * as d3 from 'd3'
 
-function fetchDeployments () {
-  return axios.get('data/deployments.csv')
+function fetchDeployments (id) {
+  return axios.get(`data/${id}/deployments.csv`)
     .then(response => response.data)
     .then(csv => d3.csvParse(csv, (d, i) => {
-      d.deployment = `${d.project}:${d.site_id}`
-      d.latitude = +d.latitude
-      d.longitude = +d.longitude
+      d.deployment = d.site_id ? `${d.project}:${d.site_id}` : d.project
+      d.latitude = parseFloat(d.latitude)
+      d.longitude = parseFloat(d.longitude)
       return d
     }))
 }
 
-function fetchDetections () {
-  return axios.get('data/detections.csv')
+function fetchDetections (id) {
+  return axios.get(`data/${id}/detections.csv`)
     .then(response => response.data)
     .then(csv => d3.csvParse(csv, (d, i) => ({
-      deployment: `${d.project}:${d.site_id}`,
+      deployment: d.site_id ? `${d.project}:${d.site_id}` : d.project,
       platform_type: d.platform_type,
       date: new Date(d.date),
+      latitude: parseFloat(d.latitude),
+      longitude: parseFloat(d.longitude),
       species: d.species,
       detection: d.detection
     })))
 }
 
-function fetchGliders () {
-  return axios.get('data/gliders.json')
+function fetchTracks (id) {
+  return axios.get(`data/${id}/tracks.json`)
     .then(response => response.data)
     .then(data => {
       data.forEach(d => {
-        d.deployment = d.project
+        d.deployment = d.site_id ? `${d.project}:${d.site_id}` : d.project
       })
       return data
     })
 }
 
-// function fetchGliderDeployments () {
-//   return axios.get('data/glider-deployments.csv')
-//     .then(response => response.data)
-//     .then(csv => d3.csvParse(csv, (d, i) => {
-//       d.deployment = `${d.project}:${d.site_id}`
-//       return d
-//     }))
-// }
-
-// function fetchGliderDetections () {
-//   return axios.get('data/glider-detections.csv')
-//     .then(response => response.data)
-//     .then(csv => d3.csvParse(csv, (d, i) => ({
-//       deployment: `${d.project}:${d.site_id}`,
-//       date: new Date(d.date),
-//       latitude: +d.latitude,
-//       longitude: +d.longitude,
-//       species: d.species,
-//       detection: d.detection
-//     })))
-// }
-
-export function fetchData () {
+export function fetchData (id) {
   return Promise.all([
-    fetchDeployments(),
-    fetchDetections(),
-    fetchGliders()
-    // fetchGliderDeployments(),
-    // fetchGliderDetections()
+    fetchDeployments(id),
+    fetchDetections(id),
+    fetchTracks(id)
   ])
 }

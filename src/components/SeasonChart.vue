@@ -62,7 +62,7 @@ export default {
     this.chart = dc.barChart(this.$el.appendChild(document.createElement('div')))
       .width(466)
       .height(120)
-      .margins({ top: 10, right: 10, bottom: 5, left: 40 })
+      .margins({ top: 10, right: 10, bottom: 5, left: 60 })
       .dimension(dim)
       .group(group, 'yes', (d) => d.value.yes)
       .x(d3.scaleTime().domain([new Date(2000, 0, 1), new Date(2000, 11, 31)]))
@@ -87,8 +87,8 @@ export default {
     })
     this.chart.stack(group, 'maybe', d => d.value.maybe)
     this.chart.stack(group, 'no', d => d.value.no)
-    this.chart.yAxis().ticks(4).tickFormat(d3.format('.0s'))
-    // this.chart.xAxis().ticks(12).tickFormat(() => '')
+    // this.chart.yAxis().ticks(4).tickFormat(d3.format('.2s'))
+    this.chart.yAxis().ticks(4)
     this.chart.render()
   },
   beforeDestroy () {

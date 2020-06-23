@@ -151,7 +151,7 @@
     </v-navigation-drawer>
 
     <v-content data-v-step="0" style="z-index:0">
-      <Map :points="deployments.data" :tracks="glider.tracks" v-if="auth.isAuth"></Map>
+      <Map :points="deployments.data" :tracks="tracks.data" v-if="auth.isAuth"></Map>
       <div v-else>
         <v-card class="mx-auto mt-8" max-width="600px" elevation="12">
           <v-toolbar
@@ -189,7 +189,6 @@
 
 <script>
 import dc from 'dc'
-import * as d3 from 'd3'
 import moment from 'moment'
 import debounce from 'debounce'
 
@@ -201,7 +200,7 @@ import DetectionFilter from '@/components/DetectionFilter'
 
 import evt from '@/lib/events'
 import { fetchData } from '@/lib/utils'
-import { xf, setData, speciesDim } from '@/lib/crossfilter'
+import { xf, setData } from '@/lib/crossfilter'
 import { speciesTypes } from '@/lib/constants'
 
 export default {
@@ -246,8 +245,8 @@ export default {
         selected: speciesTypes[0].id,
         options: speciesTypes
       },
-      glider: {
-        tracks: []
+      tracks: {
+        data: []
       },
       dialogs: {
         about: false
@@ -311,74 +310,52 @@ export default {
   },
   methods: {
     init () {
-      fetchData()
-        .then(([staticDeployments, staticDetections, gliders]) => {
-          const gliderDetections = gliders.map(glider => {
-            return glider.data.map(d => ({
-              deployment: glider.project,
-              platform_type: glider.platform_type,
-              date: new Date(d.date),
-              latitude: d.latitude,
-              longitude: d.longitude,
-              species: d.species,
-              detection: d.detection
-            }))
-          }).flat()
-
-          const deployments = [...staticDeployments, ...gliders]
-          const detections = [...staticDetections, ...gliderDetections]
-
+      this.season.dim = xf.dimension(d => moment(d.date).dayOfYear())
+      this.deployments.dim = xf.dimension(d => d.deployment)
+      this.deployments.group = this.deployments.dim.group().reduceCount()
+      this.loadData()
+    },
+    loadData () {
+      console.log('app: loadData')
+      if (!this.species.selected) return
+      this.loading = true
+      evt.$emit('reset:filters', 'app:loadData')
+      return fetchData(this.species.selected)
+        .then(([deployments, detections, tracks]) => {
           this.deployments.data = Object.freeze(deployments)
 
-          d3.nest()
-            .key(d => d.species)
-            .rollup(v => v.length)
-            .entries(detections)
-            .forEach(d => {
-              this.counts.detections.totals[d.key] = d.value
-            })
+          this.counts.detections.total = detections.length
+          this.counts.deployments.total = deployments.length
 
-          d3.nest()
-            .key(d => d.species)
-            .key(d => d.deployment)
-            .rollup(v => v.length)
-            .entries(detections)
-            .forEach(d => {
-              this.counts.deployments.totals[d.key] = d.values.length
-            })
-
-          this.glider.tracks = Object.freeze(gliders)
+          this.tracks.data = Object.freeze(tracks)
 
           setData(detections)
 
-          this.season.dim = xf.dimension(d => moment(d.date).dayOfYear())
-          this.deployments.dim = xf.dimension(d => d.deployment)
-          this.deployments.group = this.deployments.dim.group().reduceCount()
-
           this.loading = false
-          this.setSpecies()
+          // this.setSpecies()
+          this.updateCounts()
 
-          this.$nextTick(() => {
-            evt.$emit('render:filter')
-            evt.$emit('render:map')
-            // this.startTour()
-          })
+          dc.redrawAll()
+
+          // this.$nextTick(() => {
+          //   evt.$emit('render:filter')
+          //   evt.$emit('render:map')
+          //   // this.startTour()
+          // })
         })
     },
     setSpecies () {
-      speciesDim.filterExact(this.species.selected)
-      evt.$emit('render:map')
-      dc.redrawAll()
-      this.counts.detections.total = this.counts.detections.totals[this.species.selected]
-      this.counts.deployments.total = this.counts.deployments.totals[this.species.selected]
-      this.updateCounts()
+      console.log('app: setSpecies')
+      this.loadData()
     },
     setPlatformTypes () {
-      evt.$emit('render:map')
+      console.log('app: setPlatformTypes')
+      evt.$emit('render:map', 'setPlatformTypes')
       dc.redrawAll()
       this.updateCounts()
     },
     setSeason: debounce(function ([start, end]) {
+      console.log('app: setSeason')
       this.season.start = start
       this.season.end = end === 365 ? 366 : end
       if (this.season.start <= this.season.end) {
@@ -386,10 +363,11 @@ export default {
       } else {
         this.season.dim.filterFunction(d => d >= this.season.start || d <= this.season.end)
       }
-      evt.$emit('render:map')
+      evt.$emit('render:map', 'setSeason')
       dc.redrawAll()
     }, 1, true),
     updateCounts () {
+      console.log('app: updateCounts')
       this.counts.detections.filtered = xf.allFiltered().length
       this.counts.deployments.filtered = this.deployments.group.all().filter(d => d.value > 0).length
     },

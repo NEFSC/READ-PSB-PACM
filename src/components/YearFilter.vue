@@ -52,7 +52,7 @@ export default {
     this.chart = dc.barChart(this.$el.appendChild(document.createElement('div')))
       .width(468)
       .height(160)
-      .margins({ top: 10, right: 10, bottom: 40, left: 40 })
+      .margins({ top: 10, right: 10, bottom: 40, left: 60 })
       .dimension(dim)
       // .group(group)
       .group(group, 'yes', (d) => d.value.yes)
@@ -65,7 +65,7 @@ export default {
       .on('filtered', () => {
         const filter = this.chart.filter() || timeExtent
         this.filter = [filter[0], filter[1]]
-        evt.$emit('render:map')
+        evt.$emit('render:map', 'yearFilter:filtered')
       })
       .on('postRender', (chart) => {
         const n = chart.xUnitCount()
@@ -81,7 +81,8 @@ export default {
     this.chart.xAxis().ticks(20).tickFormat(v => {
       return (v % 2 > 0) || v >= timeExtent[1] ? '' : d3.format('d')(v)
     })
-    this.chart.yAxis().ticks(4).tickFormat(d3.format('.0s'))
+    this.chart.yAxis().ticks(4)
+    // this.chart.yAxis().ticks(4).tickFormat(d3.format('.0s'))
     this.chart.render()
   }
 }

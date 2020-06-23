@@ -14,6 +14,14 @@ export const speciesTypes = [
   {
     id: 'humpback',
     label: 'Humpback Whale'
+  },
+  {
+    id: 'beaked',
+    label: 'Beaked Whales'
+  },
+  {
+    id: 'kogia',
+    label: 'Kogia Whales'
   }
 ]
 export const speciesTypesMap = new Map(speciesTypes.map(d => [d.id, d]))
@@ -26,11 +34,15 @@ export const platformTypes = [
   {
     id: 'slocum',
     label: 'Glider'
+  },
+  {
+    id: 'buoy',
+    label: 'Surface Buoy'
+  },
+  {
+    id: 'towed_array',
+    label: 'Towed Array'
   }
-  // {
-  //   id: 'buoy',
-  //   label: 'Surface Buoy'
-  // }
 ]
 export const platformTypesMap = new Map(platformTypes.map(d => [d.id, d]))
 

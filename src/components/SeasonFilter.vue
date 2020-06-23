@@ -15,6 +15,7 @@ import * as d3 from 'd3'
 import moment from 'moment'
 
 import SeasonChart from '@/components/SeasonChart'
+import evt from '@/lib/events'
 
 export default {
   name: 'SeasonFilter',
@@ -37,7 +38,7 @@ export default {
   },
   mounted () {
     const margins = {
-      left: 52,
+      left: 72,
       right: 10,
       top: 20,
       bottom: 20
@@ -157,6 +158,11 @@ export default {
       .text('end')
       .attr('x', this.x(this.end))
       .attr('y', -15)
+
+    evt.$on('reset:filters', this.reset)
+  },
+  beforeDestroy () {
+    evt.$off('reset:filters', this.reset)
   },
   methods: {
     reset () {

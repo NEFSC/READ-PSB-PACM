@@ -2,8 +2,8 @@
   <l-map
     ref="map"
     style="width:100%;height:100%"
-    :center="[35, -60]"
-    :zoom="5"
+    :center="[42, -60]"
+    :zoom="4"
     @moveend="draw"
     @zoomend="draw">
     <l-tile-layer
@@ -133,6 +133,7 @@ export default {
     LTileLayer
   },
   mounted () {
+    console.log('map: mounted')
     const map = this.$refs.map.mapObject
 
     createColorLegend(map)
@@ -166,7 +167,8 @@ export default {
       })
       .html((d) => {
         let deployment = d
-        let isGlider = d.platform_type === 'slocum'
+
+        let isGlider = d.platform_type === 'slocum' || d.platform_type === 'towed_array'
         let isGliderTrack = isGlider && d.hasOwnProperty('data')
         if (isGlider && !isGliderTrack) {
           deployment = this.tracks.filter(track => track.deployment === d.deployment)[0]
@@ -185,9 +187,9 @@ export default {
             ${pad(10, 'Duration', '&nbsp;')}: ${duration.asDays() + 1} days<br>
             <br>
             <u>Total Detection Days</u><br>
-            ${pad(10, detectionTypesMap.get('no').label, '&nbsp;')}: ${value.no.toLocaleString()}<br>
-            ${pad(10, detectionTypesMap.get('maybe').label, '&nbsp;')}: ${value.maybe.toLocaleString()}<br>
-            ${pad(10, detectionTypesMap.get('yes').label, '&nbsp;')}: ${value.yes.toLocaleString()}
+            ${pad(10, detectionTypesMap.get('no').label, '&nbsp;')}: ${value ? value.no.toLocaleString() : 0}<br>
+            ${pad(10, detectionTypesMap.get('maybe').label, '&nbsp;')}: ${value ? value.maybe.toLocaleString() : 0}<br>
+            ${pad(10, detectionTypesMap.get('yes').label, '&nbsp;')}: ${value ? value.yes.toLocaleString() : 0}
           `
           if (!isGliderTrack) {
             const analysisDate = moment.utc(d.date)
@@ -231,7 +233,9 @@ export default {
       })
     this.container.call(this.tip)
 
-    this.draw()
+    if (this.points) {
+      this.draw()
+    }
     evt.$on('render:map', this.render)
   },
   beforeDestroy () {
@@ -240,18 +244,22 @@ export default {
   },
   watch: {
     points () {
+      console.log('map: watch points')
       this.draw()
     }
   },
   methods: {
     draw () {
       if (!this.container) return
+
+      console.log('map: draw()')
+
       const map = this.$refs.map.mapObject
 
       this.container
         .select('g.static.points')
         .selectAll('circle')
-        .data(this.points.filter(d => d.platform_type !== 'slocum'), d => d.deployment)
+        .data(this.points.filter(d => d.platform_type !== 'slocum' && d.platform_type !== 'towed_array'), d => d.deployment)
         .join(
           enter => enter.append('circle').attr('class', 'point'),
           update => update,
@@ -299,7 +307,7 @@ export default {
       this.container
         .select('g.glider.points')
         .selectAll('circle')
-        .data(xf.all().filter(d => d.platform_type === 'slocum'), d => d.deployment)
+        .data(xf.all().filter(d => (d.platform_type === 'slocum' || d.platform_type === 'towed_array')), d => d.deployment)
         .join(
           enter => enter.append('circle').attr('class', 'point'),
           update => update,
@@ -313,15 +321,15 @@ export default {
       this.render()
     },
     render () {
-      // console.log('Map:render')
       if (!this.container) return
+      console.log('map: render()')
 
       const minRadius = MIN_RADIUS
 
       this.container
         .selectAll('g.static.points circle.point')
         // only show site if there is at least one observed day
-        .style('display', d => (deploymentMap.get(d.deployment).total === 0 ? 'none' : 'inline'))
+        .style('display', d => (deploymentMap.get(d.deployment) && deploymentMap.get(d.deployment).total === 0 ? 'none' : 'inline'))
         .style('fill', (d) => {
           const value = deploymentMap.get(d.deployment)
           return value.yes > 0
@@ -341,10 +349,12 @@ export default {
 
       this.container
         .selectAll('g.glider.tracks path.track')
-        .style('display', d => (deploymentMap.get(d.deployment).total === 0 ? 'none' : 'inline'))
+        .style('display', d => {
+          return deploymentMap.get(d.deployment) && deploymentMap.get(d.deployment).total === 0 ? 'none' : 'inline'
+        })
       this.container
         .selectAll('g.glider.tracks path.track-overlay')
-        .style('display', d => (deploymentMap.get(d.deployment).total === 0 ? 'none' : 'inline'))
+        .style('display', d => (deploymentMap.get(d.deployment) && deploymentMap.get(d.deployment).total === 0 ? 'none' : 'inline'))
 
       this.container
         .selectAll('g.glider.points circle.point')

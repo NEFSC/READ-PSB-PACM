@@ -38,7 +38,7 @@ export default {
         return detectionTypes.map(d => d.label).indexOf(d.key)
       })
       .ordinalColors(['#CC3833', '#78B334', '#0277BD'])
-      .on('filtered', () => evt.$emit('render:map'))
+      .on('filtered', () => evt.$emit('render:map', 'detectionFilter:filtered'))
       .on('postRender', () => {
         if (this.chart.svg().selectAll('.x-axis-label').nodes().length > 0) return
         const textSelection = this.chart.svg()
@@ -56,7 +56,8 @@ export default {
           .attr('y', this.chart.height() - Math.ceil(textDims.height) / 2)
       })
 
-    this.chart.xAxis().ticks(5).tickFormat(d3.format('.0s'))
+    // this.chart.xAxis().ticks(5).tickFormat(d3.format('.0s'))
+    this.chart.xAxis().ticks(5)
 
     this.chart.render()
   },

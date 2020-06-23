@@ -2,8 +2,6 @@ import crossfilter from 'crossfilter2'
 
 export const xf = crossfilter()
 
-export const speciesDim = xf.dimension(d => d.species)
-
 export const deploymentDim = xf.dimension(d => d.deployment)
 export const deploymentGroup = deploymentDim.group().reduce(
   (p, v) => {
@@ -25,7 +23,6 @@ export const deploymentGroup = deploymentDim.group().reduce(
 )
 
 export let deploymentMap = new Map()
-
 export function setData (data) {
   xf.remove(() => true)
   data.forEach((d, i) => {
