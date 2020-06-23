@@ -1,4 +1,4 @@
-# process dataset file
+# load multispecies buoy/mooring from Gen
 
 library(tidyverse)
 library(lubridate)
@@ -6,8 +6,9 @@ library(lubridate)
 
 # load csv ----------------------------------------------------------------
 
-# df_csv <- read_csv("~/Dropbox/Work/nefsc/transfers/20191011 - data files/NEFSC_NARW_presence_all_2018-10-30.csv", col_types = cols(
-df_csv <- read_csv("~/Dropbox/Work/nefsc/transfers/20200115 - multispecies dataset/NOAA_5_Species_Detection_Data_2004-2019_01-15-2020.csv", col_types = cols(
+filepath <- "~/Dropbox/Work/nefsc/transfers/20200420 - multispecies dataset/NOAA_5_Species_Detection_Data_2004-2019_04-20-2020.csv"
+
+df_csv <- read_csv(filepath, col_types = cols(
   .default = col_character(),
   PLATFORM_ID = col_logical(),
   SITE_ID = col_character(),
@@ -35,10 +36,12 @@ df_csv %>%
   filter(is.na(ymd_hms(analysis_period_start_date_time)))
 df_csv %>% 
   filter(is.na(ymd_hms(analysis_period_end_date_time)))
+
 df_csv %>% 
   filter(is.na(latitude))
 df_csv %>% 
   filter(is.na(longitude))
+
 df_csv %>% 
   filter(is.na(site_id))
 
@@ -62,25 +65,9 @@ df_csv %>%
 df_csv %>% 
   group_by(project, site_id, analysis_period_start_date_time) %>% 
   add_tally() %>% 
+  ungroup() %>% 
   filter(n > 1) %>% 
   select(project, site_id, ends_with("presence"), n)
-
-# project: NEFSC_SBNMS_200601
-# site: 6
-# rename to 6A and 6B
-# df_csv <- df_csv %>% 
-#   mutate(
-#     site_id = case_when(
-#       project == "NEFSC_SBNMS_200601" & site_id == "6" & instrument_id == "96" ~ "6A",
-#       project == "NEFSC_SBNMS_200601" & site_id == "6" & instrument_id == "96 (re-deploy)" ~ "6B",
-#       TRUE ~ site_id
-#     )
-#   )
-
-# df_csv %>% 
-#   filter(project == "NEFSC_SBNMS_200601") %>% 
-#   select(site_id, latitude, longitude) %>% 
-#   distinct()
 
 
 # clean -------------------------------------------------------------------
@@ -109,8 +96,48 @@ table(df$detection_method)
 table(df$platform_type)
 table(df$instrument_type)
 
-deployment_variables <- names(df)[1:26]
-detection_variables <- c("project", "site_id", "platform_type", names(df)[27:length(names(df))])
+deployment_variables <- c(
+  "project",
+  "data_poc_name", 
+  "data_poc_affiliation", 
+  "data_poc_email", 
+  "platform_type", 
+  "platform_id",
+  "site_id",
+  "instrument_type", 
+  "instrument_id",
+  "channel",
+  "submitter_name",
+  "submitter_affiliation", 
+  "submitter_email",
+  "submission_date",
+  "latitude",
+  "longitude", 
+  "water_depth_meters",
+  "recorder_depth_meters",
+  "soundfiles_timezone", 
+  "sampling_rate_hz",
+  "duty_cycle_seconds",
+  "monitoring_start_datetime", 
+  "monitoring_end_datetime",
+  "qc_data",
+  "detection_method",
+  "protocol_reference"
+)
+detection_variables <- c(
+  "project",
+  "site_id",
+  "platform_type",
+  "analysis_period_start_date_time",
+  "analysis_period_end_date_time", 
+  "analysis_period_effort_seconds", 
+  "n_validated_detections",
+  "narw_presence", 
+  "call_type", 
+  "blue_presence",
+  "sei_presence",
+  "humpback_presence"
+)
 
 df_deployments <- df %>% 
   select(deployment_variables) %>% 
@@ -172,13 +199,8 @@ df_detections %>%
 
 # export ------------------------------------------------------------------
 
-df_deployments %>% 
-  write_csv("../public/data/deployments.csv", na = "")
-df_detections %>%
-  write_csv("../public/data/detections.csv", na = "")
-
 list(
-  deployments = df_deployments,
-  detections = df_detections
+  detections = df_detections,
+  deployments = df_deployments
 ) %>% 
-  saveRDS("rds/dataset.rds")
+  saveRDS("rds/gen.rds")

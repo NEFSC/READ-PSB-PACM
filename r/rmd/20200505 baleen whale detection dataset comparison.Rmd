@@ -1,0 +1,149 @@
+---
+title: "Baleen Whale Detection Dataset Comparison"
+author: "Jeffrey D Walker, PhD"
+date: "5/5/2020"
+output: 
+  html_document: 
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(lubridate)
+library(DT)
+```
+
+## Load Datasets
+
+Load Gen's and Hansen's datasets from CSV files.
+
+```{r}
+df_gen <- read_csv("~/Dropbox/Work/nefsc/transfers/20200420 - multispecies dataset/NOAA_5_Species_Detection_Data_2004-2019_04-20-2020.csv", col_types = cols(
+  .default = col_character(),
+  PLATFORM_ID = col_character(),
+  SITE_ID = col_character(),
+  INSTRUMENT_ID = col_character(),
+  CHANNEL = col_double(),
+  LATITUDE = col_double(),
+  LONGITUDE = col_double(),
+  WATER_DEPTH_METERS = col_double(),
+  RECORDER_DEPTH_METERS = col_double(),
+  SAMPLING_RATE_HZ = col_double(),
+  ANALYSIS_PERIOD_EFFORT_SECONDS = col_double(),
+  N_VALIDATED_DETECTIONS = col_double()
+)) %>% 
+  janitor::clean_names() %>% 
+  mutate(analysis_date = as.character(as_date(analysis_period_start_date_time))) %>%
+  select(-c("blue_presence", "sei_presence", "humpback_presence", "fin_presence")) # drop these columns
+
+df_hansen <- read_csv(
+  "~/Dropbox/Work/nefsc/transfers/20200113 - hansen pam dataset/Hansen Johnson - narw_pam_database.csv",
+  col_types = cols(
+    .default = col_character(),
+    CHANNEL = col_double(),
+    LATITUDE = col_double(),
+    LONGITUDE = col_double(),
+    WATER_DEPTH_METERS = col_double(),
+    RECORDER_DEPTH_METERS = col_double(),
+    SAMPLING_RATE_HZ = col_double(),
+    ANALYSIS_PERIOD_EFFORT_SECONDS = col_double(),
+    N_VALIDATED_DETECTIONS = col_double(),
+    MONITORING_DURATION = col_double()
+  )
+) %>% 
+  janitor::clean_names() %>% 
+  rename(
+    analysis_period_start_date_time = analysis_period_start_datetime, # convert to same column names as Gen
+    analysis_period_end_date_time = analysis_period_end_datetime
+  ) %>%
+  select(-year, -mday, -monitoring_duration) # drop these columns
+```
+
+Check that datasets have identical column names.
+
+```{r}
+identical(sort(names(df_gen)), sort(names(df_hansen)))
+```
+
+Merge the datasets into one dataframe, and add column `dataset` to distinguish source.
+
+```{r}
+df <- bind_rows(
+  df_gen %>% mutate(dataset = "gen"),
+  df_hansen %>% mutate(dataset = "hansen")
+)
+glimpse(df)
+```
+
+### Project Dataset
+
+To compare the datasets, extract project-related columns and then count up the number of rows for each project by dataset.
+
+```{r}
+df_project <- df %>% 
+  group_by(dataset, project, site_id, instrument_type, monitoring_start_datetime, monitoring_end_datetime) %>% 
+  tally() %>% 
+  ungroup() %>% 
+  spread(dataset, n, fill = 0) %>% 
+  arrange(instrument_type, project, site_id)
+```
+
+## Project Comparisons
+
+### All Projects
+
+This table lists ALL projects from both datasets. The `gen` and `hansen` columns indicate the number of analysis dates (rows) from each datasets. If these two columns are equal, then both datasets contain the same amount of data for each project (though not necessarily the same detection results!).
+
+```{r}
+datatable(df_project, filter = 'top')
+```
+
+### Projects with Differing Counts
+
+These projects are in both datasets, but have different number of rows in each.
+
+```{r}
+df_project %>% 
+  filter(gen > 0, hansen > 0, gen != hansen) %>% 
+  datatable(filter = 'top')
+```
+
+As an example, lets look at project `NEFSC_SC_201612_CH6`, which covered the monitoring period 1/14/2017 - 6/4/2017. Gen's dataset had 142 detection days (rows) and Hansen's had 186.
+
+```{r}
+df_project %>% 
+  filter(project == "NEFSC_SC_201612_CH6")
+```
+
+This table shows the daily detection results from each dataset. Gen's dataset starts and ends on the same dates as `monitoring_start_datetime` and `monitoring_end_datetime`. Hansen's dataset thus appears to include extra detection days outside the monitoring period.
+
+```{r}
+df %>%
+  filter(project == "NEFSC_SC_201612_CH6") %>%
+  select(dataset, analysis_date, narw_presence) %>%
+  spread(dataset, narw_presence) %>%
+  datatable(filter = 'top')
+```
+
+### Projects Missing in Hansen's Dataset
+
+This table lists all projects that are in Gen's dataset, but not Hansen's.
+
+```{r}
+df_project %>% 
+  filter(hansen == 0) %>% 
+  datatable(filter = 'top')
+```
+
+### Projects Missing in Gen's Dataset
+
+This table lists all projects that are in Hansen's dataset, but not Gen's.
+
+```{r}
+df_project %>% 
+  filter(gen == 0) %>% 
+  datatable(options = list(pageLength = 20), filter = 'top')
+```
+
