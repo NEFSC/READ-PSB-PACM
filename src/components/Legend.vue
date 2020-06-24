@@ -14,10 +14,10 @@
 
     <div class="mt-4">
       <div class="subtitle-1 font-weight-medium"># Detection Days</div>
-      <svg width="130" height="100">
+      <svg width="130" height="90">
         <g v-for="(v, i) in sizeValues" :key="'size-' + v" transform="translate(30,0)">
           <circle :cy="i * 20 + 20" :r="sizeScale(v)" stroke="white" stroke-opacity="0.5" :fill="colorScale('yes')" />
-          <text x="30" :y="i * 20 + 20" class="legend-text">{{v}}</text>
+          <text x="30" :y="i * 20 + 20" class="legend-text">{{v.toLocaleString()}}</text>
         </g>
       </svg>
     </div>

@@ -29,7 +29,7 @@ export default {
     this.chart = dc.rowChart(this.$el.appendChild(document.createElement('div')))
       .width(450)
       .height(140)
-      .margins({ top: 10, right: 20, bottom: 40, left: 80 })
+      .margins({ top: 10, right: 20, bottom: 40, left: 90 })
       .dimension(dim)
       .group(group)
       .elasticX(true)
