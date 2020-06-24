@@ -12,139 +12,46 @@
       url="//server.arcgisonline.com/ArcGIS/rest/services/Ocean_Basemap/MapServer/tile/{z}/{y}/{x}"
       attribution="Tiles &copy; Esri &mdash; Sources: GEBCO, NOAA, CHS, OSU, UNH, CSUMB, National Geographic, DeLorme, NAVTEQ, and Esri'">
     </l-tile-layer>
+    <l-control position="bottomright">
+      <Legend></Legend>
+    </l-control>
   </l-map>
 </template>
 
 <script>
-import { LMap, LTileLayer, LControlScale } from 'vue2-leaflet'
+import { LMap, LTileLayer, LControlScale, LControl } from 'vue2-leaflet'
 import * as d3 from 'd3'
 import d3Tip from 'd3-tip'
 import L from 'leaflet'
 import moment from 'moment'
 import pad from 'pad'
 
+import Legend from '@/components/Legend'
 import ZoomMin from '@/lib/leaflet/L.Control.ZoomMin'
 import '@/lib/leaflet/L.Control.ZoomMin.css'
 import evt from '@/lib/events'
 import { xf, deploymentMap, isFiltered } from '@/lib/crossfilter'
-import { detectionTypes, detectionTypesMap, platformTypesMap } from '@/lib/constants'
-
-const MIN_RADIUS = 5
-
-const colorScale = d3.scaleOrdinal()
-  .domain(detectionTypes.map(d => d.id))
-  .range(detectionTypes.map(d => d.color))
-
-function createColorLegend (map) {
-  const legend = L.control({ position: 'bottomright' })
-  legend.onAdd = function (map) {
-    const div = L.DomUtil.create('div', 'legend')
-    const svg = d3.select(div)
-      .append('svg')
-      .attr('width', 130)
-      .attr('height', 100)
-
-    const radius = 8
-    const padding = 15
-
-    svg.append('text')
-      .attr('class', 'legend-title')
-      .attr('x', 0)
-      .attr('y', 20)
-      .text('Detection Type')
-
-    svg.selectAll('circle.color')
-      .data(['yes', 'maybe', 'no'])
-      .join(
-        enter => enter.append('circle').attr('class', 'color'),
-        update => update,
-        exit => exit.remove()
-      )
-      .attr('cx', 15)
-      .attr('cy', (d, i) => i * (radius + padding) + 45)
-      .attr('r', radius)
-      .style('fill', colorScale)
-
-    svg.selectAll('text.color')
-      .data(['yes', 'maybe', 'no'])
-      .join(
-        enter => enter.append('text').attr('class', 'color'),
-        update => update,
-        exit => exit.remove()
-      )
-      .attr('x', 40)
-      .attr('y', (d, i) => i * (radius + padding) + 45)
-      .attr('dy', '0.3em')
-      .text(d => detectionTypesMap.get(d).label)
-    return div
-  }
-  legend.addTo(map)
-
-  map.addControl(new ZoomMin({ minBounds: map.getBounds() }))
-}
-
-function createSizeLegend (map) {
-  const legend = L.control({ position: 'bottomright' })
-  legend.onAdd = function (map) {
-    const div = L.DomUtil.create('div', 'legend')
-    const svg = d3.select(div)
-      .append('svg')
-      .attr('width', 130)
-      .attr('height', 130)
-
-    const minRadius = MIN_RADIUS
-    const padding = 15
-
-    const values = [0, 25, 50, 75, 100].reverse()
-
-    svg.append('text')
-      .attr('class', 'legend-title')
-      .attr('x', 0)
-      .attr('y', 20)
-      .text('# Detection Days')
-
-    svg.selectAll('circle.count')
-      .data(values)
-      .join(
-        enter => enter.append('circle').attr('class', 'count'),
-        update => update,
-        exit => exit.remove()
-      )
-      .attr('cx', minRadius + 10)
-      .attr('cy', (d, i) => i * (minRadius + padding) + 45)
-      .attr('r', d => Math.sqrt(d) + minRadius)
-      .style('fill', colorScale('yes'))
-
-    svg.selectAll('text.count')
-      .data(values)
-      .join(
-        enter => enter.append('text').attr('class', 'count'),
-        update => update,
-        exit => exit.remove()
-      )
-      .attr('x', minRadius + 35)
-      .attr('y', (d, i) => i * (minRadius + padding) + 45)
-      .attr('dy', '0.3em')
-      .text(d => d)
-    return div
-  }
-  legend.addTo(map)
-}
+import { detectionTypesMap, platformTypesMap } from '@/lib/constants'
+import { colorScale, sizeScale } from '@/lib/scales'
 
 export default {
   name: 'Map',
   props: ['points', 'tracks'],
   components: {
+    Legend,
     LMap,
     LTileLayer,
-    LControlScale
+    LControlScale,
+    LControl
   },
   mounted () {
     console.log('map: mounted')
     const map = this.$refs.map.mapObject
 
-    createColorLegend(map)
-    createSizeLegend(map)
+    map.addControl(new ZoomMin({ minBounds: map.getBounds() }))
+
+    // createColorLegend(map)
+    // createSizeLegend(map)
 
     const svgLayer = L.svg()
     map.addLayer(svgLayer)
@@ -331,8 +238,6 @@ export default {
       if (!this.container) return
       console.log('map: render()')
 
-      const minRadius = MIN_RADIUS
-
       this.container
         .selectAll('g.static.points circle.point')
         // only show site if there is at least one observed day
@@ -348,10 +253,10 @@ export default {
         .attr('r', (d) => {
           const value = deploymentMap.get(d.deployment)
           return value.yes > 0
-            ? Math.sqrt(value.yes) + minRadius
+            ? sizeScale(value.yes)
             : value.maybe > 0
-              ? Math.sqrt(value.maybe) + minRadius
-              : minRadius
+              ? sizeScale(value.maybe)
+              : sizeScale(0)
         })
 
       this.container
@@ -367,7 +272,7 @@ export default {
         .selectAll('g.glider.points circle.point')
         .style('display', d => (isFiltered(d) && d.detection === 'yes' ? 'inline' : 'none'))
         .style('fill', d => colorScale(d.detection))
-        .attr('r', minRadius + 1)
+        .attr('r', sizeScale.range()[0] + 1)
     }
   }
 }
@@ -416,26 +321,5 @@ export default {
   font-size: 14px;
   z-index: 1000;
 }
-.legend {
-  background: #EEE;
-  padding: 10px;
-  border-radius: 4px;
-  line-height: 18px;
-  color: #555;
-}
-.legend svg text {
-  font-size: 12pt;
-  fill: #555;
-}
-.legend svg text.legend-title {
-  font-size: 12pt;
-  font-weight: 600;
-  fill: #555;
-}
-.legend svg circle {
-  /* fill-opacity: 0.75; */
-  stroke-opacity: 0.5;
-  stroke-width: 1.5px;
-  stroke: rgb(255, 255, 255);
-}
+
 </style>

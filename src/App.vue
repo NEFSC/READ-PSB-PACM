@@ -151,7 +151,9 @@
     </v-navigation-drawer>
 
     <v-main data-v-step="0" style="z-index:0">
-      <Map :points="deployments.data" :tracks="tracks.data" v-if="auth.isAuth"></Map>
+      <div v-if="auth.isAuth" style="height:100%">
+        <Map :points="deployments.data" :tracks="tracks.data"></Map>
+      </div>
       <div v-else>
         <v-card class="mx-auto mt-8" max-width="600px" elevation="12">
           <v-toolbar
