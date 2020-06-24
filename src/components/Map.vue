@@ -34,6 +34,89 @@ import { xf, deploymentMap, isFiltered } from '@/lib/crossfilter'
 import { detectionTypesMap, platformTypesMap } from '@/lib/constants'
 import { colorScale, sizeScale } from '@/lib/scales'
 
+function getScreenPosition (el) {
+  const screenWidth = document.body.offsetWidth
+  const screenHeight = document.body.offsetHeight
+  const svg = el.parentNode.parentNode.parentNode
+  const viewBox = svg.viewBox.baseVal
+
+  const cx = +el.getAttribute('cx')
+  const svgWidth = viewBox.width
+  const xPad = (svgWidth - screenWidth) / 2
+  const translateX = viewBox.x
+
+  const cy = +el.getAttribute('cy')
+  const svgHeight = viewBox.height
+  const yPad = (svgHeight - screenHeight) / 2
+  const translateY = viewBox.y
+
+  return [cx - xPad - translateX, cy - yPad - translateY]
+}
+
+const tipPadding = [600, 300] // width, height
+
+function tipPlacement (el) {
+  const screenWidth = document.body.offsetWidth
+  const screenHeight = document.body.offsetHeight
+
+  const [screenX, screenY] = getScreenPosition(el)
+
+  if (screenX < tipPadding[0]) {
+    // east
+    if (screenY < tipPadding[1]) {
+      return {
+        direction: 'se',
+        offset: [20, 20]
+      }
+    } else if (screenY > (screenHeight - tipPadding[1])) {
+      return {
+        direction: 'ne',
+        offset: [-20, 20]
+      }
+    } else {
+      return {
+        direction: 'e',
+        offset: [0, 20]
+      }
+    }
+  } else if (screenX > (screenWidth - tipPadding[0])) {
+    // west
+    if (screenY < tipPadding[1]) {
+      return {
+        direction: 'sw',
+        offset: [20, -20]
+      }
+    } else if (screenY > (screenHeight - tipPadding[1])) {
+      return {
+        direction: 'nw',
+        offset: [-20, -20]
+      }
+    } else {
+      return {
+        direction: 'w',
+        offset: [0, -20]
+      }
+    }
+  } else {
+    if (screenY < tipPadding[1]) {
+      return {
+        direction: 's',
+        offset: [20, 0]
+      }
+    } else if (screenY > (screenHeight - tipPadding[1])) {
+      return {
+        direction: 'n',
+        offset: [-20, 0]
+      }
+    } else {
+      return {
+        direction: 'e',
+        offset: [0, 20]
+      }
+    }
+  }
+}
+
 export default {
   name: 'Map',
   props: ['points', 'tracks', 'counts'],
@@ -69,15 +152,23 @@ export default {
 
     this.tip = d3Tip()
       .attr('class', 'd3-tip map')
-      .direction(function (d) {
-        const viewBox = svg.attr('viewBox').split(' ').map(d => +d)
-        const mapWidth = map.getSize().x
-        const svgWidth = viewBox[2]
-        const offsetX = viewBox[0]
-        const pointX = d3.mouse(this)[0]
+      // .direction(function (d) {
+      //   const viewBox = svg.attr('viewBox').split(' ').map(d => +d)
+      //   const mapWidth = map.getSize().x
+      //   const svgWidth = viewBox[2]
+      //   const offsetX = viewBox[0]
+      //   const pointX = d3.mouse(this)[0]
 
-        const mapX = Math.round((mapWidth - svgWidth) / 2 - offsetX + pointX)
-        return (mapWidth - mapX) < (0.5 * mapWidth) ? 'w' : 'e'
+      //   const mapX = Math.round((mapWidth - svgWidth) / 2 - offsetX + pointX)
+      //   return (mapWidth - mapX) < (0.5 * mapWidth) ? 'w' : 'e'
+      // })
+      .direction(function tipDirection (d) {
+        const { direction } = tipPlacement(d3.select(this).node())
+        return direction
+      })
+      .offset(function tipOffset (d) {
+        const { offset } = tipPlacement(d3.select(this).node())
+        return offset
       })
       .html((d) => {
         let deployment = d
