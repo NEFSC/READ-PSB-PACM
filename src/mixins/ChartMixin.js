@@ -18,6 +18,7 @@ export default {
   methods: {
     reset () {
       this.chart.filterAll()
+      dc.redrawAll()
     }
   }
 }

@@ -60,9 +60,9 @@ export default {
       })
 
     this.chart = dc.barChart(this.$el.appendChild(document.createElement('div')))
-      .width(466)
+      .width(450)
       .height(120)
-      .margins({ top: 10, right: 10, bottom: 5, left: 60 })
+      .margins({ top: 10, right: 20, bottom: 5, left: 60 })
       .dimension(dim)
       .group(group, 'yes', (d) => d.value.yes)
       .x(d3.scaleTime().domain([new Date(2000, 0, 1), new Date(2000, 11, 31)]))

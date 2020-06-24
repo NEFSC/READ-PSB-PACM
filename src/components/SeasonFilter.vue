@@ -39,12 +39,13 @@ export default {
   mounted () {
     const margins = {
       left: 72,
-      right: 10,
+      right: 20,
       top: 20,
       bottom: 20
     }
 
-    const width = this.$el.clientWidth - margins.left - margins.right
+    // const width = this.$el.clientWidth - margins.left - margins.right
+    const width = 358
     const height = 60
 
     this.x.range([0, width])

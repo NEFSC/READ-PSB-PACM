@@ -50,9 +50,9 @@ export default {
     this.filter = timeExtent
 
     this.chart = dc.barChart(this.$el.appendChild(document.createElement('div')))
-      .width(468)
+      .width(450)
       .height(160)
-      .margins({ top: 10, right: 10, bottom: 40, left: 60 })
+      .margins({ top: 10, right: 20, bottom: 40, left: 60 })
       .dimension(dim)
       // .group(group)
       .group(group, 'yes', (d) => d.value.yes)
@@ -70,8 +70,8 @@ export default {
       .on('postRender', (chart) => {
         const n = chart.xUnitCount()
         const width = chart.effectiveWidth()
-        chart.selectAll('.axis.x .tick line')
-          .attr('transform', `translate(${Math.floor(width / n / 2)} 0)`)
+        // chart.selectAll('.axis.x .tick line')
+        //   .attr('transform', `translate(${Math.floor(width / n / 2)} 0)`)
         chart.selectAll('.axis.x .tick text')
           .attr('transform', `translate(${Math.floor(width / n / 2)} 0)`)
       })

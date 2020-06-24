@@ -6,7 +6,7 @@
 </template>
 
 <script>
-import * as d3 from 'd3'
+// import * as d3 from 'd3'
 import dc from 'dc'
 
 import ChartMixin from '@/mixins/ChartMixin'
@@ -27,9 +27,9 @@ export default {
     const group = dim.group().reduceCount()
 
     this.chart = dc.rowChart(this.$el.appendChild(document.createElement('div')))
-      .width(468)
+      .width(450)
       .height(140)
-      .margins({ top: 10, right: 10, bottom: 40, left: 80 })
+      .margins({ top: 10, right: 20, bottom: 40, left: 80 })
       .dimension(dim)
       .group(group)
       .elasticX(true)
