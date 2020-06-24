@@ -6,6 +6,7 @@
     :zoom="4"
     @moveend="draw"
     @zoomend="draw">
+    <l-control-scale position="bottomleft"></l-control-scale>
     <l-tile-layer
       url="//server.arcgisonline.com/ArcGIS/rest/services/Ocean_Basemap/MapServer/tile/{z}/{y}/{x}"
       attribution="Tiles &copy; Esri &mdash; Sources: GEBCO, NOAA, CHS, OSU, UNH, CSUMB, National Geographic, DeLorme, NAVTEQ, and Esri'">
@@ -14,7 +15,7 @@
 </template>
 
 <script>
-import { LMap, LTileLayer } from 'vue2-leaflet'
+import { LMap, LTileLayer, LControlScale } from 'vue2-leaflet'
 import * as d3 from 'd3'
 import d3Tip from 'd3-tip'
 import L from 'leaflet'
@@ -130,7 +131,8 @@ export default {
   props: ['points', 'tracks'],
   components: {
     LMap,
-    LTileLayer
+    LTileLayer,
+    LControlScale
   },
   mounted () {
     console.log('map: mounted')
