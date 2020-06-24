@@ -113,18 +113,6 @@
           </v-list-item-content>
         </v-list-item>
 
-        <v-list-item class="mt-2">
-          <v-list-item-content class="py-0">
-            <v-list-item-title class="subtitle-1 font-weight-medium">Dataset Summary</v-list-item-title>
-            <div class="ml-4 body-2">
-              {{ counts.detections.filtered.toLocaleString() }} of {{ counts.detections.total.toLocaleString() }} Recorded Days
-            </div>
-            <div class="ml-4 body-2">
-              {{ counts.deployments.filtered.toLocaleString() }} of {{ counts.deployments.total.toLocaleString() }} Deployments
-            </div>
-          </v-list-item-content>
-        </v-list-item>
-
         <!-- DEBUG -->
         <!-- <v-list-item>
           <v-list-item-content>
@@ -152,7 +140,7 @@
 
     <v-main data-v-step="0" style="z-index:0">
       <div v-if="auth.isAuth" style="height:100%">
-        <Map :points="deployments.data" :tracks="tracks.data"></Map>
+        <Map :points="deployments.data" :tracks="tracks.data" :counts="counts"></Map>
       </div>
       <div v-else>
         <v-card class="mx-auto mt-8" max-width="600px" elevation="12">

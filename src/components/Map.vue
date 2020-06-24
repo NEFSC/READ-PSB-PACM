@@ -13,7 +13,7 @@
       attribution="Tiles &copy; Esri &mdash; Sources: GEBCO, NOAA, CHS, OSU, UNH, CSUMB, National Geographic, DeLorme, NAVTEQ, and Esri'">
     </l-tile-layer>
     <l-control position="bottomright">
-      <Legend></Legend>
+      <Legend :counts="counts"></Legend>
     </l-control>
   </l-map>
 </template>
@@ -36,7 +36,7 @@ import { colorScale, sizeScale } from '@/lib/scales'
 
 export default {
   name: 'Map',
-  props: ['points', 'tracks'],
+  props: ['points', 'tracks', 'counts'],
   components: {
     Legend,
     LMap,
@@ -94,16 +94,16 @@ export default {
         const duration = moment.duration(endDate.diff(startDate))
         if (isGlider) {
           let html = `
-            ${pad(10, 'Project', '&nbsp;')}: ${deployment.project}<br>
-            ${pad(10, 'Unit Type', '&nbsp;')}: ${deployment.instrument_type}<br>
-            ${pad(10, 'Platform', '&nbsp;')}: ${platformTypesMap.get(deployment.platform_type).label}<br>
-            ${pad(10, 'Deployed', '&nbsp;')}: ${startDate.format('ll')} to ${endDate.format('ll')}<br>
-            ${pad(10, 'Duration', '&nbsp;')}: ${duration.asDays() + 1} days<br>
+            ${pad(12, 'Project', '&nbsp;')}: ${deployment.project}<br>
+            ${pad(12, 'Unit Type', '&nbsp;')}: ${deployment.instrument_type}<br>
+            ${pad(12, 'Platform', '&nbsp;')}: ${platformTypesMap.get(deployment.platform_type).label}<br>
+            ${pad(12, 'Deployed', '&nbsp;')}: ${startDate.format('ll')} to ${endDate.format('ll')}<br>
+            ${pad(12, 'Duration', '&nbsp;')}: ${duration.asDays() + 1} days<br>
             <br>
             <u>Total Detection Days</u><br>
-            ${pad(10, detectionTypesMap.get('no').label, '&nbsp;')}: ${value ? value.no.toLocaleString() : 0}<br>
-            ${pad(10, detectionTypesMap.get('maybe').label, '&nbsp;')}: ${value ? value.maybe.toLocaleString() : 0}<br>
-            ${pad(10, detectionTypesMap.get('yes').label, '&nbsp;')}: ${value ? value.yes.toLocaleString() : 0}
+            ${pad(12, detectionTypesMap.get('yes').label, '&nbsp;')}: ${value ? value.yes.toLocaleString() : 0}<br>
+            ${pad(12, detectionTypesMap.get('maybe').label, '&nbsp;')}: ${value ? value.maybe.toLocaleString() : 0}<br>
+            ${pad(12, detectionTypesMap.get('no').label, '&nbsp;')}: ${value ? value.no.toLocaleString() : 0}
           `
           if (!isGliderTrack) {
             const analysisDate = moment.utc(d.date)
@@ -111,9 +111,9 @@ export default {
               <br>
               <br>
               <u>Selected Date</u><br>
-              ${pad(10, 'Date', '&nbsp;')}: ${analysisDate.format('ll')}<br>
-              ${pad(10, 'Position', '&nbsp;')}: ${d.latitude.toFixed(4)}, ${d.longitude.toFixed(4)}<br>
-              ${pad(10, 'Result', '&nbsp;')}: ${detectionTypesMap.get(d.detection).label}
+              ${pad(12, 'Date', '&nbsp;')}: ${analysisDate.format('ll')}<br>
+              ${pad(12, 'Position', '&nbsp;')}: ${d.latitude.toFixed(4)}, ${d.longitude.toFixed(4)}<br>
+              ${pad(12, 'Result', '&nbsp;')}: ${detectionTypesMap.get(d.detection).label}
             `
           } else {
             // reposition tip for glider track from bbox to mouse
@@ -131,18 +131,18 @@ export default {
           return html
         }
         return `
-          ${pad(10, 'Project', '&nbsp;')}: ${deployment.project}<br>
-          ${pad(10, 'Site', '&nbsp;')}: ${deployment.site_id}<br>
-          ${pad(10, 'Unit', '&nbsp;')}: ${deployment.instrument_type}<br>
-          ${pad(10, 'Platform', '&nbsp;')}: ${platformTypesMap.get(deployment.platform_type).label}<br>
-          ${pad(10, 'Position', '&nbsp;')}: ${deployment.latitude.toFixed(4)}, ${deployment.longitude.toFixed(4)}<br>
-          ${pad(10, 'Deployed', '&nbsp;')}: ${startDate.format('ll')} to ${endDate.format('ll')}<br>
-          ${pad(10, 'Duration', '&nbsp;')}: ${duration.asDays() + 1} days<br>
+          ${pad(12, 'Project', '&nbsp;')}: ${deployment.project}<br>
+          ${pad(12, 'Site', '&nbsp;')}: ${deployment.site_id}<br>
+          ${pad(12, 'Unit', '&nbsp;')}: ${deployment.instrument_type}<br>
+          ${pad(12, 'Platform', '&nbsp;')}: ${platformTypesMap.get(deployment.platform_type).label}<br>
+          ${pad(12, 'Position', '&nbsp;')}: ${deployment.latitude.toFixed(4)}, ${deployment.longitude.toFixed(4)}<br>
+          ${pad(12, 'Deployed', '&nbsp;')}: ${startDate.format('ll')} to ${endDate.format('ll')}<br>
+          ${pad(12, 'Duration', '&nbsp;')}: ${duration.asDays() + 1} days<br>
           <br>
           <u>Total Detection Days</u><br>
-          ${pad(10, detectionTypesMap.get('no').label, '&nbsp;')}: ${value.no.toLocaleString()}<br>
-          ${pad(10, detectionTypesMap.get('maybe').label, '&nbsp;')}: ${value.maybe.toLocaleString()}<br>
-          ${pad(10, detectionTypesMap.get('yes').label, '&nbsp;')}: ${value.yes.toLocaleString()}
+          ${pad(12, detectionTypesMap.get('yes').label, '&nbsp;')}: ${value.yes.toLocaleString()}<br>
+          ${pad(12, detectionTypesMap.get('maybe').label, '&nbsp;')}: ${value.maybe.toLocaleString()}<br>
+          ${pad(12, detectionTypesMap.get('no').label, '&nbsp;')}: ${value.no.toLocaleString()}
         `
       })
     this.container.call(this.tip)
