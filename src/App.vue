@@ -66,7 +66,7 @@
       width="500"
       v-if="auth.isAuth">
       <v-list v-if="!loading">
-        <v-list-item class="mt-3" data-v-step="1">
+        <v-list-item class="my-1" data-v-step="1">
           <v-list-item-content>
             <v-select
               outlined
@@ -80,7 +80,7 @@
           </v-list-item-content>
         </v-list-item>
 
-        <v-list-item class="mt-3" data-v-step="1">
+        <v-list-item class="my-1" data-v-step="1">
           <v-list-item-content>
             <PlatformTypeFilter @update="setPlatformTypes"></PlatformTypeFilter>
           </v-list-item-content>
@@ -150,7 +150,7 @@
       </v-list>
     </v-navigation-drawer>
 
-    <v-content data-v-step="0" style="z-index:0">
+    <v-main data-v-step="0" style="z-index:0">
       <Map :points="deployments.data" :tracks="tracks.data" v-if="auth.isAuth"></Map>
       <div v-else>
         <v-card class="mx-auto mt-8" max-width="600px" elevation="12">
@@ -181,7 +181,7 @@
           </v-alert>
         </v-card>
       </div>
-    </v-content>
+    </v-main>
 
     <v-tour name="tour" :steps="steps"></v-tour>
   </v-app>
