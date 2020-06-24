@@ -2,8 +2,9 @@
   <l-map
     ref="map"
     style="width:100%;height:100%"
-    :center="[42, -60]"
+    :center="[49, -60]"
     :zoom="4"
+    :options="{ zoomControl: false }"
     @moveend="draw"
     @zoomend="draw">
     <l-control-scale position="bottomleft"></l-control-scale>
@@ -22,6 +23,8 @@ import L from 'leaflet'
 import moment from 'moment'
 import pad from 'pad'
 
+import ZoomMin from '@/lib/leaflet/L.Control.ZoomMin'
+import '@/lib/leaflet/L.Control.ZoomMin.css'
 import evt from '@/lib/events'
 import { xf, deploymentMap, isFiltered } from '@/lib/crossfilter'
 import { detectionTypes, detectionTypesMap, platformTypesMap } from '@/lib/constants'
@@ -76,6 +79,8 @@ function createColorLegend (map) {
     return div
   }
   legend.addTo(map)
+
+  map.addControl(new ZoomMin({ minBounds: map.getBounds() }))
 }
 
 function createSizeLegend (map) {
