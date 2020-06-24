@@ -2,7 +2,7 @@
   <l-map
     ref="map"
     style="width:100%;height:100%"
-    :center="[49, -60]"
+    :center="[49, -50]"
     :zoom="4"
     :options="{ zoomControl: false }"
     @moveend="draw"
