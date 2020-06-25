@@ -139,8 +139,11 @@
     </v-navigation-drawer>
 
     <v-main data-v-step="0" style="z-index:0">
-      <div v-if="auth.isAuth" style="height:100%">
-        <Map :points="deployments.data" :tracks="tracks.data" :counts="counts"></Map>
+      <div v-if="auth.isAuth" style="height:100%;position:relative">
+        <Map :points="deployments.data" :tracks="tracks.data" :counts="counts" @select="selectDeployment"></Map>
+        <div style="position:absolute;bottom:0;left:0;width:100%;z-index:1000;background:white" v-if="!!deployments.selected">
+          <DeploymentDetail :selected="deployments.selected" @close="selectDeployment()"></DeploymentDetail>
+        </div>
       </div>
       <div v-else>
         <v-card class="mx-auto mt-8" max-width="600px" elevation="12">
@@ -187,6 +190,7 @@ import YearFilter from '@/components/YearFilter'
 import PlatformTypeFilter from '@/components/PlatformTypeFilter'
 import SeasonFilter from '@/components/SeasonFilter'
 import DetectionFilter from '@/components/DetectionFilter'
+import DeploymentDetail from '@/components/DeploymentDetail'
 
 import evt from '@/lib/events'
 import { fetchData } from '@/lib/utils'
@@ -200,7 +204,8 @@ export default {
     YearFilter,
     PlatformTypeFilter,
     SeasonFilter,
-    DetectionFilter
+    DetectionFilter,
+    DeploymentDetail
   },
   data () {
     return {
@@ -209,10 +214,12 @@ export default {
         password: null,
         error: null
       },
+      sheet: true,
       loading: true,
       deployments: {
         data: [],
-        dim: null
+        dim: null,
+        selected: undefined
       },
       counts: {
         detections: {
@@ -281,6 +288,11 @@ export default {
       ]
     }
   },
+  computed: {
+    showDialog () {
+      return !!this.deployments.selected
+    }
+  },
   mounted () {
     if (process.env.NODE_ENV === 'development') {
       this.auth.isAuth = true
@@ -310,6 +322,7 @@ export default {
       if (!this.species.selected) return
       this.loading = true
       evt.$emit('reset:filters', 'app:loadData')
+      this.selectDeployment()
       return fetchData(this.species.selected)
         .then(([deployments, detections, tracks]) => {
           this.deployments.data = Object.freeze(deployments)
@@ -333,6 +346,27 @@ export default {
           //   // this.startTour()
           // })
         })
+    },
+    selectDeployment (id) {
+      console.log('app:selectDeployment()', id)
+      if (!id) {
+        this.deployments.selected = undefined
+        return
+      }
+      if (this.deployments.selected && this.deployments.selected.id === id) {
+        // unselect
+        this.deployments.selected = undefined
+        return
+      }
+      const deployment = this.deployments.data.find(d => d.deployment === id)
+      const detections = xf.all().filter(d => d.deployment === id)
+      const track = this.tracks.data.filter(d => d.deployment === id)
+      this.deployments.selected = {
+        id,
+        deployment,
+        detections,
+        track
+      }
     },
     setSpecies () {
       console.log('app: setSpecies')

@@ -12,7 +12,7 @@
       url="//server.arcgisonline.com/ArcGIS/rest/services/Ocean_Basemap/MapServer/tile/{z}/{y}/{x}"
       attribution="Tiles &copy; Esri &mdash; Sources: GEBCO, NOAA, CHS, OSU, UNH, CSUMB, National Geographic, DeLorme, NAVTEQ, and Esri'">
     </l-tile-layer>
-    <l-control position="bottomright">
+    <l-control position="topright">
       <Legend :counts="counts"></Legend>
     </l-control>
   </l-map>
@@ -274,12 +274,7 @@ export default {
         .attr('cy', (d) => map.latLngToLayerPoint(new L.LatLng(d.latitude, d.longitude)).y)
         .on('mouseenter', this.tip.show)
         .on('mouseout', this.tip.hide)
-        .on('click', d => {
-          console.log({
-            ...d,
-            value: deploymentMap.get(d.deployment)
-          })
-        })
+        .on('click', d => this.$emit('select', d.deployment))
 
       const path = d3.line()
         .x(d => map.latLngToLayerPoint(new L.LatLng(d.latitude, d.longitude)).x)
@@ -308,6 +303,7 @@ export default {
         .attr('d', d => path(d.data))
         .on('mouseenter', this.tip.show)
         .on('mouseout', this.tip.hide)
+        .on('click', d => this.$emit('select', d.deployment))
 
       this.container
         .select('g.glider.points')
@@ -322,6 +318,7 @@ export default {
         .attr('cy', (d) => map.latLngToLayerPoint(new L.LatLng(d.latitude, d.longitude)).y)
         .on('mouseenter', this.tip.show)
         .on('mouseout', this.tip.hide)
+        .on('click', d => this.$emit('select', d.deployment))
 
       this.render()
     },

@@ -5,6 +5,7 @@ import vuetify from './plugins/vuetify'
 
 import './plugins/axios'
 import './plugins/dc'
+import './plugins/highcharts'
 import './plugins/leaflet'
 import './plugins/moment'
 import './plugins/vue-tour'
