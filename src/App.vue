@@ -48,7 +48,7 @@
         </v-card>
       </v-dialog>
 
-      <v-btn color="default" dark text max-width="120" @click="startTour" data-v-step="3">
+      <v-btn color="default" dark text max-width="120" @click="startTour" data-v-step="6">
         <v-icon left>mdi-help-circle</v-icon> Help
       </v-btn>
 
@@ -80,7 +80,7 @@
           </v-list-item-content>
         </v-list-item>
 
-        <v-list-item class="my-1" data-v-step="1">
+        <v-list-item class="my-1" data-v-step="2">
           <v-list-item-content>
             <PlatformTypeFilter @update="setPlatformTypes"></PlatformTypeFilter>
           </v-list-item-content>
@@ -88,13 +88,13 @@
 
         <v-divider class="my-4"></v-divider>
 
-        <v-list-item class="mt-0">
+        <v-list-item class="mt-0" data-v-step="3">
           <v-list-item-content class="pt-1">
             <SeasonFilter @update="setSeason"></SeasonFilter>
           </v-list-item-content>
         </v-list-item>
 
-        <v-list-item data-v-step="2" class="mt-2">
+        <v-list-item class="mt-2" data-v-step="4">
           <v-list-item-content class="py-0">
             <YearFilter></YearFilter>
           </v-list-item-content>
@@ -107,7 +107,7 @@
           </v-list-item-content>
         </v-list-item> -->
 
-        <v-list-item class="mt-2">
+        <v-list-item class="mt-2" data-v-step="5">
           <v-list-item-content class="py-0">
             <DetectionFilter></DetectionFilter>
           </v-list-item-content>
@@ -253,8 +253,10 @@ export default {
           target: '[data-v-step="0"]',
           content: `
           <h1 class="title">Welcome!</h1>
-          The map shows which stations the whales were detected.<br>
-          <i>Hover over a station to view its metadata.</i>
+          This map shows the locations where whales were detected using passive acoustic monitoring.<br><br>
+          Each point represents either a fixed location station (buoy or mooring), or the location of a positive detection along a glider or towed array track.<br><br>
+          The fixed location stations are sized by the number of detection days over the current season and year span.<br><br>
+          <i>Hover over a point to view metadata about that project, or click on it to view a timeseries of detections.</i>
           `,
           params: {
             highlight: false,
@@ -263,22 +265,55 @@ export default {
         },
         {
           target: '[data-v-step="1"]',
-          content: `Switch species here`,
+          content: `Switch to a different species`,
           params: {
             highlight: true,
-            placement: 'bottom'
+            placement: 'left'
           }
         },
         {
           target: '[data-v-step="2"]',
-          content: 'Click and drag on the charts to filter dataset for a specific time period',
+          content: 'Choose which platform types to include in the dataset',
           params: {
             highlight: true,
-            placement: 'bottom'
+            placement: 'left'
           }
         },
         {
           target: '[data-v-step="3"]',
+          content: `
+            This chart shows the number of detections per week among all stations and over all years.<br>
+            <i>Click and drag on the bottom timeline to filter dataset for a specific seasonal period.</i>
+          `,
+          params: {
+            highlight: true,
+            placement: 'left'
+          }
+        },
+        {
+          target: '[data-v-step="4"]',
+          content: `
+            Chart shows the number of detections per year among all stations.<br>
+            <i>Click and drag on the chart to select a specific range of years.</i>
+          `,
+          params: {
+            highlight: true,
+            placement: 'left'
+          }
+        },
+        {
+          target: '[data-v-step="5"]',
+          content: `
+            Chart shows the total number of days for each detection type among all stations.<br>
+            <i>Click on one or more bars to filter the dataset for specific detection type(s).</i>
+          `,
+          params: {
+            highlight: true,
+            placement: 'left'
+          }
+        },
+        {
+          target: '[data-v-step="6"]',
           content: 'Click here to start the tour again',
           params: {
             highlight: true,
