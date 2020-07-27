@@ -1,4 +1,4 @@
-# load multispecies buoy/mooring from Gen
+# load buoy/mooring dataset
 
 library(tidyverse)
 library(lubridate)
@@ -6,25 +6,75 @@ library(lubridate)
 
 # load csv ----------------------------------------------------------------
 
-filepath <- "~/Dropbox/Work/nefsc/transfers/20200420 - multispecies dataset/NOAA_5_Species_Detection_Data_2004-2019_04-20-2020.csv"
+df_moored_meta_csv <- read_csv(
+  "~/Dropbox/Work/nefsc/transfers/20200724 - multispecies mooring and glider/Moored_metadata_2020-07-24.csv",
+  col_types = cols(
+    .default = col_character(),
+    CHANNEL = col_integer(),
+    LATITUDE = col_double(),
+    LONGITUDE = col_double(),
+    WATER_DEPTH_METERS = col_double(),
+    RECORDER_DEPTH_METERS = col_double(),
+    SAMPLING_RATE_HZ = col_double()
+  )
+) %>% 
+  janitor::clean_names() %>% 
+  mutate(
+    duty_cycle_seconds = tolower(duty_cycle_seconds)
+  )
 
-df_csv <- read_csv(filepath, col_types = cols(
-  .default = col_character(),
-  PLATFORM_ID = col_logical(),
-  SITE_ID = col_character(),
-  INSTRUMENT_ID = col_character(),
-  CHANNEL = col_double(),
-  LATITUDE = col_double(),
-  LONGITUDE = col_double(),
-  WATER_DEPTH_METERS = col_double(),
-  RECORDER_DEPTH_METERS = col_double(),
-  SAMPLING_RATE_HZ = col_double(),
-  ANALYSIS_PERIOD_EFFORT_SECONDS = col_double(),
-  N_VALIDATED_DETECTIONS = col_double()
-)) %>% 
-  janitor::clean_names()
+df_moored_meta <- df_moored_meta_csv %>% 
+  mutate(
+    submission_date = ymd(submission_date),
+    monitoring_start_datetime = ymd_hms(monitoring_start_datetime),
+    monitoring_end_datetime = ymd_hms(monitoring_end_datetime)
+  )
 
-glimpse(df_csv)
+# unique values
+janitor::tabyl(df_moored_meta$platform_type)
+janitor::tabyl(df_moored_meta$instrument_type)
+janitor::tabyl(df_moored_meta$channel)
+janitor::tabyl(df_moored_meta$soundfiles_timezone)
+janitor::tabyl(df_moored_meta$duty_cycle_seconds)
+janitor::tabyl(df_moored_meta$qc_data)
+
+# timestamps
+df_moored_meta %>% 
+  select(where(is.Date)) %>%
+  table()
+df_moored_meta %>% 
+  select(where(is.POSIXct)) %>%
+  summary()
+
+# numeric values
+df_moored_meta %>% 
+  select(where(is.numeric)) %>%
+  summary()
+
+# missing monitoring start/end datetime
+df_moored_meta_csv[is.na(ymd_hms(df_moored_meta_csv$monitoring_start_datetime)) | is.na(ymd_hms(df_moored_meta_csv$monitoring_end_datetime)), ] %>% 
+  write_csv("qaqc/20200724/moored-metadata-missing-monitoring-timestamp.csv")
+
+# duplicate project id
+df_moored_meta %>%
+  group_by(project) %>% 
+  add_count() %>% 
+  filter(n > 1) %>% 
+  arrange(project) %>% 
+  select(-n) %>% 
+  write_csv("qaqc/20200724/moored-metadata-duplicate-project.csv")
+
+# missing lat/lon
+df_moored_meta %>% 
+  filter(is.na(latitude) | is.na(longitude)) %>% 
+  write_csv("qaqc/20200724/moored-metadata-missing-latlon.csv")
+
+# positive longitude
+df_moored_meta %>% 
+  filter(longitude > 0) %>% 
+  write_csv("qaqc/20200724/moored-metadata-positive-longitude.csv")
+
+
 
 
 # qaqc --------------------------------------------------------------------
