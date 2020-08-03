@@ -1,7 +1,7 @@
 ---
 title: "QAQC Moored and Glider Datasets"
 author: "Jeffrey D Walker, PhD"
-date: "7/28/2020"
+date: "8/3/2020"
 output: 
   html_document: 
     toc: yes
@@ -18,7 +18,7 @@ library(lubridate)
 library(DT)
 ```
 
-QAQC of moored (v. 7/28/2020) and glider (v. 7/24/2020) data.
+QAQC of moored and glider (v. 8/3/2020) data.
 
 # Moored Dataset
 
@@ -28,7 +28,7 @@ QAQC of moored (v. 7/28/2020) and glider (v. 7/24/2020) data.
 
 ```{r}
 df_moored_meta_csv <- read_csv(
-  "~/Dropbox/Work/nefsc/transfers/20200728 - updated moored dataset/Moored_metadata_2020-07-28.csv",
+  "~/Dropbox/Work/nefsc/transfers/20200803 - mooring and glider data/Moored_metadata_2020-08-03.csv",
   col_types = cols(
     .default = col_character(),
     CHANNEL = col_integer(),
@@ -45,7 +45,7 @@ df_moored_meta_csv <- read_csv(
   ) %>% 
   select(unique_id, everything()) # bring unique_id to first column
 
-df_moored_meta <- df_moored_meta_csv %>% 
+df_moored_meta <- df_moored_meta_csv %>%
   mutate(
     submission_date = ymd(submission_date),
     monitoring_start_datetime = ymd_hms(monitoring_start_datetime),
@@ -80,6 +80,38 @@ df_moored_meta %>%
   summary()
 ```
 
+
+```{r}
+df_moored_meta_by_species <- df_moored_meta %>%
+  rename_with(
+    ~ str_replace(., "_", ":"),
+    starts_with(c("narw_", "humpback_", "sei_", "fin_", "blue_"))
+  ) %>% 
+  pivot_longer(
+    starts_with(c("narw", "humpback", "sei", "fin", "blue")),
+    names_to = c("species", ".value"),
+    names_sep = ":"
+  ) %>% 
+  select(unique_id, species, detection_method, protocol_reference)
+```
+
+`detection_method` is primarily LFDCS. NARW has 10 `Gillespie edge detector` rows, Humpback has 7 `Manual` rows, and all but blue has 5 `near real-time LFDCS`. Note that 1,560 rows are missing detection method presumably since they were not analyzed for that species.
+
+```{r}
+df_moored_meta_by_species %>% 
+  janitor::tabyl(detection_method, species) %>% 
+  janitor::adorn_totals(where = c("col", "row"))
+```
+
+`protocol_reference` is tied to `detection_method`. Note two different options for `LFDCS`.
+
+```{r}
+df_moored_meta_by_species %>% 
+  filter(!is.na(detection_method)) %>% 
+  janitor::tabyl(protocol_reference, detection_method)
+```
+
+
 ### QAQC
 
 #### Duplicate Project IDs
@@ -98,11 +130,32 @@ df_moored_meta %>%
   datatable()
 ```
 
+#### Missing/Invalid Monitoring Period Timestamps
+
+Each row should contain a monitoring start and end timestamps in ISO format (`YYYY-MM-DD HH:mm:ss`).
+
+There are 3 projects missing both timestamps.
+
+```{r}
+df_moored_meta_csv %>%
+  filter(is.na(monitoring_start_datetime) | is.na(monitoring_end_datetime)) %>% 
+  datatable()
+```
+
+There are 17 projects in which the start/end timestamp is in the wrong format (`MM/DD/YY HH:mm` instead of `YYYY-MM-DD HH:mm:ss`). Ten of these are the Cornell Autobuoys, and the rest are from Mark Baumgartner. These need to be converted to ISO format.
+
+```{r}
+df_moored_meta_csv %>%
+  filter(!is.na(monitoring_start_datetime), is.na(ymd_hms(monitoring_start_datetime)) | is.na(ymd_hms(monitoring_end_datetime))) %>% 
+  datatable()
+```
+
+
 #### Missing Latitude/Longitude.
 
 Each mooring/buoy must contain a latitude and longitude.
 
-This project is missing the latitude and longitude.
+There are 4 projects with missing latitude and longitude.
 
 ```{r}
 df_moored_meta %>% 
@@ -116,7 +169,7 @@ df_moored_meta %>%
 
 ```{r}
 df_moored_detect_csv <- read_csv(
-  "~/Dropbox/Work/nefsc/transfers/20200728 - updated moored dataset/Moored_detection_data_2020-07-28.csv",
+  "~/Dropbox/Work/nefsc/transfers/20200803 - mooring and glider data/Moored_detection_data_2020-08-03.csv",
   col_types = cols(
     .default = col_character(),
     ANALYSIS_PERIOD_EFFORT_SECONDS = col_double(),
@@ -150,7 +203,7 @@ df_moored_detect_by_species <- df_moored_detect %>%
 head(df_moored_detect_by_species)
 ```
 
-Presence column contain three unique values (`Detected`, `Not Detected`, `Possibly Detected`) across all species. Note a lot of NA's for non-NARW species.
+Presence column should contain three unique values (`Detected`, `Not Detected`, `Possibly Detected`) across all species, but two additional and invalid values were found (`detected`, and `undetected`).
 
 ```{r}
 df_moored_detect_by_species %>% 
@@ -169,20 +222,6 @@ df_moored_detect_by_species%>%
 ```{r}
 df_moored_detect_by_species%>% 
   janitor::tabyl(call_type, species)
-```
-
-`detection_method` is primarily LFDCS. Humpback has some `Manual` rows, and NARW has some other alternatives.
-
-```{r}
-df_moored_detect_by_species %>% 
-  janitor::tabyl(detection_method, species)
-```
-
-`protocol_reference` is tied to `detection_method`. Note two different options for `LFDCS`.
-
-```{r}
-df_moored_detect_by_species %>% 
-  janitor::tabyl(protocol_reference, detection_method)
 ```
 
 ### QAQC
@@ -205,11 +244,25 @@ All rows in the detections table, however, do have matching rows in the metadata
 all(unique(df_moored_detect$unique_id) %in% unique(df_moored_meta$unique_id))
 ```
 
+#### Invalid Presence Values
+
+The presence columns must contain one of three unique and cap-sensitive values (`Detected`, `Not Detected`, `Possibly Detected`)
+
+The Cornell Autobuoys contain invalid values (`detected`, `undetected`) for NARW presence:
+
+```{r}
+df_moored_detect_by_species %>% 
+  filter(presence %in% c("detected", "undetected")) %>% 
+  distinct(unique_id) %>% 
+  datatable()
+```
+
+
 #### Non-Daily Detection Intervals
 
 The moored detection data should be aggregated to daily timesteps since the map will ultimate show detection-days, which is a sum of daily values.
 
-These projects do not have daily timesteps:
+There are no projects with non-daily timesteps:
 
 ```{r}
 unique_id_non_daily <- df_moored_detect %>% 
@@ -222,26 +275,6 @@ df_moored_meta %>%
 ```
 
 
-Seven of these recorders are for surface buoys collected by Mark Baumgartner. So it looks like his data were not processed to daily timesteps like the others. They are all at 900 second (15 minute) intervals.
-
-```{r}
-df_moored_detect %>% 
-  filter(unique_id %in% unique_id_non_daily[-1]) %>% 
-  distinct(unique_id, analysis_period_effort_seconds)
-```
-
-
-The other recorder (`unique_id = NEFSC_GA_201510_CH4_B4`) has only one row of non-daily detections, which is the first date for this recorder. Therefore, the `analysis_period_start_datetime` could probably just be changed to the start of the day (`2015-10-24 00:00:00`), and then the `analysis_period_effort_seconds` set to 86400.
-
-```{r}
-df_moored_detect %>% 
-  filter(unique_id %in% unique_id_non_daily[1]) %>% 
-  select(unique_id, starts_with("analysis_period_")) %>% 
-  head()
-```
-
-
-
 # Glider Dataset
 
 ## Metadata
@@ -250,7 +283,7 @@ df_moored_detect %>%
 
 ```{r}
 df_glider_meta_csv <- read_csv(
-  "~/Dropbox/Work/nefsc/transfers/20200724 - multispecies mooring and glider/Glider_metadata_2020-07-24.csv",
+  "~/Dropbox/Work/nefsc/transfers/20200803 - mooring and glider data/Glider_metadata_2020-08-03.csv",
   col_types = cols(
     .default = col_character(),
     CHANNEL = col_integer(),
@@ -264,8 +297,8 @@ df_glider_meta_csv <- read_csv(
 df_glider_meta <- df_glider_meta_csv %>% 
   mutate(
     submission_date = ymd(submission_date),
-    monitoring_start_datetime = ymd_hms(monitoring_start_datetime),
-    monitoring_end_datetime = ymd_hms(monitoring_end_datetime)
+    monitoring_start_datetime = mdy_hm(monitoring_start_datetime), # NOTE: no longer in ISO
+    monitoring_end_datetime = mdy_hm(monitoring_end_datetime)
   )
 ```
 
@@ -298,9 +331,61 @@ df_glider_meta %>%
 
 Note that glider metadata do not have `water_depth_meters` or `recorder_depth_meters`.
 
+
+```{r}
+df_glider_meta_by_species <- df_glider_meta %>%
+  rename_with(
+    ~ str_replace(., "_", ":"),
+    starts_with(c("narw_", "humpback_", "sei_", "fin_", "blue_"))
+  ) %>% 
+  pivot_longer(
+    starts_with(c("narw", "humpback", "sei", "fin", "blue")),
+    names_to = c("species", ".value"),
+    names_sep = ":"
+  ) %>% 
+  select(unique_id, species, detection_method, protocol_reference)
+```
+
+`detection_method` is always `near real-time LFDCS`. Note that 11 rows are missing detection method for each species, presumably since they were not analyzed for that species.
+
+```{r}
+df_glider_meta_by_species %>% 
+  janitor::tabyl(detection_method, species) %>% 
+  janitor::adorn_totals(where = c("col", "row"))
+```
+
+`protocol_reference` is tied directly to `detection_method`.
+
+```{r}
+df_glider_meta_by_species %>% 
+  filter(!is.na(detection_method)) %>% 
+  janitor::tabyl(protocol_reference, detection_method)
+```
+
+
 ### QAQC
 
-No issues found.
+
+#### Missing/Invalid Monitoring Period Timestamps
+
+Each row should contain a monitoring start and end timestamps in ISO format (`YYYY-MM-DD HH:mm:ss`).
+
+There are 2 projects missing both timestamps.
+
+```{r}
+df_glider_meta_csv %>%
+  filter(is.na(monitoring_start_datetime) | is.na(monitoring_end_datetime)) %>% 
+  datatable()
+```
+
+The rest all use non-ISO format (`MM/DD/YY HH:mm`), and should be changed to ISO format. Here are the first few rows for example:
+
+```{r}
+df_glider_meta_csv %>% 
+  select(project, monitoring_start_datetime, monitoring_end_datetime) %>% 
+  head()
+```
+
 
 ## Detections
 
@@ -308,16 +393,21 @@ No issues found.
 
 ```{r}
 df_glider_detect_csv <- read_csv(
-  "~/Dropbox/Work/nefsc/transfers/20200724 - multispecies mooring and glider/Glider_detection_data_2020-07-24.csv",
+  "~/Dropbox/Work/nefsc/transfers/20200803 - mooring and glider data/Glider_detection_data_2020-08-03.csv",
     col_types = cols(
     .default = col_character(),
     ANALYSIS_PERIOD_EFFORT_SECONDS = col_double(),
-    NARW_N_VALIDATED_DETECTIONS = col_integer(),
+    # NARW_N_VALIDATED_DETECTIONS = col_integer(), # Dropped?
     LATITUDE = col_double(),
     LONGITUDE = col_double()
   )
 ) %>% 
-  janitor::clean_names()
+  janitor::clean_names() %>% 
+  select(
+    unique_id, analysis_period_effort_seconds, starts_with("analysis_period_"),
+    latitude, longitude,
+    starts_with("narw_"), starts_with("humpback_"), starts_with("sei_"), starts_with("fin_")
+  )
 
 df_glider_detect <- df_glider_detect_csv %>% 
   mutate(
@@ -352,7 +442,7 @@ df_glider_detect_by_species %>%
   summary()
 ```
 
-Presence column only has values for NARW (`Detected`, `Not Detected`, `Possibly Detected`).
+Presence column only has three unique values (`Detected`, `Not Detected`, `Possibly Detected`).
 
 ```{r}
 df_glider_detect_by_species %>% 
@@ -361,30 +451,11 @@ df_glider_detect_by_species %>%
 
 None of the species have `n_validated_detections` (only NARW did for the moored dataset).
 
-```{r}
-df_glider_detect_by_species%>% 
-  janitor::tabyl(n_validated_detections, species)
-```
-
-`call_type` only defined for NARW (Upcall).
+`call_type` defined for each species.
 
 ```{r}
 df_glider_detect_by_species%>% 
   janitor::tabyl(call_type, species)
-```
-
-`detection_method` only defined for NARW (near real-time LFDCS).
-
-```{r}
-df_glider_detect_by_species %>% 
-  janitor::tabyl(detection_method, species)
-```
-
-`protocol_reference` is tied to `detection_method`. Note two different options for `LFDCS`.
-
-```{r}
-df_glider_detect_by_species %>% 
-  janitor::tabyl(protocol_reference, detection_method)
 ```
 
 ### QAQC
@@ -401,3 +472,15 @@ df_glider_detect %>%
   datatable()
 ```
 
+#### Missing Analysis Period Timestamps
+
+Each row must have a pair of valid analysis period start and end timestamps in ISO format (`YYYY-MM-DD HH:mm:ss`)
+
+There are `r nrow(filter(df_glider_detect, is.na(analysis_period_start_datetime) | is.na(analysis_period_end_datetime)))` rows missing the start and/or end datetime. Here are the first 100 of those rows:
+
+```{r}
+df_glider_detect %>% 
+  filter(is.na(analysis_period_start_datetime) | is.na(analysis_period_end_datetime)) %>% 
+  head(100) %>% 
+  datatable()
+```

@@ -2,12 +2,15 @@
 
 library(tidyverse)
 library(lubridate)
+library(logger)
+
+log_threshold(DEBUG)
 
 
-# load csv ----------------------------------------------------------------
+# load metadata -----------------------------------------------------------
 
-df_moored_meta_csv <- read_csv(
-  "~/Dropbox/Work/nefsc/transfers/20200724 - multispecies mooring and glider/Moored_metadata_2020-07-24.csv",
+df_meta_csv <- read_csv(
+  "~/Dropbox/Work/nefsc/transfers/20200728 - updated moored dataset/Moored_metadata_2020-07-28.csv",
   col_types = cols(
     .default = col_character(),
     CHANNEL = col_integer(),
@@ -18,239 +21,168 @@ df_moored_meta_csv <- read_csv(
     SAMPLING_RATE_HZ = col_double()
   )
 ) %>% 
-  janitor::clean_names() %>% 
+  janitor::clean_names() %>%
   mutate(
+    # normalize text
+    platform_type = tolower(platform_type),
     duty_cycle_seconds = tolower(duty_cycle_seconds)
-  )
+  ) %>% 
+  select(unique_id, everything()) # bring unique_id to first column
 
-df_moored_meta <- df_moored_meta_csv %>% 
+df_meta_all <- df_meta_csv %>% 
   mutate(
     submission_date = ymd(submission_date),
     monitoring_start_datetime = ymd_hms(monitoring_start_datetime),
     monitoring_end_datetime = ymd_hms(monitoring_end_datetime)
   )
 
+# load detection data -----------------------------------------------------
+
+df_detect_csv <- read_csv(
+  "~/Dropbox/Work/nefsc/transfers/20200728 - updated moored dataset/Moored_detection_data_2020-07-28.csv",
+  col_types = cols(
+    .default = col_character(),
+    ANALYSIS_PERIOD_EFFORT_SECONDS = col_double(),
+    NARW_N_VALIDATED_DETECTIONS = col_integer()
+  )
+) %>% 
+  janitor::clean_names()
+
+df_detect_all <- df_detect_csv %>% 
+  mutate(
+    analysis_period_start_datetime = ymd_hms(analysis_period_start_datetime),
+    analysis_period_end_datetime = ymd_hms(analysis_period_end_datetime)
+  )
+
+
+# screen projects ---------------------------------------------------------
+
+# only projects with detection data
+projects_without_data <- setdiff(unique(df_meta_all$unique_id), unique(df_detect$unique_id))
+log_info("excluding projects with no detection data (n = {length(projects_without_data)})")
+
+# only projects with valid lat/lon
+projects_invalid_latlon <- df_meta_all %>% 
+  filter(is.na(latitude) | is.na(longitude)) %>% 
+  pull(unique_id)
+log_info("excluding projects with invalid lat/lon (n = {length(projects_invalid_latlon)})")
+
+df_meta <- df_meta_all %>% 
+  filter(!unique_id %in% c(projects_without_data, projects_invalid_latlon))
+
+df_detect <- df_detect_all %>% 
+  filter(unique_id %in% df_meta$unique_id) %>% 
+  rename_with(
+    ~ str_replace(., "_", ":"),
+    starts_with(c("narw_", "humpback_", "sei_", "fin_", "blue_"))
+  ) %>% 
+  pivot_longer(
+    starts_with(c("narw", "humpback", "sei", "fin", "blue")),
+    names_to = c("species", ".value"),
+    names_sep = ":"
+  ) %>% 
+  filter(!is.na(presence)) %>% 
+  mutate(
+    presence = case_when(
+      presence == "Not Detected" ~ "no",
+      presence == "Possibly Detected" ~ "maybe",
+      presence == "Detected" ~ "yes",
+      TRUE ~ NA_character_
+    )
+  )
+
+
+# meta summary ------------------------------------------------------------
+
 # unique values
-janitor::tabyl(df_moored_meta$platform_type)
-janitor::tabyl(df_moored_meta$instrument_type)
-janitor::tabyl(df_moored_meta$channel)
-janitor::tabyl(df_moored_meta$soundfiles_timezone)
-janitor::tabyl(df_moored_meta$duty_cycle_seconds)
-janitor::tabyl(df_moored_meta$qc_data)
+janitor::tabyl(df_meta$platform_type)
+janitor::tabyl(df_meta$instrument_type)
+janitor::tabyl(df_meta$channel)
+janitor::tabyl(df_meta$soundfiles_timezone)
+janitor::tabyl(df_meta$duty_cycle_seconds)
+janitor::tabyl(df_meta$qc_data)
 
 # timestamps
-df_moored_meta %>% 
+df_meta %>% 
   select(where(is.Date)) %>%
   table()
-df_moored_meta %>% 
+df_meta %>% 
   select(where(is.POSIXct)) %>%
   summary()
 
 # numeric values
-df_moored_meta %>% 
+df_meta %>% 
   select(where(is.numeric)) %>%
   summary()
 
-# missing monitoring start/end datetime
-df_moored_meta_csv[is.na(ymd_hms(df_moored_meta_csv$monitoring_start_datetime)) | is.na(ymd_hms(df_moored_meta_csv$monitoring_end_datetime)), ] %>% 
-  write_csv("qaqc/20200724/moored-metadata-missing-monitoring-timestamp.csv")
 
-# duplicate project id
-df_moored_meta %>%
-  group_by(project) %>% 
-  add_count() %>% 
-  filter(n > 1) %>% 
-  arrange(project) %>% 
-  select(-n) %>% 
-  write_csv("qaqc/20200724/moored-metadata-duplicate-project.csv")
+# detect summary ----------------------------------------------------------
 
-# missing lat/lon
-df_moored_meta %>% 
-  filter(is.na(latitude) | is.na(longitude)) %>% 
-  write_csv("qaqc/20200724/moored-metadata-missing-latlon.csv")
+df_detect %>% 
+  select(where(is.POSIXct)) %>%
+  summary()
 
-# positive longitude
-df_moored_meta %>% 
-  filter(longitude > 0) %>% 
-  write_csv("qaqc/20200724/moored-metadata-positive-longitude.csv")
+df_detect %>% 
+  janitor::tabyl(presence, species) %>% 
+  janitor::adorn_totals(where = c("row"))
 
+df_detect %>% 
+  janitor::tabyl(presence, species) %>% 
+  janitor::adorn_percentages("row") %>% 
+  janitor::adorn_pct_formatting(digits = 0)
 
+# n_validated_detections only used for (some) NARW detections
+df_detect%>% 
+  janitor::tabyl(n_validated_detections, species)
+
+df_detect %>% 
+  janitor::tabyl(call_type, species)
+
+df_detect %>% 
+  janitor::tabyl(detection_method, species)
+
+df_detect %>% 
+  janitor::tabyl(protocol_reference, detection_method)
 
 
 # qaqc --------------------------------------------------------------------
 
-# failed to parse
-df_csv %>% 
-  filter(is.na(ymd_hms(monitoring_end_datetime)))
-df_csv %>% 
-  filter(is.na(ymd_hms(analysis_period_start_date_time)))
-df_csv %>% 
-  filter(is.na(ymd_hms(analysis_period_end_date_time)))
+stopifnot(exprs = {
+  all(!duplicated(df_meta$unique_id))
+  all(!is.na(select(df_meta, unique_id, starts_with("monitoring_"), latitude, longitude)))
+  all(df_meta$longitude < 0)
+  
+  identical(sort(unique(df_meta$unique_id)), sort(unique(df_detect$unique_id)))
+  
+  all(!is.na(select(df_detect, unique_id, starts_with("analysis_period"), species, presence)))
+  all(unique(df_detect$presence) %in% c("yes", "no", "maybe"))
+})
 
-df_csv %>% 
-  filter(is.na(latitude))
-df_csv %>% 
-  filter(is.na(longitude))
-
-df_csv %>% 
-  filter(is.na(site_id))
-
-# invalid longitude
-df_csv %>% 
-  filter(longitude > 0) %>% 
-  select(project, site_id, latitude, longitude) %>% 
-  distinct()
-
-# sites with differing lat/lon
-df_csv %>% 
-  mutate(monitoring_start = format(ymd_hms(monitoring_start_datetime), "%Y%m%d")) %>% 
-  select(project, site_id, latitude, longitude, monitoring_start) %>% 
-  distinct() %>% 
-  group_by(project, site_id) %>% 
-  mutate(n = n()) %>% 
-  ungroup() %>% 
+df_detect %>% 
+  distinct(unique_id, detection_method) %>% 
+  group_by(unique_id) %>% 
+  add_count() %>%
   filter(n > 1)
 
-# multiple identical rows with varying fin_presence
-df_csv %>% 
-  group_by(project, site_id, analysis_period_start_date_time) %>% 
-  add_tally() %>% 
-  ungroup() %>% 
-  filter(n > 1) %>% 
-  select(project, site_id, ends_with("presence"), n)
+df_detect %>% 
+  distinct(unique_id, species, protocol_reference) %>% 
+  group_by(unique_id, species) %>% 
+  add_count() %>%
+  filter(n > 1)
 
 
-# clean -------------------------------------------------------------------
+detections_not_daily <- df_detect %>%
+  filter(analysis_period_effort_seconds < 86400) %>%
+  pull(unique_id) %>% 
+  unique()
 
-df <- df_csv %>% 
-  mutate(
-    site_id = coalesce(site_id, "N/A"),
-    longitude = if_else(longitude > 0, -1 * longitude, longitude),
-    submission_date = ymd(submission_date),
-    platform_type = tolower(platform_type),
-    monitoring_start_datetime = ymd_hms(monitoring_start_datetime),
-    monitoring_end_datetime = ymd_hms(monitoring_end_datetime),
-    analysis_period_start_date_time = ymd_hms(analysis_period_start_date_time),
-    analysis_period_end_date_time = ymd_hms(analysis_period_end_date_time)
-  ) %>% 
-  filter(
-    !is.na(latitude),
-    !is.na(longitude),
-    !is.na(analysis_period_start_date_time),
-    !is.na(analysis_period_end_date_time)
-  ) %>% 
-  select(-fin_presence) %>% 
-  distinct()
-
-table(df$detection_method)
-table(df$platform_type)
-table(df$instrument_type)
-
-deployment_variables <- c(
-  "project",
-  "data_poc_name", 
-  "data_poc_affiliation", 
-  "data_poc_email", 
-  "platform_type", 
-  "platform_id",
-  "site_id",
-  "instrument_type", 
-  "instrument_id",
-  "channel",
-  "submitter_name",
-  "submitter_affiliation", 
-  "submitter_email",
-  "submission_date",
-  "latitude",
-  "longitude", 
-  "water_depth_meters",
-  "recorder_depth_meters",
-  "soundfiles_timezone", 
-  "sampling_rate_hz",
-  "duty_cycle_seconds",
-  "monitoring_start_datetime", 
-  "monitoring_end_datetime",
-  "qc_data",
-  "detection_method",
-  "protocol_reference"
-)
-detection_variables <- c(
-  "project",
-  "site_id",
-  "platform_type",
-  "analysis_period_start_date_time",
-  "analysis_period_end_date_time", 
-  "analysis_period_effort_seconds", 
-  "n_validated_detections",
-  "narw_presence", 
-  "call_type", 
-  "blue_presence",
-  "sei_presence",
-  "humpback_presence"
-)
-
-df_deployments <- df %>% 
-  select(deployment_variables) %>% 
-  distinct()
-
-stopifnot(
-  df_deployments %>% 
-    select(project, site_id, latitude, longitude) %>% 
-    distinct() %>% 
-    group_by(project, site_id) %>% 
-    count() %>% 
-    filter(n > 1) %>% 
-    nrow() == 0
-)
-
-df_detections <- df %>% 
-  select(detection_variables) %>% 
-  transmute(
-    project,
-    site_id,
-    platform_type,
-    date = as_date(analysis_period_start_date_time),
-    narw_presence,
-    blue_presence,
-    sei_presence,
-    humpback_presence
-    # fin_presence
-  ) %>% 
-  distinct() %>% 
-  pivot_longer(ends_with("_presence"), names_to = "species", values_to = "detection", values_drop_na = TRUE) %>% 
-  mutate(
-    species = str_replace(species, "_presence", ""),
-    detection = case_when(
-      detection == "Detected" ~ "yes",
-      detection == "Not Detected" ~ "no",
-      detection == "Possibly Detected" ~ "maybe",
-      TRUE ~ NA_character_
-    )
-  ) %>%
-  arrange(project, site_id, date, species)
-
-stopifnot(
-  df_detections %>% 
-    group_by(project, site_id, date, species) %>% 
-    count() %>% 
-    filter(n > 1) %>% 
-    nrow() == 0
-)
-
-# stopifnot(all(!is.na(df_detections)))
-
-glimpse(df_deployments)
-glimpse(df_detections)
-
-df_detections %>% 
-  janitor::tabyl(detection, species) %>% 
-  janitor::adorn_percentages("row") %>% 
-  janitor::adorn_pct_formatting(digits = 0)
+df_meta %>% 
+  filter(unique_id %in% detections_not_daily)
 
 # export ------------------------------------------------------------------
 
 list(
-  detections = df_detections,
-  deployments = df_deployments
+  meta = df_meta,
+  detect = df_detect
 ) %>% 
-  saveRDS("rds/gen.rds")
+  saveRDS("rds/moored.rds")
