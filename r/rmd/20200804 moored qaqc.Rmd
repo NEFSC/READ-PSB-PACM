@@ -1,0 +1,341 @@
+---
+title: "QAQC Moored Dataset (v. 2020-08-04)"
+author: "Jeffrey D Walker, PhD"
+date: "8/5/2020"
+output: 
+  html_document: 
+    toc: yes
+    number_sections: yes
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(lubridate)
+library(DT)
+```
+
+# Load Files
+
+```{r}
+df_meta_csv <- read_csv(
+  "~/Dropbox/Work/nefsc/transfers/20200804 - mooring and glider data/Moored_metadata_2020-08-04.csv",
+  col_types = cols(
+    .default = col_character(),
+    CHANNEL = col_integer(),
+    LATITUDE = col_double(),
+    LONGITUDE = col_double(),
+    WATER_DEPTH_METERS = col_double(),
+    RECORDER_DEPTH_METERS = col_double(),
+    SAMPLING_RATE_HZ = col_double()
+  )
+) %>% 
+  janitor::clean_names() # cleans up column names, mainly converting to lowercase
+
+df_meta <- df_meta_csv %>%
+  mutate(
+    submission_date = ymd(submission_date),
+    monitoring_start_datetime = ymd_hms(monitoring_start_datetime),
+    monitoring_end_datetime = ymd_hms(monitoring_end_datetime)
+  ) %>% 
+  select(unique_id, everything()) # bring unique_id to first column
+
+df_detect_csv <- read_csv(
+  "~/Dropbox/Work/nefsc/transfers/20200804 - mooring and glider data/Moored_detection_data_2020-08-04.csv",
+  col_types = cols(
+    .default = col_character(),
+    ANALYSIS_PERIOD_EFFORT_SECONDS = col_double(),
+    NARW_N_VALIDATED_DETECTIONS = col_integer()
+  )
+) %>% 
+  janitor::clean_names()
+
+df_detect <- df_detect_csv %>% 
+  mutate(
+    analysis_period_start_datetime = ymd_hms(analysis_period_start_datetime),
+    analysis_period_end_datetime = ymd_hms(analysis_period_end_datetime)
+  )
+  
+df_detect_by_species <- df_detect %>%
+  rename_with(
+    ~ str_replace(., "_", ":"),
+    starts_with(c("narw_", "humpback_", "sei_", "fin_", "blue_"))
+  ) %>% 
+  pivot_longer(
+    starts_with(c("narw", "humpback", "sei", "fin", "blue")),
+    names_to = c("species", ".value"),
+    names_sep = ":",
+    values_drop_na = TRUE
+  )
+```
+
+
+## Missing Detection Data
+
+Identify deployments without detection data.
+
+```{r}
+moored_no_detections <- sort(setdiff(df_meta$unique_id, unique(df_detect$unique_id)))
+df_meta %>% 
+  filter(unique_id %in% moored_no_detections) %>% 
+  datatable()
+```
+
+Removing `r length(moored_no_detections)` deployments from the metadata table that do not have any detection data.
+
+```{r}
+df_meta <- df_meta %>% 
+  filter(
+    !unique_id %in% moored_no_detections
+  )
+```
+
+## Missing Coordinates
+
+Identify deployments without latitude/longitude.
+
+```{r}
+moored_no_coordinates <- df_meta %>% 
+  filter(is.na(latitude) | is.na(longitude)) %>% 
+  pull(unique_id)
+df_meta %>% 
+  filter(unique_id %in% moored_no_coordinates) %>% 
+  datatable()
+```
+
+Removing `r length(moored_no_coordinates)` deployment(s) from the metadata table that do not have any detection data.
+
+```{r}
+df_meta <- df_meta %>% 
+  filter(
+    !unique_id %in% moored_no_coordinates
+  )
+```
+
+## Clean Up
+
+Filter the detection table to only include the deployments in the metadata table.
+
+```{r}
+df_detect <- df_detect %>% 
+  filter(unique_id %in% df_meta$unique_id)
+```
+
+The metadata and detection tables have the exact same set of `unique_id`'s.
+
+```{r}
+stopifnot(identical(sort(unique(df_meta$unique_id)), sort(unique(df_detect$unique_id))))
+```
+
+Extract the species-specific columns from the metadata table (`detection_moethd`, `protocol_reference`).
+
+```{r}
+df_meta_by_species <- df_meta %>%
+  select(unique_id, starts_with(c("narw_", "humpback_", "sei_", "fin_", "blue_"))) %>% 
+  rename_with(
+    ~ str_replace(., "_", ":"),
+    starts_with(c("narw_", "humpback_", "sei_", "fin_", "blue_"))
+  ) %>% 
+  pivot_longer(
+    starts_with(c("narw", "humpback", "sei", "fin", "blue")),
+    names_to = c("species", ".value"),
+    names_sep = ":",
+    values_drop_na = TRUE
+  )
+df_meta <- df_meta %>% 
+  select(-starts_with(c("narw_", "humpback_", "sei_", "fin_", "blue_")))
+```
+
+# Metadata Table
+
+`project` cannot be missing any values.
+
+```{r}
+stopifnot(all(!is.na(df_meta$project)))
+```
+
+`data_poc_*` columns can have any values but not be missing.
+
+```{r}
+stopifnot(all(!is.na(select(df_meta, starts_with("data_poc")))))
+```
+
+`platform_type` only has values `Mooring` and `surface buoy`, and is not missing.
+
+```{r}
+stopifnot(all(df_meta$platform_type %in% c("Mooring", "surface buoy")))
+df_meta %>% 
+  janitor::tabyl(platform_type)
+```
+
+`instrument_type` can have any value but not be missing.
+
+```{r}
+stopifnot(all(!is.na(df_meta$instrument_type)))
+df_meta %>% 
+  janitor::tabyl(instrument_type)
+```
+
+`submitter_*` columns can have any values but not be missing.
+
+```{r}
+stopifnot(all(!is.na(select(df_meta, starts_with("submitter_")))))
+```
+
+`submission_date` cannot be missing.
+
+```{r}
+stopifnot(all(!is.na(df_meta$submission_date)))
+```
+
+`latitude` cannot be missing and must be between 0 and 90. `longitude` cannot be missing and must be between -90 and 0 (negative because West of central meridian).
+
+```{r}
+stopifnot(
+  all(!is.na(df_meta$latitude)),
+  all(df_meta$latitude >= 0),
+  all(df_meta$latitude <= 90),
+  all(!is.na(df_meta$longitude)),
+  all(df_meta$longitude >= -90),
+  all(df_meta$longitude <= 0)
+)
+df_meta %>% 
+  select(latitude, longitude) %>% 
+  summary()
+```
+
+`monitoring_start_datetime` and `monitoring_end_datetime` cannot be missing, and the end timestamp must always be after the start timestamp.
+
+```{r}
+stopifnot({
+  all(!is.na(df_meta$monitoring_start_datetime))
+  all(!is.na(df_meta$monitoring_end_datetime))
+  all(as.numeric(difftime(df_meta$monitoring_end_datetime, df_meta$monitoring_start_datetime, units = "sec")) > 0)
+})
+df_meta %>% 
+  select(starts_with("monitoring_")) %>% 
+  summary()
+```
+
+Columns `platform_id`, `site_id`, `channel`, `water_depth_meters`, `recorder_depth_meters`, `soundfiles_timezone`, `sampling_rate_hz`, `duty_cycle_seconds`, `qc_data` can have any value or be missing (no QAQC checks).
+
+# Detections Table
+
+`presence` columns only contain `Detected`, `Not Detected`, `Possibly Detected`.
+
+```{r}
+stopifnot(all(df_detect_by_species$presence %in% c("Detected", "Not Detected", "Possibly Detected")))
+df_detect_by_species %>% 
+  janitor::tabyl(presence, species)
+```
+
+`call_type` varies by species.
+
+```{r}
+df_detect_by_species %>% 
+  janitor::tabyl(call_type, species)
+```
+
+`n_validated_detections` only applies to NARW, and is sometimes `NA`.
+
+```{r}
+df_detect_by_species %>% 
+  janitor::tabyl(n_validated_detections, species)
+```
+
+`n_validated_detections` is always zero when `presence='Not Detected'`, and greater than zero otherwise. However, it can also be `NA` for any `presence` category.
+
+```{r}
+df_detect_by_species %>% 
+  filter(species == "narw") %>% 
+  janitor::tabyl(n_validated_detections, presence)
+```
+
+`analysis_period_effort_seconds` is always 86400 (1 day)
+
+```{r}
+stopifnot(all(df_detect$analysis_period_effort_seconds == 86400))
+```
+
+`analysis_period_effort_seconds` is always correctly calculated based on start/end timestamps.
+
+```{r}
+stopifnot(
+  all(
+    df_detect$analysis_period_effort_seconds == as.numeric(difftime(df_detect$analysis_period_end_datetime, df_detect$analysis_period_start_datetime, units = "sec"))
+  )
+)
+```
+
+The range of analysis start/end timestamps is always within the full monitoring period.
+
+```{r}
+stopifnot(
+  df_detect %>% 
+    group_by(unique_id) %>% 
+    summarise(
+      analysis_start = min(analysis_period_start_datetime),
+      analysis_end = min(analysis_period_end_datetime),
+      .groups = "drop"
+    ) %>% 
+    left_join(
+      df_meta %>% 
+        select(unique_id, monitoring_start = monitoring_start_datetime, monitoring_end = monitoring_end_datetime) %>% 
+        mutate(
+          monitoring_start = floor_date(monitoring_start, unit = "day"),
+          monitoring_end = floor_date(monitoring_end, unit = "day")
+        ),
+      by = "unique_id"
+    ) %>% 
+    filter(analysis_start < monitoring_start | analysis_end > monitoring_end) %>% 
+    nrow() == 0
+)
+```
+
+
+## Time Zone Issue
+
+<div class="alert alert-danger">
+  <strong>`r icon::fa("exclamation-triangle")`</strong> A large number of rows have start/end timestamps that are not end at midnight suggesting timezone issues
+</div>
+
+Should `analysis_period_start_datetime` and `analysis_period_end_datetime` always be at midnight?
+
+Here is a tally of the number of detection rows with start timestamps in each hour of the day. These should all be zero if the timestamps are always at midnight.
+
+```{r}
+df_detect %>% 
+  mutate(
+    analysis_period_start_datetime_hour = hour(analysis_period_start_datetime)
+  ) %>% 
+  janitor::tabyl(analysis_period_start_datetime_hour)
+```
+
+Here is a list of the deployment `unique_id`s that do not have timestamps at midnight. The `soundfiles_timezone` column is appended by joining the metadata table, but it doesn't seem to be related.
+
+```{r}
+df_detect %>% 
+  mutate(
+    analysis_period_start_datetime_hour = hour(analysis_period_start_datetime)
+  ) %>% 
+  filter(analysis_period_start_datetime_hour != 0) %>% 
+  distinct(unique_id, analysis_period_start_datetime_hour) %>% 
+  left_join(
+    df_meta %>% 
+      select(unique_id, soundfiles_timezone),
+    by = "unique_id"
+  ) %>% 
+  datatable()
+```
+
+And there is one row where the the hour is 17, which would be a different issue not related to time zones. Looks like this is the first row of `NEFSC_GA_201510_CH4_B4`, which should be `2015-10-24 00:00:00` to `2015-10-25 00:00:00` instead?
+
+```{r}
+df_detect %>% 
+  filter(hour(analysis_period_start_datetime) == 17) %>% 
+  datatable()
+```
+
