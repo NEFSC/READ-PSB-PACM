@@ -1,0 +1,270 @@
+---
+title: "QAQC Glider Dataset (v. 2020-08-06)"
+author: "Jeffrey D Walker, PhD"
+date: "8/7/2020"
+output: 
+  html_document: 
+    toc: yes
+    number_sections: yes
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(lubridate)
+library(DT)
+```
+
+# Load Files
+
+```{r}
+df_meta_csv <- read_csv(
+  "~/Dropbox/Work/nefsc/transfers/20200806 - glider data/Glider_metadata_2020-08-06.csv",
+  col_types = cols(
+    .default = col_character(),
+    CHANNEL = col_integer(),
+    WATER_DEPTH_METERS = col_double(),
+    RECORDER_DEPTH_METERS = col_double(),
+    SAMPLING_RATE_HZ = col_double()
+  )
+) %>% 
+  janitor::clean_names()
+
+df_meta <- df_meta_csv %>% 
+  mutate(
+    submission_date = ymd(submission_date),
+    monitoring_start_datetime = ymd_hms(monitoring_start_datetime),
+    monitoring_end_datetime = ymd_hms(monitoring_end_datetime)
+  ) %>% 
+  select(unique_id, everything())
+
+df_detect_csv <- read_csv(
+  "~/Dropbox/Work/nefsc/transfers/20200804 - mooring and glider data/Glider_detection_data_2020-08-04.csv",
+    col_types = cols(
+    .default = col_character(),
+    ANALYSIS_PERIOD_EFFORT_SECONDS = col_double(),
+    LATITUDE = col_double(),
+    LONGITUDE = col_double()
+  )
+) %>% 
+  janitor::clean_names()
+  
+df_detect <- df_detect_csv %>% 
+  mutate(
+    analysis_period_start_datetime = ymd_hms(analysis_period_start_datetime),
+    analysis_period_end_datetime = ymd_hms(analysis_period_end_datetime)
+  ) %>% 
+  select(
+    unique_id, analysis_period_effort_seconds, starts_with("analysis_period_"),
+    latitude, longitude,
+    starts_with("narw_"), starts_with("humpback_"), starts_with("sei_"), starts_with("fin_")
+  )
+
+df_detect_by_species <- df_detect %>%
+  rename_with(
+    ~ str_replace(., "_", ":"),
+    starts_with(c("narw_", "humpback_", "sei_", "fin_", "blue_"))
+  ) %>% 
+  pivot_longer(
+    starts_with(c("narw", "humpback", "sei", "fin", "blue")),
+    names_to = c("species", ".value"),
+    names_sep = ":",
+    values_drop_na = TRUE
+  )
+```
+
+
+## Missing Detection Data
+
+Identify deployments without detection data.
+
+```{r}
+no_detections <- sort(setdiff(df_meta$unique_id, unique(df_detect$unique_id)))
+stopifnot(length(no_detections) == 0)
+```
+
+## Clean Up
+
+The metadata and detection tables have the exact same set of `unique_id`'s.
+
+```{r}
+stopifnot(identical(sort(unique(df_meta$unique_id)), sort(unique(df_detect$unique_id))))
+```
+
+Extract the species-specific columns from the metadata table (`detection_moethd`, `protocol_reference`).
+
+```{r}
+df_meta_by_species <- df_meta %>%
+  select(unique_id, starts_with(c("narw_", "humpback_", "sei_", "fin_", "blue_"))) %>% 
+  rename_with(
+    ~ str_replace(., "_", ":"),
+    starts_with(c("narw_", "humpback_", "sei_", "fin_", "blue_"))
+  ) %>% 
+  pivot_longer(
+    starts_with(c("narw", "humpback", "sei", "fin", "blue")),
+    names_to = c("species", ".value"),
+    names_sep = ":",
+    values_drop_na = TRUE
+  )
+df_meta <- df_meta %>% 
+  select(-starts_with(c("narw_", "humpback_", "sei_", "fin_", "blue_")))
+```
+
+
+# Metadata Table
+
+`project` cannot be missing any values.
+
+```{r}
+stopifnot(all(!is.na(df_meta$project)))
+```
+
+`data_poc_*` columns can have any values but not be missing.
+
+```{r}
+stopifnot(all(!is.na(select(df_meta, starts_with("data_poc")))))
+```
+
+`platform_type` only has values `slocum` and `wave`, and is not missing.
+
+```{r}
+stopifnot(all(df_meta$platform_type %in% c("slocum", "wave")))
+df_meta %>% 
+  janitor::tabyl(platform_type)
+```
+
+`instrument_type` can have any value but not be missing.
+
+```{r}
+stopifnot(all(!is.na(df_meta$instrument_type)))
+df_meta %>% 
+  janitor::tabyl(instrument_type)
+```
+
+`submitter_*` columns can have any values but not be missing.
+
+```{r}
+stopifnot(all(!is.na(select(df_meta, starts_with("submitter_")))))
+```
+
+`submission_date` cannot be missing.
+
+```{r}
+stopifnot(all(!is.na(df_meta$submission_date)))
+```
+
+`monitoring_start_datetime` and `monitoring_end_datetime` cannot be missing, and the end timestamp must always be after the start timestamp.
+
+```{r}
+stopifnot({
+  all(!is.na(df_meta$monitoring_start_datetime))
+  all(!is.na(df_meta$monitoring_end_datetime))
+  all(as.numeric(difftime(df_meta$monitoring_end_datetime, df_meta$monitoring_start_datetime, units = "sec")) > 0)
+})
+df_meta %>% 
+  select(starts_with("monitoring_")) %>% 
+  summary()
+```
+
+Columns `platform_id`, `site_id`, `channel`, `water_depth_meters`, `recorder_depth_meters`, `soundfiles_timezone`, `sampling_rate_hz`, `duty_cycle_seconds`, `qc_data` can have any value or be missing (no QAQC checks).
+
+The `detection_method` column is the same for all species.
+
+```{r}
+df_meta_by_species %>% 
+  janitor::tabyl(detection_method, species)
+```
+
+Each `detection_method` method has a unique `protocol_reference`.
+
+```{r}
+df_meta_by_species %>% 
+  janitor::tabyl(protocol_reference, detection_method)
+```
+
+
+# Detections Table
+
+`presence` columns only contain `Detected`, `Not Detected`, `Possibly Detected` and are not missing.
+
+```{r}
+stopifnot(all(df_detect_by_species$presence %in% c("Detected", "Not Detected", "Possibly Detected")))
+df_detect_by_species %>% 
+  janitor::tabyl(presence, species)
+```
+
+`call_type` varies by species.
+
+```{r}
+df_detect_by_species %>% 
+  janitor::tabyl(call_type, species)
+```
+
+`analysis_period_effort_seconds` is always 900 seconds (15 minutes)
+
+```{r}
+stopifnot(all(df_detect$analysis_period_effort_seconds == 900))
+```
+
+`analysis_period_effort_seconds` is always correctly calculated based on start/end timestamps.
+
+```{r}
+stopifnot(
+  all(
+    df_detect$analysis_period_effort_seconds == as.numeric(difftime(df_detect$analysis_period_end_datetime, df_detect$analysis_period_start_datetime, units = "sec"))
+  )
+)
+```
+
+`latitude` cannot be missing and must be between 0 and 90. `longitude` cannot be missing and must be between -90 and 0 (negative because West of central meridian).
+
+```{r}
+stopifnot(
+  all(!is.na(df_detect$latitude)),
+  all(df_detect$latitude >= 0),
+  all(df_detect$latitude <= 90),
+  all(!is.na(df_detect$longitude)),
+  all(df_detect$longitude >= -90),
+  all(df_detect$longitude <= 0)
+)
+df_detect %>% 
+  select(latitude, longitude) %>% 
+  summary()
+```
+
+Each deployment should contain unique values for `analysis_period_start_datetime` (no duplicate analysis periods).
+
+```{r}
+stopifnot(
+  df_detect %>% 
+    group_by(unique_id, analysis_period_start_datetime) %>% 
+    count() %>% 
+    filter(n > 1) %>% 
+    nrow == 0
+)
+```
+
+The range of analysis start/end timestamps is always within the monitoring period for each deployment.
+
+```{r}
+stopifnot({
+  df_detect %>% 
+    group_by(unique_id) %>% 
+    summarise(
+      analysis_start = min(analysis_period_start_datetime),
+      analysis_end = min(analysis_period_end_datetime),
+      .groups = "drop"
+    ) %>% 
+    left_join(
+      df_meta %>% 
+        select(unique_id, monitoring_start = monitoring_start_datetime, monitoring_end = monitoring_end_datetime),
+      by = "unique_id"
+    ) %>% 
+    filter(analysis_start < monitoring_start | analysis_end > monitoring_end) %>% 
+    nrow() == 0
+})
+```
+

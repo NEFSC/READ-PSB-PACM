@@ -1,7 +1,7 @@
 ---
 title: "QAQC Moored Dataset (v. 2020-08-04)"
 author: "Jeffrey D Walker, PhD"
-date: "8/5/2020"
+date: "8/7/2020"
 output: 
   html_document: 
     toc: yes
@@ -15,6 +15,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 library(tidyverse)
 library(lubridate)
+library(tsibble)
 library(DT)
 ```
 
@@ -222,6 +223,20 @@ df_meta %>%
 
 Columns `platform_id`, `site_id`, `channel`, `water_depth_meters`, `recorder_depth_meters`, `soundfiles_timezone`, `sampling_rate_hz`, `duty_cycle_seconds`, `qc_data` can have any value or be missing (no QAQC checks).
 
+The `detection_method` column varies by species.
+
+```{r}
+df_meta_by_species %>% 
+  janitor::tabyl(detection_method, species)
+```
+
+Each `detection_method` method has a unique `protocol_reference`, except LFDCS, which has two references that vary by species.
+
+```{r}
+df_meta_by_species %>% 
+  janitor::tabyl(protocol_reference, detection_method)
+```
+
 # Detections Table
 
 `presence` columns only contain `Detected`, `Not Detected`, `Possibly Detected`.
@@ -295,16 +310,61 @@ stopifnot(
 )
 ```
 
+For each deployment contains unique analysis dates (no duplicates).
 
-## Time Zone Issue
+```{r}
+stopifnot(
+  all(
+    df_detect %>% 
+      mutate(
+        analysis_date = as_date(analysis_period_start_datetime)
+      ) %>% 
+      group_by(unique_id, analysis_date) %>% 
+      count() %>% 
+      pull(n) == 1
+  )
+)
+```
 
-<div class="alert alert-danger">
+## Gaps Warning
+
+<div class="alert alert-warning">
+  <strong>`r icon::fa("exclamation-triangle")`</strong> A large number of deployments have gaps in the daily timeseries suggesting that not every day for a given monitoring period was analyzed.
+</div>
+
+Many of the deployments contain gaps in the daily timeseries.
+
+```{r}
+ts_detect <- df_detect_by_species %>% 
+  mutate(
+    analysis_date = as_date(analysis_period_start_datetime)
+  ) %>% 
+  select(unique_id, analysis_date, species, presence) %>% 
+  as_tsibble(key = c(unique_id, species), index = analysis_date)
+count_gaps(ts_detect) %>% 
+  datatable()
+```
+
+For example, the presence of `fin` whales for `unique_id = NEFSC_GA_201604_WAT_BS_01_WAT_BS`.
+
+```{r}
+df_detect_by_species %>% 
+  filter(unique_id == "NEFSC_GA_201604_WAT_BS_01_WAT_BS", species == "fin") %>% 
+  ggplot(aes(analysis_period_start_datetime, 1, color = presence)) +
+  geom_point() +
+  scale_y_continuous(labels = NULL) +
+  labs(y = NULL)
+```
+
+## Time Zone Warning
+
+<div class="alert alert-warning">
   <strong>`r icon::fa("exclamation-triangle")`</strong> A large number of rows have start/end timestamps that are not end at midnight suggesting timezone issues
 </div>
 
-Should `analysis_period_start_datetime` and `analysis_period_end_datetime` always be at midnight?
+Expected `analysis_period_start_datetime` and `analysis_period_end_datetime` to always be at midnight since this is a daily timeseries.
 
-Here is a tally of the number of detection rows with start timestamps in each hour of the day. These should all be zero if the timestamps are always at midnight.
+But, many detection rows have `analysis_period_start_datetime` on a non-zero hour
 
 ```{r}
 df_detect %>% 
@@ -314,14 +374,22 @@ df_detect %>%
   janitor::tabyl(analysis_period_start_datetime_hour)
 ```
 
-Here is a list of the deployment `unique_id`s that do not have timestamps at midnight. The `soundfiles_timezone` column is appended by joining the metadata table, but it doesn't seem to be related.
+The one with `hour(analysis_period_start_datetime) = 17` was the first day of this deployment, and originally had `2015-10-24T17:39:00Z` as the start, and `2015-10-25T00:00:00Z` as the end. THe latter was changed so the period duration would be 86400 seconds (1 day), but should have changed the start instead. Not an issue since `analysis_period_start_datetime` will be truncated to date part.
+
+```{r}
+df_detect %>% 
+  filter(hour(analysis_period_start_datetime) == 17) %>% 
+  datatable()
+```
+
+Here are the other deployments that do not have timestamps at midnight. The `soundfiles_timezone` column is appended by joining the metadata table, but it doesn't seem to be related.
 
 ```{r}
 df_detect %>% 
   mutate(
     analysis_period_start_datetime_hour = hour(analysis_period_start_datetime)
   ) %>% 
-  filter(analysis_period_start_datetime_hour != 0) %>% 
+  filter(analysis_period_start_datetime_hour != 0, analysis_period_start_datetime_hour != 17) %>% 
   distinct(unique_id, analysis_period_start_datetime_hour) %>% 
   left_join(
     df_meta %>% 
@@ -331,11 +399,8 @@ df_detect %>%
   datatable()
 ```
 
-And there is one row where the the hour is 17, which would be a different issue not related to time zones. Looks like this is the first row of `NEFSC_GA_201510_CH4_B4`, which should be `2015-10-24 00:00:00` to `2015-10-25 00:00:00` instead?
+Gen reports that the handling of timezones varied over the entire period, here is a summary:
 
-```{r}
-df_detect %>% 
-  filter(hour(analysis_period_start_datetime) == 17) %>% 
-  datatable()
-```
+> For all of the archival/moored deployments starting before 2014; all of the analysis was converted to EST (GMT-5).  So any of the deployments where the analysis start datetime begins at 05:00 for that day, the sound files were in GMT, but the daily analysis is converted to EST, if that makes sense.  Any of the start times that are not 00 had sound files in a time zone other than GMT-5, and had been converted appropriately to the local EST date.
 
+> For the 2015 data and beyond, it looks like time zones were not appropriately applied to the analysis.  So, all of the daily presence analyses are done on a 00:00:00 start time of the date, but this is for both GMT and EST sound files, therefore, they're not completely aligned correctly.   For that last row item in the data check where the start and end analysis time is 17:00:00, that must have been the first time of data (I think that was the same deployment where we had a different number of analysis_period_effot_seconds).. and somehow when I compiled the code it kept the first start time of data for that deployment only.
