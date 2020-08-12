@@ -1,177 +1,208 @@
-# load buoy and glider data from Hansen's dataset
+# load glider dataset
 
 library(tidyverse)
 library(lubridate)
-library(jsonlite)
+library(logger)
 
-df_csv <- read_csv(
-  "~/Dropbox/Work/nefsc/transfers/20200113 - hansen pam dataset/Hansen Johnson - narw_pam_database.csv",
+log_threshold(DEBUG)
+
+FILE_GLIDER_META <- "~/Dropbox/Work/nefsc/transfers/20200806 - glider data/Glider_metadata_2020-08-06.csv"
+FILE_GLIDER_DETECT <- "~/Dropbox/Work/nefsc/transfers/20200804 - mooring and glider data/Glider_detection_data_2020-08-04.csv"
+
+
+# load metadata -----------------------------------------------------------
+
+df_meta_csv <- read_csv(
+  FILE_GLIDER_META,
   col_types = cols(
     .default = col_character(),
-    CHANNEL = col_double(),
-    LATITUDE = col_double(),
-    LONGITUDE = col_double(),
+    CHANNEL = col_integer(),
     WATER_DEPTH_METERS = col_double(),
     RECORDER_DEPTH_METERS = col_double(),
-    SAMPLING_RATE_HZ = col_double(),
-    ANALYSIS_PERIOD_EFFORT_SECONDS = col_double(),
-    N_VALIDATED_DETECTIONS = col_double(),
-    MONITORING_DURATION = col_double(),
-    SUBMISSION_DATE = col_date()
+    SAMPLING_RATE_HZ = col_double()
   )
 ) %>% 
   janitor::clean_names()
 
-df <- df_csv %>% 
-  filter(instrument_type %in% c("DMON", "Autobuoy")) %>% 
+df_meta <- df_meta_csv %>% 
   mutate(
-    species = "narw",
-    date = ymd(analysis_date),
-    detection = case_when(
-      narw_presence == "detected" ~ "yes",
-      narw_presence == "possible" ~ "maybe",
-      narw_presence == "undetected" ~ "no",
-      TRUE ~ "unknown"
-    ),
+    submission_date = ymd(submission_date),
     monitoring_start_datetime = ymd_hms(monitoring_start_datetime),
     monitoring_end_datetime = ymd_hms(monitoring_end_datetime)
   ) %>% 
-  rename(
-    analysis_period_start_date_time = analysis_period_start_datetime, # convert to same column names as Gen
-    analysis_period_end_date_time = analysis_period_end_datetime
-  ) %>%
-  select(-year, -mday, -monitoring_duration, -narw_presence, -analysis_date) # drop these columns
-
-# gliders -----------------------------------------------------------------
-
-df_gliders <- df %>% 
-  filter(platform_type == "slocum")
-
-# compute median lat/lon by project,date
-df_gliders_day <- df_gliders %>% 
-  group_by(project, site_id, platform_type, date, species) %>% 
-  summarise(
-    latitude = median(latitude, na.rm = TRUE),
-    longitude = median(longitude, na.rm = TRUE),
-    detection = case_when(
-      any(detection == "yes") ~ "yes",
-      any(detection == "maybe") ~ "maybe",
-      any(detection == "no") ~ "no",
-      TRUE ~ "unknown"
-    )
+  select(unique_id, everything()) %>% 
+  rename_with(
+    ~ str_replace(., "_", ":"),
+    starts_with(c("narw_", "humpback_", "sei_", "fin_", "blue_"))
   ) %>% 
-  ungroup() %>% 
-  filter(!is.na(latitude), !is.na(longitude)) %>% 
-  arrange(project, site_id, date) %>% 
-  group_by(project, site_id) %>% 
-  mutate(
-    next_latitude = lead(latitude),
-    next_longitude = lead(longitude),
-  ) %>% 
-  ungroup()
-
-df_gliders_day %>%
-  ggplot(aes(longitude, latitude, xend = next_longitude, yend = next_latitude)) +
-  geom_segment() +
-  geom_point(aes(color = detection))
-
-# time gaps
-df_gliders_day %>% 
-  group_by(project) %>% 
-  mutate(
-    diff_day = c(NA, diff(date))
-  ) %>% 
-  filter(diff_day > 1)
-
-df_glider_detections <- df_gliders_day %>% 
-  select(project, site_id, platform_type, date, species, latitude, longitude, detection)
-stopifnot(all(df_glider_detections$detection %in% c("yes", "no", "maybe")))
-stopifnot(all(!is.na(df_glider_detections[, c("latitude", "longitude")])))
-
-df_glider_deployments <- df_gliders %>% 
-  select(
-    c(
-      "project", "data_poc_name", "data_poc_affiliation", "data_poc_email", 
-      "platform_type", "platform_id", "site_id", "instrument_type", 
-      "instrument_id", "channel", "submitter_name", "submitter_affiliation", 
-      "submitter_email", "submission_date", "latitude", "longitude", 
-      "water_depth_meters", "recorder_depth_meters", "soundfiles_timezone", 
-      "sampling_rate_hz", "duty_cycle_seconds", "monitoring_start_datetime", 
-      "monitoring_end_datetime", "qc_data", "detection_method", "protocol_reference"
-    )
-  ) %>% 
-  mutate(
-    latitude = NA,
-    longitude = NA
-  ) %>% 
-  distinct()
-stopifnot(all(!duplicated(df_glider_deployments$project)))
-
-# buoy --------------------------------------------------------------------
-
-df_buoy <- df %>% 
-  filter(platform_type != "slocum") %>% 
-  mutate(
-    platform_type = if_else(
-      project == "CORNELL_TSS_AUTOBUOYS",
-      "buoy",
-      platform_type
-    )
+  pivot_longer(
+    starts_with(c("narw", "humpback", "sei", "fin", "blue")),
+    names_to = c("species", ".value"),
+    names_sep = ":",
+    values_drop_na = TRUE
   )
 
-df_buoy_day <- df_buoy %>% 
-  group_by(project, site_id, platform_type, date, species) %>% 
-  summarise(
-    latitude = median(latitude, na.rm = TRUE),
-    longitude = median(longitude, na.rm = TRUE),
-    detection = case_when(
-      any(detection == "yes") ~ "yes",
-      any(detection == "maybe") ~ "maybe",
-      any(detection == "no") ~ "no",
-      TRUE ~ "unknown"
-    )
+# load detect data --------------------------------------------------------
+
+df_detect_csv <- read_csv(
+  FILE_GLIDER_DETECT,
+  col_types = cols(
+    .default = col_character(),
+    ANALYSIS_PERIOD_EFFORT_SECONDS = col_double(),
+    LATITUDE = col_double(),
+    LONGITUDE = col_double()
+  )
+) %>% 
+  janitor::clean_names()
+
+df_detect <- df_detect_csv %>% 
+  mutate(
+    analysis_period_start_datetime = ymd_hms(analysis_period_start_datetime),
+    analysis_period_end_datetime = ymd_hms(analysis_period_end_datetime)
   ) %>% 
-  ungroup() %>% 
-  filter(!is.na(latitude), !is.na(longitude))
-
-df_buoy_day %>%
-  ggplot(aes(longitude, latitude)) +
-  geom_point(aes(color = detection)) + 
-  facet_wrap(vars(detection))
-
-df_buoy_detections <- df_buoy_day %>% 
-  select(project, site_id, platform_type, date, species, detection)
-stopifnot(all(df_buoy_detections$detection %in% c("yes", "no", "maybe")))
-
-df_buoy_deployments <- df_buoy %>% 
   select(
-    c(
-      "project", "data_poc_name", "data_poc_affiliation", "data_poc_email", 
-      "platform_type", "platform_id", "site_id", "instrument_type", 
-      "instrument_id", "channel", "submitter_name", "submitter_affiliation", 
-      "submitter_email", "submission_date", "latitude", "longitude", 
-      "water_depth_meters", "recorder_depth_meters", "soundfiles_timezone", 
-      "sampling_rate_hz", "duty_cycle_seconds", "monitoring_start_datetime", 
-      "monitoring_end_datetime", "qc_data", "detection_method", "protocol_reference"
-    )
+    unique_id, analysis_period_effort_seconds, starts_with("analysis_period_"),
+    latitude, longitude,
+    starts_with("narw_"), starts_with("humpback_"), starts_with("sei_"), starts_with("fin_")
+  ) %>%
+  rename_with(
+    ~ str_replace(., "_", ":"),
+    starts_with(c("narw_", "humpback_", "sei_", "fin_", "blue_"))
   ) %>% 
-  distinct()
-stopifnot(all(!duplicated(str_c(df_buoy_deployments$project, df_buoy_deployments$platform_id))))
+  pivot_longer(
+    starts_with(c("narw", "humpback", "sei", "fin", "blue")),
+    names_to = c("species", ".value"),
+    names_sep = ":",
+    values_drop_na = TRUE
+  )
+
+
+# qaqc --------------------------------------------------------------------
+
+stopifnot(exprs = {
+  # no duplicated ids
+  all(!duplicated(str_c(df_meta$unique_id, df_meta$species)))
+  
+  # require columns
+  all(!is.na(df_meta$project))
+  all(!is.na(select(df_meta, starts_with("data_poc"))))
+  all(!is.na(df_meta$instrument_type))
+  all(!is.na(select(df_meta, starts_with("submitter_"))))
+  all(!is.na(df_meta$submission_date))
+  all(!is.na(df_detect$unique_id))
+  all(!is.na(df_detect$species))
+  all(!is.na(df_detect$presence))
+  all(!is.na(df_detect$latitude))
+  all(!is.na(df_detect$longitude))
+  all(!is.na(select(df_detect, starts_with("analysis_period"))))
+  all(!is.na(select(df_detect, starts_with("monitoring_"))))
+  
+  # enumerated values
+  all(df_meta$platform_type %in% c("slocum", "wave"))
+  all(unique(df_detect$presence) %in% c("Detected", "Possibly Detected", "Not Detected"))
+  with(df_detect,
+       all(analysis_period_effort_seconds == as.numeric(difftime(analysis_period_end_datetime, analysis_period_start_datetime, units = "sec")))
+  )
+  
+  # range of analysis periods is within monitoring period
+  df_detect %>% 
+    group_by(unique_id) %>% 
+    summarise(
+      analysis_start = min(analysis_period_start_datetime),
+      analysis_end = min(analysis_period_end_datetime),
+      .groups = "drop"
+    ) %>% 
+    left_join(
+      df_meta %>% 
+        select(unique_id, monitoring_start = monitoring_start_datetime, monitoring_end = monitoring_end_datetime) %>% 
+        mutate(
+          monitoring_start = floor_date(monitoring_start, unit = "day"),
+          monitoring_end = floor_date(monitoring_end, unit = "day")
+        ),
+      by = "unique_id"
+    ) %>% 
+    filter(analysis_start < monitoring_start | analysis_end > monitoring_end) %>% 
+    nrow() == 0
+  
+  # no duplicate analysis periods
+  all(
+    df_detect %>% 
+      group_by(unique_id, species, analysis_period_start_datetime) %>% 
+      count() %>% 
+      pull(n) == 1
+  )
+  
+  # monitoring period end is after start
+  all(as.numeric(difftime(df_meta$monitoring_end_datetime, df_meta$monitoring_start_datetime, units = "sec")) > 0)
+  # analysis period end is after start
+  all(as.numeric(difftime(df_detect$analysis_period_end_datetime, df_detect$analysis_period_start_datetime, units = "sec")) > 0)
+  # latitude between 0 to 90
+  all(df_detect$latitude >= 0)
+  all(df_detect$latitude <= 90)
+  # latitude between -90 and 0 (west of central meridian)
+  all(df_detect$longitude >= -90)
+  all(df_detect$longitude <= 0)
+  
+  # meta and detect contain same ids
+  identical(sort(unique(df_meta$unique_id)), sort(unique(df_detect$unique_id)))
+})
+
+
+# meta summary ------------------------------------------------------------
+
+# unique values
+janitor::tabyl(df_meta$platform_type)
+janitor::tabyl(df_meta$instrument_type)
+janitor::tabyl(df_meta$channel)
+janitor::tabyl(df_meta$soundfiles_timezone)
+janitor::tabyl(df_meta$duty_cycle_seconds)
+janitor::tabyl(df_meta$qc_data)
+
+# timestamps
+df_meta %>% 
+  select(where(is.Date)) %>%
+  table()
+df_meta %>% 
+  select(where(is.POSIXct)) %>%
+  summary()
+
+# numeric values
+df_meta %>% 
+  select(where(is.numeric)) %>%
+  summary()
+
+# detection methods
+df_meta_by_species %>% 
+  janitor::tabyl(detection_method, species)
+
+# protocol reference
+df_meta_by_species %>% 
+  janitor::tabyl(protocol_reference, detection_method, species)
+
+
+# detect summary ----------------------------------------------------------
+
+df_detect %>% 
+  select(where(is.POSIXct)) %>%
+  summary()
+
+df_detect %>% 
+  janitor::tabyl(presence, species) %>% 
+  janitor::adorn_totals(where = c("row"))
+
+df_detect %>% 
+  janitor::tabyl(presence, species) %>% 
+  janitor::adorn_percentages("row") %>% 
+  janitor::adorn_pct_formatting(digits = 0)
+
+df_detect %>% 
+  janitor::tabyl(call_type, species)
 
 
 # export ------------------------------------------------------------------
 
 list(
-  glider = list(
-    tracks = df_gliders_day %>% 
-      select(project, site_id, platform_type, date, latitude, longitude),
-    detections = df_glider_detections %>% 
-      filter(detection == "yes"),
-    deployments = df_glider_deployments
-  ),
-  buoy = list(
-    detections = df_buoy_detections,
-    deployments = df_buoy_deployments
-  )
+  meta = df_meta,
+  detect = df_detect
 ) %>% 
-  saveRDS("rds/hansen.rds")
+  saveRDS("rds/glider.rds")

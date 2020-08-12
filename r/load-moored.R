@@ -2,15 +2,18 @@
 
 library(tidyverse)
 library(lubridate)
+library(tsibble)
 library(logger)
 
 log_threshold(DEBUG)
 
+FILE_META <- "~/Dropbox/Work/nefsc/transfers/20200804 - mooring and glider data/Moored_metadata_2020-08-04.csv"
+FILE_DETECT <- "~/Dropbox/Work/nefsc/transfers/20200804 - mooring and glider data/Moored_detection_data_2020-08-04.csv"
 
 # load metadata -----------------------------------------------------------
 
 df_meta_csv <- read_csv(
-  "~/Dropbox/Work/nefsc/transfers/20200728 - updated moored dataset/Moored_metadata_2020-07-28.csv",
+  FILE_META,
   col_types = cols(
     .default = col_character(),
     CHANNEL = col_integer(),
@@ -21,25 +24,21 @@ df_meta_csv <- read_csv(
     SAMPLING_RATE_HZ = col_double()
   )
 ) %>% 
-  janitor::clean_names() %>%
-  mutate(
-    # normalize text
-    platform_type = tolower(platform_type),
-    duty_cycle_seconds = tolower(duty_cycle_seconds)
-  ) %>% 
-  select(unique_id, everything()) # bring unique_id to first column
+  janitor::clean_names() # cleans up column names, mainly converting to lowercase
 
-df_meta_all <- df_meta_csv %>% 
+df_meta_all <- df_meta_csv %>%
   mutate(
     submission_date = ymd(submission_date),
     monitoring_start_datetime = ymd_hms(monitoring_start_datetime),
     monitoring_end_datetime = ymd_hms(monitoring_end_datetime)
-  )
+  ) %>% 
+  select(unique_id, everything()) # bring unique_id to first column
 
-# load detection data -----------------------------------------------------
+
+# load detect data --------------------------------------------------------
 
 df_detect_csv <- read_csv(
-  "~/Dropbox/Work/nefsc/transfers/20200728 - updated moored dataset/Moored_detection_data_2020-07-28.csv",
+  FILE_DETECT,
   col_types = cols(
     .default = col_character(),
     ANALYSIS_PERIOD_EFFORT_SECONDS = col_double(),
@@ -58,8 +57,8 @@ df_detect_all <- df_detect_csv %>%
 # screen projects ---------------------------------------------------------
 
 # only projects with detection data
-projects_without_data <- setdiff(unique(df_meta_all$unique_id), unique(df_detect$unique_id))
-log_info("excluding projects with no detection data (n = {length(projects_without_data)})")
+projects_no_detections <- setdiff(unique(df_meta_all$unique_id), unique(df_detect_all$unique_id))
+log_info("excluding projects with no detection data (n = {length(projects_no_detections)})")
 
 # only projects with valid lat/lon
 projects_invalid_latlon <- df_meta_all %>% 
@@ -68,7 +67,17 @@ projects_invalid_latlon <- df_meta_all %>%
 log_info("excluding projects with invalid lat/lon (n = {length(projects_invalid_latlon)})")
 
 df_meta <- df_meta_all %>% 
-  filter(!unique_id %in% c(projects_without_data, projects_invalid_latlon))
+  filter(!unique_id %in% c(projects_no_detections, projects_invalid_latlon)) %>%
+  rename_with(
+    ~ str_replace(., "_", ":"),
+    starts_with(c("narw_", "humpback_", "sei_", "fin_", "blue_"))
+  ) %>% 
+  pivot_longer(
+    starts_with(c("narw", "humpback", "sei", "fin", "blue")),
+    names_to = c("species", ".value"),
+    names_sep = ":",
+    values_drop_na = TRUE
+  )
 
 df_detect <- df_detect_all %>% 
   filter(unique_id %in% df_meta$unique_id) %>% 
@@ -81,15 +90,7 @@ df_detect <- df_detect_all %>%
     names_to = c("species", ".value"),
     names_sep = ":"
   ) %>% 
-  filter(!is.na(presence)) %>% 
-  mutate(
-    presence = case_when(
-      presence == "Not Detected" ~ "no",
-      presence == "Possibly Detected" ~ "maybe",
-      presence == "Detected" ~ "yes",
-      TRUE ~ NA_character_
-    )
-  )
+  filter(!is.na(presence))
 
 
 # meta summary ------------------------------------------------------------
@@ -115,6 +116,14 @@ df_meta %>%
   select(where(is.numeric)) %>%
   summary()
 
+# detection methods
+df_meta %>% 
+  janitor::tabyl(detection_method, species)
+
+# protocol reference
+df_meta %>% 
+  janitor::tabyl(protocol_reference, detection_method, species)
+
 
 # detect summary ----------------------------------------------------------
 
@@ -138,46 +147,91 @@ df_detect%>%
 df_detect %>% 
   janitor::tabyl(call_type, species)
 
-df_detect %>% 
-  janitor::tabyl(detection_method, species)
-
-df_detect %>% 
-  janitor::tabyl(protocol_reference, detection_method)
-
 
 # qaqc --------------------------------------------------------------------
 
 stopifnot(exprs = {
-  all(!duplicated(df_meta$unique_id))
-  all(!is.na(select(df_meta, unique_id, starts_with("monitoring_"), latitude, longitude)))
-  all(df_meta$longitude < 0)
+  # no duplicated ids
+  all(!duplicated(str_c(df_meta$unique_id, df_meta$species)))
   
+  # require columns
+  all(!is.na(df_meta$project))
+  all(!is.na(select(df_meta, starts_with("data_poc"))))
+  all(!is.na(df_meta$instrument_type))
+  all(!is.na(select(df_meta, starts_with("submitter_"))))
+  all(!is.na(df_meta$submission_date))
+  all(!is.na(df_meta$latitude))
+  all(!is.na(df_meta$longitude))
+  all(!is.na(df_detect$unique_id))
+  all(!is.na(df_detect$species))
+  all(!is.na(df_detect$presence))
+  all(!is.na(select(df_detect, starts_with("analysis_period"))))
+  all(!is.na(select(df_detect, starts_with("monitoring_"))))
+  
+  # enumerated values
+  all(df_meta$platform_type %in% c("Mooring", "surface buoy"))
+  all(unique(df_detect$presence) %in% c("Detected", "Possibly Detected", "Not Detected"))
+  all(df_detect$analysis_period_effort_seconds == 86400)
+  with(df_detect,
+    all(analysis_period_effort_seconds == as.numeric(difftime(analysis_period_end_datetime, analysis_period_start_datetime, units = "sec")))
+  )
+  
+  # range of analysis periods is within monitoring period
+  df_detect %>% 
+    group_by(unique_id) %>% 
+    summarise(
+      analysis_start = min(analysis_period_start_datetime),
+      analysis_end = min(analysis_period_end_datetime),
+      .groups = "drop"
+    ) %>% 
+    left_join(
+      df_meta %>% 
+        select(unique_id, monitoring_start = monitoring_start_datetime, monitoring_end = monitoring_end_datetime) %>% 
+        mutate(
+          monitoring_start = floor_date(monitoring_start, unit = "day"),
+          monitoring_end = floor_date(monitoring_end, unit = "day")
+        ),
+      by = "unique_id"
+    ) %>% 
+    filter(analysis_start < monitoring_start | analysis_end > monitoring_end) %>% 
+    nrow() == 0
+  
+  # no duplicate analysis dates
+  all(
+    df_detect %>% 
+      mutate(
+        analysis_date = as_date(analysis_period_start_datetime)
+      ) %>% 
+      group_by(unique_id, species, analysis_date) %>% 
+      count() %>% 
+      pull(n) == 1
+  )
+  
+  # monitoring period end is after start
+  all(as.numeric(difftime(df_meta$monitoring_end_datetime, df_meta$monitoring_start_datetime, units = "sec")) > 0)
+  # latitude between 0 to 90
+  all(df_meta$latitude >= 0)
+  all(df_meta$latitude <= 90)
+  # latitude between -90 and 0 (west of central meridian)
+  all(df_meta$longitude >= -90)
+  all(df_meta$longitude <= 0)
+  
+  # meta and detect contain same ids
   identical(sort(unique(df_meta$unique_id)), sort(unique(df_detect$unique_id)))
-  
-  all(!is.na(select(df_detect, unique_id, starts_with("analysis_period"), species, presence)))
-  all(unique(df_detect$presence) %in% c("yes", "no", "maybe"))
 })
 
-df_detect %>% 
-  distinct(unique_id, detection_method) %>% 
-  group_by(unique_id) %>% 
-  add_count() %>%
-  filter(n > 1)
+# warnings ----------------------------------------------------------------
 
-df_detect %>% 
-  distinct(unique_id, species, protocol_reference) %>% 
-  group_by(unique_id, species) %>% 
-  add_count() %>%
-  filter(n > 1)
-
-
-detections_not_daily <- df_detect %>%
-  filter(analysis_period_effort_seconds < 86400) %>%
-  pull(unique_id) %>% 
-  unique()
-
-df_meta %>% 
-  filter(unique_id %in% detections_not_daily)
+df_gaps <- df_detect %>% 
+  mutate(
+    analysis_date = as_date(analysis_period_start_datetime)
+  ) %>% 
+  select(unique_id, analysis_date, species, presence) %>% 
+  as_tsibble(key = c(unique_id, species), index = analysis_date) %>% 
+  count_gaps()
+if (nrow(df_gaps) > 0) {
+  log_warn("detected {nrow(df_gaps)} gaps")
+}
 
 # export ------------------------------------------------------------------
 

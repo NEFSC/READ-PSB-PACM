@@ -1,13 +1,14 @@
-# generate datasets by species/group
+# generate datasets
 
 library(tidyverse)
 library(lubridate)
 library(glue)
 library(jsonlite)
 
-gen <- readRDS("rds/gen.rds")
-hansen <- readRDS("rds/hansen.rds")
-towed_arrays <- readRDS("rds/towed-arrays.rds")
+moored <- readRDS("rds/moored.rds")
+glider <- readRDS("rds/glider.rds")
+
+# towed_arrays <- readRDS("rds/towed-arrays.rds")
 
 # each dataset has:
 # - tracks.json
