@@ -2,18 +2,19 @@
 
 library(tidyverse)
 library(lubridate)
+library(sf)
 library(logger)
 
 log_threshold(DEBUG)
 
-FILE_GLIDER_META <- "~/Dropbox/Work/nefsc/transfers/20200806 - glider data/Glider_metadata_2020-08-06.csv"
-FILE_GLIDER_DETECT <- "~/Dropbox/Work/nefsc/transfers/20200804 - mooring and glider data/Glider_detection_data_2020-08-04.csv"
+FILE_META <- "~/Dropbox/Work/nefsc/transfers/20200806 - glider data/Glider_metadata_2020-08-06.csv"
+FILE_DETECT <- "~/Dropbox/Work/nefsc/transfers/20200804 - mooring and glider data/Glider_detection_data_2020-08-04.csv"
 
 
 # load metadata -----------------------------------------------------------
 
-df_meta_csv <- read_csv(
-  FILE_GLIDER_META,
+df_projects_csv <- read_csv(
+  FILE_META,
   col_types = cols(
     .default = col_character(),
     CHANNEL = col_integer(),
@@ -24,28 +25,35 @@ df_meta_csv <- read_csv(
 ) %>% 
   janitor::clean_names()
 
-df_meta <- df_meta_csv %>% 
+df_projects <- df_projects_csv %>% 
   mutate(
+    dataset = "glider",
     submission_date = ymd(submission_date),
     monitoring_start_datetime = ymd_hms(monitoring_start_datetime),
-    monitoring_end_datetime = ymd_hms(monitoring_end_datetime)
+    monitoring_end_datetime = ymd_hms(monitoring_end_datetime),
+    latitude = NA_real_,
+    longitude = NA_real_
   ) %>% 
-  select(unique_id, everything()) %>% 
+  rename(project_name = project) %>% 
+  select(dataset, project = unique_id, everything())
+
+df_projects_species <- df_projects %>% 
   rename_with(
     ~ str_replace(., "_", ":"),
     starts_with(c("narw_", "humpback_", "sei_", "fin_", "blue_"))
-  ) %>% 
+  ) %>%
   pivot_longer(
     starts_with(c("narw", "humpback", "sei", "fin", "blue")),
     names_to = c("species", ".value"),
     names_sep = ":",
     values_drop_na = TRUE
-  )
+  ) %>%
+  select(dataset, species, project, everything())
 
 # load detect data --------------------------------------------------------
 
-df_detect_csv <- read_csv(
-  FILE_GLIDER_DETECT,
+df_detects_csv <- read_csv(
+  FILE_DETECT,
   col_types = cols(
     .default = col_character(),
     ANALYSIS_PERIOD_EFFORT_SECONDS = col_double(),
@@ -55,15 +63,16 @@ df_detect_csv <- read_csv(
 ) %>% 
   janitor::clean_names()
 
-df_detect <- df_detect_csv %>% 
+df_detects_raw <- df_detects_csv %>% 
   mutate(
+    dataset = "glider",
     analysis_period_start_datetime = ymd_hms(analysis_period_start_datetime),
     analysis_period_end_datetime = ymd_hms(analysis_period_end_datetime)
   ) %>% 
   select(
-    unique_id, analysis_period_effort_seconds, starts_with("analysis_period_"),
+    dataset, project = unique_id, analysis_period_effort_seconds, starts_with("analysis_period_"),
     latitude, longitude,
-    starts_with("narw_"), starts_with("humpback_"), starts_with("sei_"), starts_with("fin_")
+    starts_with("narw_"), starts_with("humpback_"), starts_with("sei_"), starts_with("fin_"), starts_with("blue_")
   ) %>%
   rename_with(
     ~ str_replace(., "_", ":"),
@@ -74,135 +83,185 @@ df_detect <- df_detect_csv %>%
     names_to = c("species", ".value"),
     names_sep = ":",
     values_drop_na = TRUE
+  ) %>% 
+  filter(!is.na(presence))
+
+
+# generate tracks ---------------------------------------------------------
+
+df_tracks <- df_detects_raw %>% 
+  select(dataset, project, datetime = analysis_period_start_datetime, latitude, longitude) %>% 
+  distinct() %>% 
+  arrange(project, datetime)
+
+sf_tracks_points <- df_tracks %>% 
+  st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
+
+sf_tracks <- sf_tracks_points %>% 
+  group_by(dataset, project) %>% 
+  summarise(
+    start = min(datetime),
+    end = max(datetime),
+    do_union = FALSE
+  ) %>% 
+  st_cast("LINESTRING")
+
+mapview::mapview(sf_tracks)
+
+
+# generate daily detects --------------------------------------------------
+# daily mean lat/lon of instantaneous detections
+
+df_detects_daily <- df_detects_raw %>% 
+  filter(presence == "Detected") %>% 
+  mutate(date = as_date(analysis_period_start_datetime)) %>% 
+  arrange(project, species, date) %>% 
+  group_by(dataset, project, species, date) %>% 
+  summarise(
+    n_detections = n(),
+    latitude = first(latitude),
+    longitude = first(longitude),
+    .groups = "drop"
+  ) %>% 
+  mutate(
+    point = str_c(project, format(date, "%Y%m%d"), sep = "_"),
+    presence = "y"
   )
+
+
+# generate points ---------------------------------------------------------
+
+df_points <- df_tracks %>% 
+  mutate(
+    point = str_c(project, format(as_date(datetime), "%Y%m%d"), sep = "_")
+  ) %>% 
+  arrange(point, datetime) %>% 
+  group_by(point, dataset, project) %>% 
+  summarise(
+    latitude = first(latitude),
+    longitude = first(longitude),
+    .groups = "drop"
+  ) %>% 
+  filter(
+    point %in% unique(df_detects_daily$point)
+  )
+
+stopifnot(all(!duplicated(df_points$point)))
+
+sf_points <- df_points %>% 
+  st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
+
+mapview::mapview(sf_points)
+
+
+# generate detects --------------------------------------------------------
+
+df_detects <- df_detects_daily %>% 
+  select(-latitude, -longitude, -n_detections) %>% 
+  select(dataset, species, project, point, everything())
 
 
 # qaqc --------------------------------------------------------------------
 
 stopifnot(exprs = {
   # no duplicated ids
-  all(!duplicated(str_c(df_meta$unique_id, df_meta$species)))
+  all(!duplicated(df_projects$project))
   
   # require columns
-  all(!is.na(df_meta$project))
-  all(!is.na(select(df_meta, starts_with("data_poc"))))
-  all(!is.na(df_meta$instrument_type))
-  all(!is.na(select(df_meta, starts_with("submitter_"))))
-  all(!is.na(df_meta$submission_date))
-  all(!is.na(df_detect$unique_id))
-  all(!is.na(df_detect$species))
-  all(!is.na(df_detect$presence))
-  all(!is.na(df_detect$latitude))
-  all(!is.na(df_detect$longitude))
-  all(!is.na(select(df_detect, starts_with("analysis_period"))))
-  all(!is.na(select(df_detect, starts_with("monitoring_"))))
+  all(!is.na(df_projects$project))
+  all(!is.na(select(df_projects, starts_with("data_poc"))))
+  all(!is.na(df_projects$instrument_type))
+  all(!is.na(select(df_projects, starts_with("submitter_"))))
+  all(!is.na(df_projects$submission_date))
+  
+  all(!is.na(df_detects$point))
+  all(!is.na(df_detects$project))
+  all(!is.na(df_detects$species))
+  all(!is.na(df_detects$presence))
+  all(!is.na(df_detects$date))
+  all(!is.na(df_detects$dataset))
   
   # enumerated values
-  all(df_meta$platform_type %in% c("slocum", "wave"))
-  all(unique(df_detect$presence) %in% c("Detected", "Possibly Detected", "Not Detected"))
-  with(df_detect,
-       all(analysis_period_effort_seconds == as.numeric(difftime(analysis_period_end_datetime, analysis_period_start_datetime, units = "sec")))
-  )
+  all(df_projects$platform_type %in% c("slocum", "wave"))
+  all(unique(df_detects$presence) %in% c("y", "m", "n"))
   
-  # range of analysis periods is within monitoring period
-  df_detect %>% 
-    group_by(unique_id) %>% 
-    summarise(
-      analysis_start = min(analysis_period_start_datetime),
-      analysis_end = min(analysis_period_end_datetime),
-      .groups = "drop"
-    ) %>% 
-    left_join(
-      df_meta %>% 
-        select(unique_id, monitoring_start = monitoring_start_datetime, monitoring_end = monitoring_end_datetime) %>% 
-        mutate(
-          monitoring_start = floor_date(monitoring_start, unit = "day"),
-          monitoring_end = floor_date(monitoring_end, unit = "day")
-        ),
-      by = "unique_id"
-    ) %>% 
-    filter(analysis_start < monitoring_start | analysis_end > monitoring_end) %>% 
-    nrow() == 0
-  
-  # no duplicate analysis periods
+  # no duplicate detect dates
   all(
-    df_detect %>% 
-      group_by(unique_id, species, analysis_period_start_datetime) %>% 
+    df_detects %>% 
+      group_by(point, species, date) %>% 
       count() %>% 
       pull(n) == 1
   )
   
   # monitoring period end is after start
-  all(as.numeric(difftime(df_meta$monitoring_end_datetime, df_meta$monitoring_start_datetime, units = "sec")) > 0)
-  # analysis period end is after start
-  all(as.numeric(difftime(df_detect$analysis_period_end_datetime, df_detect$analysis_period_start_datetime, units = "sec")) > 0)
+  all(as.numeric(difftime(df_projects$monitoring_end_datetime, df_projects$monitoring_start_datetime, units = "sec")) > 0)
   # latitude between 0 to 90
-  all(df_detect$latitude >= 0)
-  all(df_detect$latitude <= 90)
+  all(df_points$latitude >= 0)
+  all(df_points$latitude <= 90)
   # latitude between -90 and 0 (west of central meridian)
-  all(df_detect$longitude >= -90)
-  all(df_detect$longitude <= 0)
+  all(df_points$longitude >= -90)
+  all(df_points$longitude <= 0)
   
   # meta and detect contain same ids
-  identical(sort(unique(df_meta$unique_id)), sort(unique(df_detect$unique_id)))
+  identical(sort(unique(df_projects$project)), sort(unique(df_detects$project)))
 })
 
 
 # meta summary ------------------------------------------------------------
 
 # unique values
-janitor::tabyl(df_meta$platform_type)
-janitor::tabyl(df_meta$instrument_type)
-janitor::tabyl(df_meta$channel)
-janitor::tabyl(df_meta$soundfiles_timezone)
-janitor::tabyl(df_meta$duty_cycle_seconds)
-janitor::tabyl(df_meta$qc_data)
+janitor::tabyl(df_projects$platform_type)
+janitor::tabyl(df_projects$instrument_type)
+janitor::tabyl(df_projects$channel)
+janitor::tabyl(df_projects$soundfiles_timezone)
+janitor::tabyl(df_projects$duty_cycle_seconds)
+janitor::tabyl(df_projects$qc_data)
 
 # timestamps
-df_meta %>% 
+df_projects %>% 
   select(where(is.Date)) %>%
   table()
-df_meta %>% 
+df_projects %>% 
   select(where(is.POSIXct)) %>%
   summary()
 
 # numeric values
-df_meta %>% 
+df_projects %>% 
   select(where(is.numeric)) %>%
   summary()
 
 # detection methods
-df_meta_by_species %>% 
+df_projects_species %>% 
   janitor::tabyl(detection_method, species)
 
 # protocol reference
-df_meta_by_species %>% 
+df_projects_species %>% 
   janitor::tabyl(protocol_reference, detection_method, species)
 
 
 # detect summary ----------------------------------------------------------
 
-df_detect %>% 
-  select(where(is.POSIXct)) %>%
+df_detects %>% 
+  select(where(is.Date)) %>%
   summary()
 
-df_detect %>% 
+df_detects %>% 
   janitor::tabyl(presence, species) %>% 
   janitor::adorn_totals(where = c("row"))
 
-df_detect %>% 
+df_detects %>% 
   janitor::tabyl(presence, species) %>% 
   janitor::adorn_percentages("row") %>% 
   janitor::adorn_pct_formatting(digits = 0)
-
-df_detect %>% 
-  janitor::tabyl(call_type, species)
 
 
 # export ------------------------------------------------------------------
 
 list(
-  meta = df_meta,
-  detect = df_detect
+  projects = df_projects,
+  points = sf_points,
+  tracks = sf_tracks,
+  detects = df_detects
 ) %>% 
   saveRDS("rds/glider.rds")
+
