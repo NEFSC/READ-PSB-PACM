@@ -2,29 +2,29 @@
 
 library(tidyverse)
 library(lubridate)
+library(sf)
 library(readxl)
-library(logger)
 
-FILE_TOWED_DETECT <- "~/Dropbox/Work/nefsc/transfers/20200326 - towed arrays/"
-FILE_TOWED_META <- "~/Dropbox/Work/nefsc/transfers/20200529 - towed array metadata/Towed_Array_effort_Walker_Website.xlsx"
+FILE_DETECT <- "~/Dropbox/Work/nefsc/transfers/20200326 - towed arrays/"
+FILE_META <- "~/Dropbox/Work/nefsc/transfers/20200529 - towed array metadata/Towed_Array_effort_Walker_Website.xlsx"
 
 # metadata ----------------------------------------------------------------
 
-df_meta_bw <- read_excel(
-  FILE_TOWED_META,
+df_projects_bw <- read_excel(
+  FILE_META,
   sheet = "BW"
 ) %>% 
   mutate(species = "beaked")
 
-df_meta_kogia <- read_xlsx(
-  FILE_TOWED_META,
+df_projects_kogia <- read_xlsx(
+  FILE_META,
   sheet = "KOGIA"
 ) %>% 
   mutate(species = "kogia")
 
-stopifnot(identical(names(df_meta_bw), names(df_meta_kogia)))
+stopifnot(identical(names(df_projects_bw), names(df_projects_kogia)))
 
-df_meta_all <- bind_rows(df_meta_bw, df_meta_kogia) %>% 
+df_projects <- bind_rows(df_projects_bw, df_projects_kogia) %>% 
   janitor::clean_names() %>% 
   mutate(
     submission_date = as_date(submission_date),
@@ -34,10 +34,9 @@ df_meta_all <- bind_rows(df_meta_bw, df_meta_kogia) %>%
   ) %>% 
   select(-ends_with(c("_excel", "_oracle")), -starts_with("analysis_"), -sampling_rate_khz)
 
-
 # ERROR: columns that vary by project/species include platform_type, qc_data
 
-df_meta <- df_meta_all %>%
+df_projects <- df_projects %>%
   select(-starts_with("monitoring")) %>% 
   rename(data_poc_name = data_poc) %>% 
   mutate(
@@ -51,7 +50,7 @@ df_meta <- df_meta_all %>%
   distinct() %>% 
   left_join(
     # monitoring start/end datetimes
-    df_meta_all %>% 
+    df_projects %>% 
       group_by(project, species) %>% 
       summarise(
         monitoring_start_datetime = min(monitoring_start_datetime),
@@ -62,7 +61,8 @@ df_meta <- df_meta_all %>%
   ) %>% 
   mutate(
     # missing columns
-    unique_id = project,
+    id = project,
+    platform_type = "towed",
     platform_id = NA_character_,
     site_id = NA_character_,
     instrument_type = NA_character_,
@@ -71,14 +71,17 @@ df_meta <- df_meta_all %>%
     water_depth_meters = NA_real_,
     recorder_depth_meters = NA_real_
   ) %>% 
-  select(unique_id, everything())
+  select(id, everything())
 
-stopifnot(all(!duplicated(str_c(df_meta$project, df_meta$species))))
+stopifnot(all(!duplicated(str_c(df_projects$project, df_projects$species))))
+
+df_projects %>% 
+  janitor::tabyl(project, species)
 
 # tracks ------------------------------------------------------------------
 
 df_track_gu1303 <- read_xlsx(
-  file.path(FILE_TOWED_DETECT, "ShipTracklines", "GU1303_gpsData.xlsx"),
+  file.path(FILE_DETECT, "ShipTracklines", "GU1303_gpsData.xlsx"),
   col_types = "guess"
 ) %>% 
   janitor::clean_names() %>% 
@@ -88,7 +91,7 @@ df_track_gu1303 <- read_xlsx(
   )
 
 df_track_gu1605 <- read_xlsx(
-  file.path(FILE_TOWED_DETECT, "ShipTracklines", "GU1605_allGPS_Corrected.xlsx"),
+  file.path(FILE_DETECT, "ShipTracklines", "GU1605_allGPS_Corrected.xlsx"),
   col_types = "guess"
 ) %>% 
   janitor::clean_names() %>% 
@@ -98,10 +101,10 @@ df_track_gu1605 <- read_xlsx(
   )
 
 # TODO: get start/end timestamps in UTC for echosounders
-df_track_gu1803 <- list.files(file.path(FILE_TOWED_DETECT, "ShipTracklines", "GU1803_ShipGPS_EffortAppended_FIXED")) %>% 
+df_track_gu1803 <- list.files(file.path(FILE_DETECT, "ShipTracklines", "GU1803_ShipGPS_EffortAppended_FIXED")) %>% 
   map_df(function (fname) {
     read_xlsx(
-      file.path(FILE_TOWED_DETECT, "ShipTracklines", "GU1803_ShipGPS_EffortAppended_FIXED", fname),
+      file.path(FILE_DETECT, "ShipTracklines", "GU1803_ShipGPS_EffortAppended_FIXED", fname),
       col_types = "guess"
     ) %>% 
       janitor::clean_names()
@@ -116,11 +119,26 @@ df_track_gu1803 <- list.files(file.path(FILE_TOWED_DETECT, "ShipTracklines", "GU
     track_id = "GU1803"
   ) %>% 
   filter(
-    user_field >= 0
+    user_field >= 0,
+    longitude > -90,
+    longitude < -30,
+    latitude < 90
   )
+summary(df_track_gu1803)
+
+df_track_gu1803 %>% 
+  st_as_sf(coords = c("longitude", "latitude"), crs = 4326) %>% 
+  group_by(track_id) %>% 
+  summarise(
+    start = min(utc),
+    end = max(utc),
+    do_union = FALSE
+  ) %>% 
+  st_cast("LINESTRING") %>% 
+  mapview::mapview()
 
 df_track_hb1303 <- read_xlsx(
-  file.path(FILE_TOWED_DETECT, "ShipTracklines", "HB1303_PG_GPS_ALL_AIedits.xlsx"),
+  file.path(FILE_DETECT, "ShipTracklines", "HB1303_PG_GPS_ALL_AIedits.xlsx"),
   col_types = "guess"
 ) %>% 
   janitor::clean_names() %>% 
@@ -128,14 +146,15 @@ df_track_hb1303 <- read_xlsx(
     track_id = "HB1303"
   )
 
-# TODO: fix HB1403 - 20140725 (GMT) sheet to match others, missing echosounders
+# TODO: fix HB1403 - 20180725 (GMT) sheet to match others, missing echosounders
 
 # Sheet: 20140725 (GMT)
 #    - drop `PC Time`? same as `GpsDate`? (assume so)
 #    - does `Recording Effort` column match `MF Rec Effort` or `HF Rec Effort` on other sheets? (set both to Recording Effort)
 #    - missing echosounders column (assume NA)
 df_track_hb1403_1 <- read_xlsx(
-  file.path(FILE_TOWED_DETECT, "ShipTracklines", "HB1403_Completed_GpsData_AIedits.xlsx"),
+  file.path(FILE_DETECT, "ShipTracklines", "HB1403_Completed_GpsData_AIedits.xlsx"),
+  sheet = 1,
   col_types = "guess",
   range = "A1:Q28830"
 ) %>% 
@@ -154,7 +173,7 @@ df_track_hb1403_1 <- read_xlsx(
     echosounders = NA_character_
   )
 df_track_hb1403_2 <- read_xlsx(
-  file.path(FILE_TOWED_DETECT, "ShipTracklines", "HB1403_Completed_GpsData_AIedits.xlsx"),
+  file.path(FILE_DETECT, "ShipTracklines", "HB1403_Completed_GpsData_AIedits.xlsx"),
   sheet = 2,
   col_types = "guess",
   range = "A1:T86072"
@@ -165,7 +184,7 @@ df_track_hb1403_2 <- read_xlsx(
     distance_km = distance
   )
 df_track_hb1403_3 <- read_xlsx(
-  file.path(FILE_TOWED_DETECT, "ShipTracklines", "HB1403_Completed_GpsData_AIedits.xlsx"),
+  file.path(FILE_DETECT, "ShipTracklines", "HB1403_Completed_GpsData_AIedits.xlsx"),
   sheet = 3,
   col_types = "guess",
   range = "A1:T59256"
@@ -175,14 +194,14 @@ df_track_hb1403_3 <- read_xlsx(
     distance_km = distance
   )
 df_track_hb1403_4 <- read_xlsx(
-  file.path(FILE_TOWED_DETECT, "ShipTracklines", "HB1403_Completed_GpsData_AIedits.xlsx"),
+  file.path(FILE_DETECT, "ShipTracklines", "HB1403_Completed_GpsData_AIedits.xlsx"),
   sheet = 4,
   col_types = "guess",
   range = "A1:T30509"
 ) %>% 
   janitor::clean_names()
 df_track_hb1403_5 <- read_xlsx(
-  file.path(FILE_TOWED_DETECT, "ShipTracklines", "HB1403_Completed_GpsData_AIedits.xlsx"),
+  file.path(FILE_DETECT, "ShipTracklines", "HB1403_Completed_GpsData_AIedits.xlsx"),
   sheet = 5,
   col_types = "guess",
   range = "A1:T14141"
@@ -205,7 +224,7 @@ df_track_hb1403 <- bind_rows(
   )
 
 df_track_hb1503_1 <- read_xlsx(
-  file.path(FILE_TOWED_DETECT, "ShipTracklines", "HB1503_20150615_gpsData.xlsx"),
+  file.path(FILE_DETECT, "ShipTracklines", "HB1503_20150615_gpsData.xlsx"),
   col_types = "guess"
 ) %>% 
   janitor::clean_names() %>% 
@@ -218,12 +237,12 @@ df_track_hb1503_1 <- read_xlsx(
     gps_time = parse_number(gps_time)
   )
 df_track_hb1503_2 <- read_xlsx(
-  file.path(FILE_TOWED_DETECT, "ShipTracklines", "HB1503_Copy of Leg1_gps_June16-18.xlsx"),
+  file.path(FILE_DETECT, "ShipTracklines", "HB1503_Copy of Leg1_gps_June16-18.xlsx"),
   col_types = "guess"
 ) %>% 
   janitor::clean_names()
 df_track_hb1503_3 <- read_xlsx(
-  file.path(FILE_TOWED_DETECT, "ShipTracklines", "HB1503_Leg2_ShipGPS.xlsx"),
+  file.path(FILE_DETECT, "ShipTracklines", "HB1503_Leg2_ShipGPS.xlsx"),
   col_types = "guess"
 ) %>% 
   janitor::clean_names() %>% 
@@ -240,7 +259,7 @@ df_track_hb1503 <- bind_rows(
   )
 
 df_track_hb1603 <- read_xlsx(
-  file.path(FILE_TOWED_DETECT, "ShipTracklines", "HB1603_ship_GPS_EchoAdd_All_legs_combined.xlsx"),
+  file.path(FILE_DETECT, "ShipTracklines", "HB1603_ship_GPS_EchoAdd_All_legs_combined.xlsx"),
   col_types = c(rep("guess", times = 21), "text")
 ) %>% 
   janitor::clean_names() %>% 
@@ -250,7 +269,7 @@ df_track_hb1603 <- read_xlsx(
   )
 
 df_track_hrs1701 <- read_csv(
-  file.path(FILE_TOWED_DETECT, "ShipTracklines", "HRS1701_Skala_gpsData.csv")
+  file.path(FILE_DETECT, "ShipTracklines", "HRS1701_Skala_gpsData.csv")
 ) %>% 
   janitor::clean_names() %>% 
   mutate(
@@ -263,7 +282,7 @@ df_track_hrs1701 <- read_csv(
     track_id = "HRS1701"
   )
 
-df_tracks <- list(
+df_tracks_raw <- list(
   df_track_gu1303,
   df_track_gu1605,
   df_track_gu1803,
@@ -273,47 +292,64 @@ df_tracks <- list(
   df_track_hb1603,
   df_track_hrs1701
 ) %>% 
-  map_df(~ select(., unique_id = track_id, datetime = utc, latitude, longitude, echosounders)) %>% 
+  map_df(~ select(., id = track_id, datetime = utc, latitude, longitude, echosounders)) %>% 
   mutate(
-    unique_id = if_else(
-      unique_id %in% c("GU1605"),
-      str_c("SEFSC_", unique_id, sep = ""),
-      str_c("NEFSC_", unique_id, sep = "")
+    id = if_else(
+      id %in% c("GU1605"),
+      str_c("SEFSC_", id, sep = ""),
+      str_c("NEFSC_", id, sep = "")
     )
   )
 
-summary(df_tracks)
-table(df_tracks$unique_id, df_tracks$echosounders)
-
-df_tracks %>% 
-  group_by(unique_id) %>% 
-  summarise(
-    n = n(),
-    start = min(datetime),
-    end = max(datetime),
-    duration_days = as.numeric(difftime(end, start, tz = "UTC", units = "days"))
-  )
 df_tracks_hr <- df_tracks %>% 
-  group_by(unique_id, datetime = floor_date(datetime, unit = "hour")) %>% 
+  mutate(datetime2 = datetime) %>% 
+  group_by(project_id = id, datetime = floor_date(datetime, unit = "hour")) %>% 
   summarise(
+    # n = n(),
+    # start = min(datetime2),
+    # end = max(datetime2),
     latitude = median(latitude, na.rm = TRUE),
     longitude = median(longitude, na.rm = TRUE),
-    echosounders = any(echosounders == "ON"),
+    # echosounders = any(echosounders == "ON"),
     .groups = "drop"
+  ) %>% 
+  mutate(
+    id = str_c(project_id, format(datetime, "%Y%m%d%H"), sep = "@")
   )
 
-names(df_tracks_hr)
+df_tracks_hr
+
+df_projects %>% 
+  anti_join(df_tracks_hr, by = c("id" = "track_id")) %>%
+  pull(id)
+
+setdiff(unique(df_tracks$id), unique(df_projects$id))
+
+sf_points <- df_tracks_hr %>% 
+  st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
+
+mapview::mapview(sf_points)
+
+sf_tracks <- sf_points %>% 
+  group_by(id = project_id) %>% 
+  summarise(
+    # start = min(start),
+    # end = max(end),
+    do_union = FALSE
+  ) %>% 
+  st_cast("LINESTRING")
+
+mapview::mapview(sf_tracks)
 
 
+# detect: kogia -----------------------------------------------------------
 
-# beaked: kogia -----------------------------------------------------------
-
-df_kogia_raw <- read_xlsx(file.path(FILE_TOWED_DETECT, "Kogia_data", "Kogia Detections.xlsx"), sheet = "NBHF_only")
+df_kogia_raw <- read_xlsx(file.path(FILE_DETECT, "Kogia_data", "Kogia Detections.xlsx"), sheet = "NBHF_only")
 
 df_kogia <- df_kogia_raw %>% 
   janitor::clean_names() %>% 
   transmute(
-    unique_id = str_sub(database, 1, 6),
+    id = str_sub(database, 1, 6),
     analysis_period_start = utc,
     analysis_period_end = event_end,
     analysis_period_effort_seconds = as.numeric(difftime(analysis_period_end, analysis_period_start, units = "secs")),
@@ -324,10 +360,10 @@ df_kogia <- df_kogia_raw %>%
     call_type = click_type
   ) %>% 
   mutate(
-    unique_id = if_else(
-      unique_id %in% c("GU1605"),
-      str_c("SEFSC_", unique_id, sep = ""),
-      str_c("NEFSC_", unique_id, sep = "")
+    id = if_else(
+      id %in% c("GU1605"),
+      str_c("SEFSC_", id, sep = ""),
+      str_c("NEFSC_", id, sep = "")
     )
   )
 
@@ -335,17 +371,17 @@ df_kogia <- df_kogia_raw %>%
 # detect: beaked ----------------------------------------------------------
 
 df_beaked_gu1303 <- read_xlsx(
-  file.path(FILE_TOWED_DETECT, "BeakedWhale_data", "GU1303_PG_ExportedBWEvents_20160126.xlsx"),
+  file.path(FILE_DETECT, "BeakedWhale_data", "GU1303_PG_ExportedBWEvents_20160126.xlsx"),
   col_types = "guess",
   na = "NULL"
 ) %>% 
   janitor::clean_names() %>% 
   mutate(
-    unique_id = "GU1303"
+    id = "GU1303"
   )
 
 df_beaked_gu1605 <- read_xlsx(
-  file.path(FILE_TOWED_DETECT, "BeakedWhale_data", "GU1605_PG_OfflineEvents_20190926.xlsx"),
+  file.path(FILE_DETECT, "BeakedWhale_data", "GU1605_PG_OfflineEvents_20190926.xlsx"),
   sheet = "BW_only",
   col_types = "guess",
   range = "A1:AH264",
@@ -353,18 +389,18 @@ df_beaked_gu1605 <- read_xlsx(
 ) %>% 
   janitor::clean_names() %>% 
   mutate(
-    unique_id = "GU1605"
+    id = "GU1605"
   )
 
-df_beaked_gu1803_1 <- read_xlsx(
-  file.path(FILE_TOWED_DETECT, "BeakedWhale_data", "GU1803_Leg1_BW_detections_4GIS.xlsx"),
+df_beaked_gu1803a_1 <- read_xlsx(
+  file.path(FILE_DETECT, "BeakedWhale_data", "GU1803_Leg1_BW_detections_4GIS.xlsx"),
   col_types = "guess",
   range = "A1:I394",
   na = "NULL"
 ) %>% 
   janitor::clean_names()
-df_beaked_gu1803_2 <- read_xlsx(
-  file.path(FILE_TOWED_DETECT, "BeakedWhale_data", "GU1803_Leg2_BW_detections_4GIS.xlsx"),
+df_beaked_gu1803a_2 <- read_xlsx(
+  file.path(FILE_DETECT, "BeakedWhale_data", "GU1803_Leg2_BW_detections_4GIS.xlsx"),
   col_types = "guess",
   range = "A1:F241",
   na = "NULL"
@@ -372,80 +408,87 @@ df_beaked_gu1803_2 <- read_xlsx(
   janitor::clean_names()
 
 df_beaked_gu1803a <- bind_rows(
-  df_beaked_gu1803_1,
-  df_beaked_gu1803_2
+  df_beaked_gu1803a_1,
+  df_beaked_gu1803a_2
 ) %>% 
-  select(
+  transmute(
     id = det_id,
     utc = time_utc,
+    event = utc, # ERROR: missing event_end
     latitude,
     longitude,
     species
   ) %>% 
-  mutate(unique_id = "GU1803")
+  mutate(id = "GU1803")
 
 df_beaked_gu1803b <- read_xlsx(
-  file.path(FILE_TOWED_DETECT, "BeakedWhale_data", "GU1803_OffEffort_BW_detections.xlsx"),
+  file.path(FILE_DETECT, "BeakedWhale_data", "GU1803_OffEffort_BW_detections.xlsx"),
   sheet = "forGIS",
   col_types = "guess",
   range = "A1:AZ62",
   na = "NULL"
 ) %>% 
   janitor::clean_names() %>% 
-  mutate(unique_id = "GU1803")
+  mutate(id = "GU1803")
+
+df_beaked_gu1803 <- bind_rows(
+  df_beaked_gu1803a,
+  df_beaked_gu1803b
+)
+
 
 df_beaked_hb1303 <- read_xlsx(
-  file.path(FILE_TOWED_DETECT, "BeakedWhale_data", "HB1303_BW_events_as_of_20170331.xlsx"),
+  file.path(FILE_DETECT, "BeakedWhale_data", "HB1303_BW_events_as_of_20170331.xlsx"),
   col_types = "guess",
   na = "NULL"
 ) %>% 
   janitor::clean_names() %>% 
-  mutate(unique_id = "HB1303")
+  mutate(id = "HB1303")
 
 df_beaked_hb1403 <- read_xlsx(
-  file.path(FILE_TOWED_DETECT, "BeakedWhale_data", "HB1403_OfflineEvents_ALL_20160105_MmMe.xlsx"),
+  file.path(FILE_DETECT, "BeakedWhale_data", "HB1403_OfflineEvents_ALL_20160105_MmMe.xlsx"),
   col_types = "guess",
   na = "NULL"
 ) %>% 
   janitor::clean_names() %>% 
-  mutate(unique_id = "HB1403")
+  mutate(id = "HB1403")
 
 df_beaked_hb1503 <- read_xlsx(
-  file.path(FILE_TOWED_DETECT, "BeakedWhale_data", "HB1503_OfflineEvents_BW_20160105.xlsx"),
+  file.path(FILE_DETECT, "BeakedWhale_data", "HB1503_OfflineEvents_BW_20160105.xlsx"),
   col_types = "guess",
   na = "NULL"
 ) %>% 
   janitor::clean_names() %>% 
-  mutate(unique_id = "HB1503")
+  mutate(id = "HB1503")
 
 df_beaked_hb1603 <- seq(1, 10) %>% 
   map_df(function (i) {
     read_xlsx(
-      file.path(FILE_TOWED_DETECT, "BeakedWhale_data", "HB1603_BW_OfflineEvents_20191004.xlsx"),
+      file.path(FILE_DETECT, "BeakedWhale_data", "HB1603_BW_OfflineEvents_20191004.xlsx"),
       sheet = i,
       col_types = "guess",
       na = "NULL"
     ) %>% 
       janitor::clean_names() %>% 
-      select(id, date, utc, utc_milliseconds, event_end, event_type, n_clicks, min_number, best_number, max_number, final_species_classification, echosounder, tm_model_name1, tm_latitude1, tm_longitude1)
+      select(id, date, utc, utc_milliseconds, event_end, event_type, n_clicks, min_number, best_number, max_number, final_species_classification, echosounder, tm_model_name1, tm_latitude1, tm_longitude1) %>% 
+      mutate(sheet = i)
   }) %>% 
-  mutate(unique_id = "HB1603")
+  mutate(id = "HB1603") %>%
+  filter(!is.na(date))
 
 df_beaked_hrs1701 <- read_xlsx(
-  file.path(FILE_TOWED_DETECT, "BeakedWhale_data", "HRS1701_BW_OfflineEvents_20180524.xlsx"),
+  file.path(FILE_DETECT, "BeakedWhale_data", "HRS1701_BW_OfflineEvents_20180524.xlsx"),
   col_types = "guess",
   sheet = "BW_EventTypes",
   na = "NULL"
 ) %>% 
   janitor::clean_names() %>% 
-  mutate(unique_id = "HRS1701")
+  mutate(id = "HRS1701")
 
-# TODO: add GU1803 Leg 1 and Leg 2
 df_beaked <- list(
   df_beaked_gu1303,
   df_beaked_gu1605,
-  # df_beaked_gu1803a, # ERROR: missing event_end
-  df_beaked_gu1803b,
+  df_beaked_gu1803,
   df_beaked_hb1303 %>% 
     mutate(
       min_number = NA_real_,
@@ -468,27 +511,28 @@ df_beaked <- list(
     mutate(species = final_species_classification),
   df_beaked_hrs1701
 ) %>% 
-  map_df(~ select(., unique_id, utc, event_end, latitude = tm_latitude1, longitude = tm_longitude1, event_type, n_clicks, min_number, best_number, max_number, species, tm_model_name = tm_model_name1)) %>% 
+  map_df(~ select(., id, utc, event_end, latitude = tm_latitude1, longitude = tm_longitude1, event_type, n_clicks, min_number, best_number, max_number, species, tm_model_name = tm_model_name1)) %>% 
+  filter(event_type %in% c("POBK", "PRBK", "BEAK")) %>% # ignore BRAN, DOLP
   mutate(
-    unique_id = if_else(
-      unique_id %in% c("GU1605"),
-      str_c("SEFSC_", unique_id, sep = ""),
-      str_c("NEFSC_", unique_id, sep = "")
+    id = if_else(
+      id %in% c("GU1605"),
+      str_c("SEFSC_", id, sep = ""),
+      str_c("NEFSC_", id, sep = "")
     ),
     species = fct_recode(
       species,
       "Cuvier's" = "Cuvier",
       "Cuvier's" = "Cuviers",
       "Gervais'" = "Gervais",
-      "MmMe" = "Mm/Me",
-      "MmMe" = "MmMe.",
+      "Gervais'/True's" = "Mm/Me",
+      "Gervais'/True's" = "MmMe.",
+      "Gervais'/True's" = "MmMe",
       "True's" = "True's.",
       "Unid. Mesoplodon" = "Unid Mesoplodon"
     )
-    
-  ) %>% 
+  ) %>%
   transmute(
-    unique_id,
+    id,
     analysis_period_start = utc,
     analysis_period_end = event_end,
     analysis_period_effort_seconds = as.numeric(difftime(analysis_period_end, analysis_period_start, units = "secs")),
@@ -499,17 +543,79 @@ df_beaked <- list(
     presence = "Detected"
   )
 
+summary(df_beaked)
+janitor::tabyl(df_beaked$call_type)
+
+unique(df_beaked$call_type) %>% sort
+
+df_beaked %>%
+  filter(is.na(latitude)) %>% 
+  janitor::tabyl(id)
 
 # detect: merge -----------------------------------------------------------
 
-df_detect <- bind_rows(df_kogia, df_beaked)
+df_detects_all <- bind_rows(df_kogia, df_beaked) %>% 
+  filter(!is.na(latitude)) %>% 
+  mutate(
+    presence = "y"
+  )
+df_detects <- df_detects_all %>% 
+  mutate(
+    date = as_date(analysis_period_start),
+    platform_type = "towed"
+  )
+# select(species, id, date, presence, latitude, longitude)
+# 
+# df_detects_hr <- df_detects_all %>% 
+#   mutate(datetime = floor_date(analysis_period_start, unit = "hour")) %>% 
+#   arrange(id, species, datetime) %>% 
+#   group_by(id, species, datetime, call_type) %>% 
+#   summarise(
+#     n_detections = n(),
+#     # latitude = first(latitude),
+#     # longitude = first(longitude),
+#     .groups = "drop"
+#   ) %>% 
+#   mutate(
+#     presence = "y",
+#     point_id = str_c(id, format(datetime, "%Y%m%d%H"), sep = "@"),
+#     date = as_date(datetime),
+#     platform_type = "towed"
+#   ) %>% 
+#   select(species, point_id, date, presence, call_type, platform_type)
+# 
+# all(unique(df_detects_hr$point_id) %in% sf_points$id)
+# 
+# df_detects_hr %>% 
+#   filter(
+#     !point_id %in% sf_points$id
+#   )
+# 
+# sf_points %>% 
+#   filter(project_id == "NEFSC_HB1303") %>% 
+#   arrange(datetime) %>% 
+#   View()
+# 
+# df_detects_day %>% 
+#   group_by(species, id, date) %>%
+#   mutate(n = n()) %>% 
+#   filter(n > 1)
+
+summary(df_detects)
+
+stopifnot(all(!is.na(df_detects)))
+
+unique(df_projects$id)
+setdiff(unique(df_projects$id), unique(df_detects$id))
+setdiff(unique(df_detects$id), unique(df_projects$id))
+setdiff(unique(df_tracks$id), unique(df_detects$id))
 
 # export ------------------------------------------------------------------
 
 list(
-  meta = df_meta,
-  tracks = df_tracks_hr,
-  detect = df_detect
+  projects = df_projects,
+  tracks = sf_tracks,
+  detects = df_detects
 ) %>% 
   saveRDS("rds/towed.rds")
 

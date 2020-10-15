@@ -3,8 +3,8 @@
     outlined
     :items="options"
     v-model="selected"
-    label="Select platform type(s)"
-    item-text="label"
+    label="Select beaked whale species"
+    item-text="id"
     item-value="id"
     hide-details
     multiple
@@ -16,19 +16,26 @@
 <script>
 import dc from 'dc'
 import { xf } from '@/lib/crossfilter'
-import { platformTypes } from '@/lib/constants'
 import { mapGetters } from 'vuex'
 
 export default {
-  name: 'PlatformTypeFilter',
+  name: 'CallTypeFilter',
   data () {
     return {
       selected: [],
-      options: []
+      options: [
+        { id: 'Cuvier\'s' },
+        { id: 'Blainville\'s' },
+        { id: 'Gervais\'' },
+        { id: 'True\'s' },
+        { id: 'Gervais\'/True\'s' },
+        { id: 'Sowerby\'s' },
+        { id: 'Unid. Mesoplodon' }
+      ]
     }
   },
   computed: {
-    ...mapGetters(['theme', 'loading'])
+    ...mapGetters(['theme'])
   },
   watch: {
     selected () {
@@ -39,7 +46,7 @@ export default {
     }
   },
   mounted () {
-    this.dim = xf.dimension(d => d.platform_type)
+    this.dim = xf.dimension(d => d.call_type)
     this.reset()
   },
   beforeDestroy () {
@@ -47,15 +54,17 @@ export default {
   },
   methods: {
     reset () {
-      const datasetTypes = [...new Set(xf.all().map(d => d.platform_type))] // all types in dataset
-      this.options = platformTypes.filter(d => datasetTypes.includes(d.id))
       this.selected = this.options.map(d => d.id)
     },
     setFilter () {
       // console.log(`setFilter(${this.selected})`)
       if (!this.dim) return
 
-      this.dim.filter(d => this.selected.includes(d))
+      if (this.selected.length === this.options.length) {
+        this.dim.filterAll()
+      } else {
+        this.dim.filter(d => this.selected.includes(d))
+      }
       dc.redrawAll()
     }
   }

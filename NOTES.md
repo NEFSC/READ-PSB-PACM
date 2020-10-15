@@ -1,6 +1,61 @@
 # Notes and Questions
 
-## Jan 6, 2020
+## 2020-10-12
+
+Towed Array Data
+
+- Metadata missing for projects "NEFSC_GU1303" and "NEFSC_HB1303" (found in tracks and detections)
+- Metadata file has project "NEFSC_GU1402", but not found in detections or tracks
+- Metadata file
+  - missing columns for consistency with mooring/glider datasets (assuming all are `NA`)
+    - `PLATFORM_ID`
+    - `SITE_ID`
+    - `INSTRUMENT_TYPE`
+    - `INSTRUMENT_ID`
+    - `CHANNEL`
+    - `WATER_DEPTH_METERS`
+    - `RECORDER_DEPTH_METERS`
+  - one row per project
+    - monitoring start/end times should cover entire deployment (currently taking min/max of all rows for project)
+    - PLATFORM_TYPE currently varies for NEFSC_GU1801 ("Towed Array, linear" and "Towed Array, tetrahedral + linear")
+    - QC_DATA currently varies for NEFSC_GU1801
+    - QC_DATA should be consistent with moored/glider datasets? those all have QC_DATA=YES, towed array dataset has "post-processed" in most projects
+- Beaked detection data
+  - GU1803 Legs 1 and 2 are missing `EventEnd` column (plus a number of other columns), setting `EventEnd` equal to `Time (UTC)` for now
+  - HB1603, sheet Leg3_HB1_0822-0823_ONEFF has split table (bunch of empty rows), copy and paste error?
+  - Missing lat/lon for in 657 rows of GU1803, 1 row of HB1303, and 27 rows of HB1603
+  - Aggregating detections is problematic because of species. If two or more species observed on same day, should this be one detection for all, or one for each species? Assuming the latter...
+
+Data Processing Notes
+
+- Tracks
+  - GU1803
+    - `Echosounder` set to ON from 2018-07-31 17:00 to 2018-08-17 15:00 UTC
+    - only include rows where `UserField` > 0
+    - latitude/longitude has numerous erroneous or inconsistent values (e.g. latitude = 1356 at 7/22 22:52:55), dropping rows where longitude < -90 or > -30, latitude > 90
+  - HB1403
+    - sheet 20140725 (GMT) is different from the others
+      - missing `Echosounders` column (set to `NA`)
+      - ignoring `PCTime` column (using `GPSDate` as timestamp)
+      - has `Recording Effort` while others have `MF Rec Effort` and `HF Rec Effort`
+- Beaked Whales
+  - only include rows where `eventType = (PRBK, POBK, BEAK)`), excluding any rows with `eventType = (BRAN, DOLP)`
+  - standardized species names to only have unique values: `"Blainville's", "Cuvier's", "Gervais'", "Gervais'/True's", "MmMe", "Sowerby's", "True's", "Unid. Mesoplodon")`
+  - using `UTC` and `EventEnd` for `analysis_period_start` and `analysis_period_end`, assuming everything is in UTC
+  - using `TMLatitude1` and `TMLongitude1` for `latitude` and `longitude`
+  - ignoring `nClicks`, `min/best/maxNumber`, `TMModelName1`
+- Kogia Whales
+  - using `UTC` and `EventEnd` for `analysis_period_start` and `analysis_period_end`, assuming everything is in UTC
+  - using `TMLatitude1` and `TMLongitude1` for `latitude` and `longitude`
+  - ignoring `nClicks`, `min/best/maxNumber`, `TMModelName1`
+- Gliders
+  - aggregate detections to daily timesteps (first latitude/longitude)
+  - no track aggregation
+- Towed Arrays
+  - aggregate tracks to hourly timesteps (use median lat/lon instead of mean due to issues with GU1803)
+  - no aggregation of detections. n is small, and its not clear how to aggregate position (coord in tracks vs detections)
+
+## 2020-01-06
 
 Dataset:
 
@@ -15,7 +70,7 @@ Questions:
 - Davis 2017 focuses on # detection days, but dataset has # detections? Is that # individuals? Or # calls?
 - Presence/absence vs abundance
 
-## Dec 16, 2019
+## 2019-12-16
 
 Dataset Questions:
 

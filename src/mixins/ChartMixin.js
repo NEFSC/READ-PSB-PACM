@@ -3,6 +3,14 @@ import dc from 'dc'
 import evt from '@/lib/events'
 
 export default {
+  props: ['yAxisLabel'],
+  watch: {
+    yAxisLabel (val) {
+      if (!this.chart) return
+      this.chart
+        .yAxisLabel(this.yAxisLabel)
+    }
+  },
   mounted () {
   //   console.log('ChartMixin: mounted', this.chart && this.chart.chartID())
     evt.$on('reset:filters', this.reset)

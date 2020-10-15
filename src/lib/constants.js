@@ -4,16 +4,20 @@ export const speciesTypes = [
     label: 'North Atlantic Right Whale'
   },
   {
-    id: 'sei',
-    label: 'Sei Whale'
-  },
-  {
     id: 'blue',
     label: 'Blue Whale'
   },
   {
     id: 'humpback',
     label: 'Humpback Whale'
+  },
+  {
+    id: 'fin',
+    label: 'Fin Whale'
+  },
+  {
+    id: 'sei',
+    label: 'Sei Whale'
   },
   {
     id: 'beaked',
@@ -32,15 +36,19 @@ export const platformTypes = [
     label: 'Bottom Mooring'
   },
   {
-    id: 'slocum',
-    label: 'Glider'
-  },
-  {
     id: 'buoy',
     label: 'Surface Buoy'
   },
   {
-    id: 'towed_array',
+    id: 'slocum',
+    label: 'Glider (Slocum)'
+  },
+  {
+    id: 'wave',
+    label: 'Glider (Wave)'
+  },
+  {
+    id: 'towed',
     label: 'Towed Array'
   }
 ]
@@ -48,17 +56,17 @@ export const platformTypesMap = new Map(platformTypes.map(d => [d.id, d]))
 
 export const detectionTypes = [
   {
-    id: 'yes',
+    id: 'y',
     label: 'Detected',
     color: '#CC3833'
   },
   {
-    id: 'maybe',
+    id: 'm',
     label: 'Possibly',
     color: '#78B334'
   },
   {
-    id: 'no',
+    id: 'n',
     label: 'Not Detected',
     color: '#0277BD'
   }

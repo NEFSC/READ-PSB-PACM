@@ -18,7 +18,7 @@
       </div>
     </div>
 
-    <v-divider></v-divider>
+    <!-- <v-divider></v-divider>
 
     <div class="my-2">
       <div class="subtitle-1 font-weight-medium">Detection Type</div>
@@ -30,38 +30,98 @@
           {{ type.label }}
         </span>
       </div>
-    </div>
+    </div> -->
 
     <v-divider></v-divider>
 
-    <div class="mt-2">
-      <div class="subtitle-1 font-weight-medium"># Detection Days</div>
-      <svg width="130" height="85">
-        <g v-for="(v, i) in sizeValues" :key="'size-' + v" transform="translate(30,0)">
-          <circle :cy="i * 20 + 20" :r="sizeScale(v)" stroke="white" stroke-opacity="0.5" :fill="colorScale('yes')" />
-          <text x="30" :y="i * 20 + 20" class="legend-text">{{v.toLocaleString()}}</text>
+    <div class="mt-2" v-if="!isTowed">
+      <div class="subtitle-1 font-weight-medium mb-2">Monitoring Stations</div>
+      <svg width="180" height="190" v-if="normalizeEffort">
+        <text x="60" y="12" class="legend-text">% Days Detected</text>
+        <g v-for="(v, i) in [1, 0.75, 0.5, 0.25, 0.01]" :key="'size-' + v" transform="translate(30,20)">
+          <circle :cy="i * 20 + 20" :r="sizeScaleUnit(v)" stroke="white" stroke-opacity="0.5" :fill="detectionTypes[0].color" />
+          <text x="30" :y="i * 20 + 20" class="legend-text">{{(v * 100).toLocaleString()}}%</text>
+        </g>
+        <g transform="translate(30,145)">
+          <circle :cy="0" :r="sizeScale(0)" stroke="white" stroke-opacity="0.5" :fill="detectionTypes[1].color" />
+          <text x="30" :y="0" class="legend-text">0% ({{detectionTypes[1].label}})</text>
+        </g>
+        <g transform="translate(30,170)">
+          <circle :cy="0" :r="sizeScale(0)" stroke="white" stroke-opacity="0.5" :fill="detectionTypes[2].color" />
+          <text x="30" :y="0" class="legend-text">0% ({{detectionTypes[2].label}})</text>
         </g>
       </svg>
+      <svg width="180" height="190" v-else>
+        <text x="60" y="12" class="legend-text"># Days Detected</text>
+        <g v-for="(v, i) in [1000, 500, 100, 50, 1]" :key="'size-' + v" transform="translate(30,20)">
+          <circle :cy="i * 20 + 20" :r="sizeScale(v)" stroke="white" stroke-opacity="0.5" :fill="detectionTypes[0].color" />
+          <text x="30" :y="i * 20 + 20" class="legend-text">{{v.toLocaleString()}}</text>
+        </g>
+        <g transform="translate(30,145)">
+          <circle :cy="0" :r="sizeScale(0)" stroke="white" stroke-opacity="0.5" :fill="detectionTypes[1].color" />
+          <text x="30" :y="0" class="legend-text">0 ({{detectionTypes[1].label}})</text>
+        </g>
+        <g transform="translate(30,170)">
+          <circle :cy="0" :r="sizeScale(0)" stroke="white" stroke-opacity="0.5" :fill="detectionTypes[2].color" />
+          <text x="30" :y="0" class="legend-text">0 ({{detectionTypes[2].label}})</text>
+        </g>
+      </svg>
+    </div>
+    <div class="mt-2" v-if="!isTowed">
+      <div class="subtitle-1 font-weight-medium mb-2">Gliders</div>
+      <svg width="180" height="50">
+        <g transform="translate(30,10)">
+          <rect y="-6" x="-6" width="12" height="12" stroke="white" stroke-opacity="0.5" :fill="detectionTypes[0].color" />
+          <text x="30" :y="0" class="legend-text">{{detectionTypes[0].label}} (Daily)</text>
+        </g>
+        <g transform="translate(30,35)">
+          <line x1="-6" x2="6" y1="-6" y2="6" stroke="hsla(0, 0%, 30%, 0.5)" stroke-width="1px" />
+          <text x="30" :y="0" class="legend-text">Glider Track</text>
+        </g>
+      </svg>
+    </div>
+    <div class="mt-2" v-if="isTowed">
+      <div class="subtitle-1 font-weight-medium mb-2">Towed Array</div>
+      <svg width="180" height="50">
+        <g transform="translate(30,10)">
+          <rect y="-6" x="-6" width="12" height="12" stroke="white" stroke-opacity="0.5" :fill="detectionTypes[0].color" />
+          <text x="30" :y="0" class="legend-text">{{detectionTypes[0].label}}</text>
+        </g>
+        <g transform="translate(30,35)">
+          <line x1="-6" x2="6" y1="-6" y2="6" stroke="hsla(0, 0%, 30%, 0.5)" stroke-width="1px" />
+          <text x="30" :y="0" class="legend-text">Ship Track</text>
+        </g>
+      </svg>
+    </div>
+    <v-divider v-if="!isTowed"></v-divider>
+    <div class="mt-2" v-if="!isTowed">
+      <div class="subtitle-1 font-weight-medium mb-2">Settings</div>
+      <v-checkbox class="ml-1 my-0" hide-details dense label="Normalize by effort" :value="normalizeEffort" @change="setNormalizeEffort"></v-checkbox>
     </div>
   </div>
 </template>
 
 <script>
-import { colorScale, sizeScale } from '@/lib/scales'
+import { colorScale, sizeScale, sizeScaleUnit } from '@/lib/scales'
 import { detectionTypes } from '@/lib/constants'
+import { mapActions, mapGetters } from 'vuex'
 
 export default {
   name: 'Legend',
   props: ['counts'],
   data () {
     return {
-      detectionTypes,
-      sizeValues: [0, 100, 500, 1000].reverse()
+      detectionTypes
     }
   },
+  computed: {
+    ...mapGetters(['isTowed', 'normalizeEffort'])
+  },
   methods: {
+    ...mapActions(['setNormalizeEffort']),
     colorScale,
-    sizeScale
+    sizeScale,
+    sizeScaleUnit
   }
 }
 </script>

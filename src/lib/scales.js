@@ -8,3 +8,7 @@ export const colorScale = scaleOrdinal()
 export const sizeScale = scaleSqrt()
   .domain([0, 1000])
   .range([5, 20])
+
+export const sizeScaleUnit = scaleSqrt()
+  .domain([0, 1])
+  .range([5, 20])

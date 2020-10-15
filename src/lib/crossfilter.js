@@ -1,23 +1,31 @@
 import crossfilter from 'crossfilter2'
+import { debounce } from 'debounce'
+import evt from '@/lib/events'
 
 export const xf = crossfilter()
+xf.onChange(debounce(function (eventType) {
+  if (eventType === 'filtered') {
+    evt.$emit('xf:filtered')
+  }
+}, 1))
+window.xf = xf
 
-export const deploymentDim = xf.dimension(d => d.deployment)
+export const deploymentDim = xf.dimension(d => d.id)
 export const deploymentGroup = deploymentDim.group().reduce(
   (p, v) => {
-    p[v.detection] += 1
+    p[v.presence] += 1
     p.total += 1
     return p
   },
   (p, v) => {
-    p[v.detection] -= 1
+    p[v.presence] -= 1
     p.total -= 1
     return p
   },
   () => ({
-    yes: 0,
-    no: 0,
-    maybe: 0,
+    y: 0,
+    n: 0,
+    m: 0,
     total: 0
   })
 )

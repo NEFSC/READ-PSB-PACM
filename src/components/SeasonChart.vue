@@ -23,23 +23,21 @@ export default {
     }
   },
   mounted () {
-    // console.log('SeasonChart:mounted')
-
     const dim = xf.dimension(d => moment('2000-01-01').add(Math.floor(moment(d.date).dayOfYear() / 6) * 6, 'days').toDate())
     const group = dim.group().reduce(
       (p, v) => {
-        p[v.detection] = (p[v.detection] || 0) + 1
+        p[v.presence] = (p[v.presence] || 0) + 1
         return p
       },
       (p, v) => {
-        p[v.detection] = (p[v.detection] || 0) - 1
+        p[v.presence] = (p[v.presence] || 0) - 1
         return p
       },
       () => {
         return {
-          yes: 0,
-          no: 0,
-          maybe: 0
+          y: 0,
+          n: 0,
+          m: 0
         }
       }
     )
@@ -53,9 +51,9 @@ export default {
         const formatter = d3.timeFormat('%b %d')
         return `
           ${formatter(start)} to ${formatter(end)}<br><br>
-          ${pad(10, detectionTypesMap.get('no').label, '&nbsp;')}: ${d.data.value.no.toLocaleString()}<br>
-          ${pad(10, detectionTypesMap.get('maybe').label, '&nbsp;')}: ${d.data.value.maybe.toLocaleString()}<br>
-          ${pad(10, detectionTypesMap.get('yes').label, '&nbsp;')}: ${d.data.value.yes.toLocaleString()}
+          ${pad(12, detectionTypesMap.get('y').label, '&nbsp;')}: ${pad(6, d.data.value.y.toLocaleString(), '&nbsp;')}<br>
+          ${pad(12, detectionTypesMap.get('m').label, '&nbsp;')}: ${pad(6, d.data.value.m.toLocaleString(), '&nbsp;')}<br>
+          ${pad(12, detectionTypesMap.get('n').label, '&nbsp;')}: ${pad(6, d.data.value.n.toLocaleString(), '&nbsp;')}
         `
       })
 
@@ -64,17 +62,17 @@ export default {
       .height(120)
       .margins({ top: 10, right: 20, bottom: 5, left: 60 })
       .dimension(dim)
-      .group(group, 'yes', (d) => d.value.yes)
+      .group(group, 'y', (d) => d.value.y)
       .x(d3.scaleTime().domain([new Date(2000, 0, 1), new Date(2000, 11, 31)]))
       .xUnits(() => 61)
       .colors(d3.scaleOrdinal().range(detectionTypes.map(d => d.color)))
       .elasticY(true)
       .brushOn(false)
-      .yAxisLabel('# Days Recorded')
+      .yAxisLabel(this.yAxisLabel)
       .gap(0)
       .barPadding(0.3)
       .renderTitle(false)
-      .on('filtered', this.updateFill)
+      // .on('filtered', this.updateFill)
       .on('postRender', (chart) => {
         chart.g().call(this.tip)
         chart.selectAll('rect.bar')
@@ -85,8 +83,8 @@ export default {
     dc.override(this.chart, 'legendables', () => {
       return this.chart._legendables().reverse()
     })
-    this.chart.stack(group, 'maybe', d => d.value.maybe)
-    this.chart.stack(group, 'no', d => d.value.no)
+    this.chart.stack(group, 'm', d => d.value.m)
+    this.chart.stack(group, 'n', d => d.value.n)
     // this.chart.yAxis().ticks(4).tickFormat(d3.format('.2s'))
     this.chart.yAxis().ticks(4)
     this.chart.render()

@@ -35,7 +35,7 @@ export default {
       .xAxisLabel('Month')
       .yAxisLabel('# Days Recorded')
       .round(dc.round.round)
-      .on('filtered', () => evt.$emit('render:map', 'monthFilter:filtered'))
+      // .on('filtered', () => evt.$emit('render:map', 'monthFilter:filtered'))
       .on('postRender', (chart) => {
         const n = chart.xUnitCount()
         const width = chart.effectiveWidth()
