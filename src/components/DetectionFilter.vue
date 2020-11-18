@@ -1,7 +1,7 @@
 <template>
   <div class="detection-filter">
     <v-btn icon x-small class="mt-1 float-right" color="grey" @click="reset"><v-icon>mdi-sync</v-icon></v-btn>
-    <div class="subtitle-1 font-weight-medium">Total <span v-if="isTowed">Detections</span><span v-else>Detection Days</span></div>
+    <div class="subtitle-1 font-weight-medium">Total Detection Days</div>
   </div>
 </template>
 
@@ -11,7 +11,6 @@ import dc from 'dc'
 import ChartMixin from '@/mixins/ChartMixin'
 import { xf } from '@/lib/crossfilter'
 import { detectionTypesMap, detectionTypes } from '@/lib/constants'
-import { mapGetters } from 'vuex'
 
 export default {
   name: 'DetectionFilter',
@@ -20,9 +19,6 @@ export default {
     return {
       chart: null
     }
-  },
-  computed: {
-    ...mapGetters(['isTowed'])
   },
   mounted () {
     // console.log('DetectionFilter mounted')

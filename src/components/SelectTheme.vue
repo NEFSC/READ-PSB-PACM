@@ -13,12 +13,12 @@
 
 <script>
 import { mapGetters, mapActions } from 'vuex'
-import { speciesTypes } from '@/lib/constants'
+import { themes } from '@/lib/constants'
 export default {
   name: 'SelectTheme',
   data () {
     return {
-      options: speciesTypes
+      options: themes
     }
   },
   computed: {

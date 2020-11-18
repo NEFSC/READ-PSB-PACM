@@ -1,4 +1,4 @@
-export const speciesTypes = [
+export const themes = [
   {
     id: 'narw',
     label: 'North Atlantic Right Whale'
@@ -26,9 +26,13 @@ export const speciesTypes = [
   {
     id: 'kogia',
     label: 'Kogia Whales'
+  },
+  {
+    id: 'sperm',
+    label: 'Sperm Whales'
   }
 ]
-export const speciesTypesMap = new Map(speciesTypes.map(d => [d.id, d]))
+// export const speciesTypesMap = new Map(speciesTypes.map(d => [d.id, d]))
 
 export const platformTypes = [
   {

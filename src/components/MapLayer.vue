@@ -5,14 +5,14 @@ import * as d3 from 'd3'
 import d3Tip from 'd3-tip'
 
 import evt from '@/lib/events'
-import { xf, deploymentMap, isFiltered } from '@/lib/crossfilter'
+import { xf, deploymentMap } from '@/lib/crossfilter'
 import { colorScale, sizeScale, sizeScaleUnit } from '@/lib/scales'
 import { tipOffset, tipHtml } from '@/lib/tip'
 
 export default {
   name: 'MapLayer',
   computed: {
-    ...mapGetters(['theme', 'tracks', 'deployments', 'selectedDeployment', 'normalizeEffort']),
+    ...mapGetters(['theme', 'deployments', 'selectedDeployment', 'normalizeEffort']),
     map () {
       return this.$parent.map
     },
@@ -33,8 +33,8 @@ export default {
   },
   mounted () {
     this.container.append('g').classed('tracks', true)
-    this.container.append('g').classed('symbols', true)
     this.container.append('g').classed('points', true)
+    this.container.append('g').classed('stations', true)
 
     this.tip = d3Tip()
       .attr('class', 'd3-tip map')
@@ -54,67 +54,78 @@ export default {
   },
   methods: {
     ...mapActions(['selectDeploymentById']),
+    isSelected (d) {
+      return this.selectedDeployment && d.id === this.selectedDeployment.id
+    },
     updateSelected () {
+      this.container.select('g.stations')
+        .selectAll('circle.station')
+        .classed('selected', this.isSelected)
       this.container.select('g.points')
-        .selectAll('circle.point')
-        .classed('selected', (d) => (this.selectedDeployment && d.id === this.selectedDeployment.id))
-      this.container.select('g.symbols')
-        .selectAll('path.symbol')
-        .classed('selected', (d) => (this.selectedDeployment && d.id === this.selectedDeployment.id))
+        .selectAll('path.point')
+        .classed('selected', this.isSelected)
       this.container.select('g.tracks')
         .selectAll('path.track-overlay')
-        .classed('selected', (d) => (this.selectedDeployment && d.id === this.selectedDeployment.id))
+        .classed('selected', this.isSelected)
     },
     draw () {
       if (this.loading) return
       this.drawTracks()
-      this.drawCircles()
-      this.drawSymbols()
+      this.drawStations()
+      this.drawPoints()
       this.render()
       this.updateSelected()
     },
-    drawCircles () {
-      const g = this.container.select('g.points')
-
+    drawStations () {
       if (!this.deployments) return
 
+      const g = this.container.select('g.stations')
+
+      const data = this.deployments.filter(d => d.properties.deployment_type === 'station')
+
       const map = this.map
-      g.selectAll('circle.point')
-        .data(this.deployments.filter(d => d.dataset === 'moored'))
+      g.selectAll('circle.station')
+        .data(data, d => d.id)
         .join('circle')
-        .attr('class', 'point')
+        .attr('class', 'station')
         .attr('r', 5)
         .each(function drawCircle (d) {
-          const point = map.latLngToLayerPoint(new L.LatLng(d.latitude, d.longitude))
+          const point = map.latLngToLayerPoint(new L.LatLng(d.geometry.coordinates[1], d.geometry.coordinates[0]))
           d3.select(this)
             .attr('cx', point.x)
             .attr('cy', point.y)
         })
+        // .on('click', d => console.log(d))
         .on('click', d => this.selectDeploymentById(d.id))
-        .on('mouseenter', d => this.showTip(d, 'point'))
+        .on('mouseenter', d => this.showTip(d, 'station'))
         .on('mouseout', this.hideTip)
     },
-    drawSymbols () {
-      const data = xf.all().filter(d => (d.platform_type !== 'mooring' && d.platform_type !== 'buoy'))
-      const g = this.container.select('g.symbols')
+    drawPoints () {
+      const g = this.container.select('g.points')
 
       const projection = (d) => {
         const point = this.map.latLngToLayerPoint(new L.LatLng(d.latitude, d.longitude))
         return [point.x, point.y]
       }
 
-      g.selectAll('path.symbol')
-        .data(data, d => d.id)
+      const data = this.deployments
+        .filter(d => d.properties.deployment_type === 'track')
+        .map(d => d.trackDetections)
+        .flat()
+
+      g.selectAll('path.point')
+        .data(data)
         .join('path')
-        .attr('class', 'symbol')
+        .attr('class', 'point')
         .attr('d', d3.symbol().type(d3.symbolSquare))
         .attr('transform', d => `translate(${projection(d)})`)
+        // .on('click', d => console.log(d))
         .on('click', d => this.selectDeploymentById(d.id))
         .on('mouseenter', d => this.showTip(d, 'point'))
         .on('mouseout', this.hideTip)
     },
     drawTracks () {
-      if (!this.tracks) return
+      if (!this.deployments) return
 
       const map = this.map
       function projectPoint (x, y) {
@@ -128,17 +139,20 @@ export default {
       const line = d3.geoPath()
         .projection(projection)
 
+      const data = this.deployments.filter(d => d.properties.deployment_type === 'track')
+
       g.selectAll('path.track')
-        .data(this.tracks.features.filter(d => deploymentMap.has(d.id)))
+        .data(data, d => d.id)
         .join('path')
         .attr('class', 'track')
         .attr('d', line)
 
       g.selectAll('path.track-overlay')
-        .data(this.tracks.features)
+        .data(data, d => d.id)
         .join('path')
         .attr('class', 'track-overlay')
         .attr('d', line)
+        // .on('click', d => console.log(d))
         .on('click', d => this.selectDeploymentById(d.id))
         .on('mouseenter', d => this.showTip(d, 'track'))
         .on('mouseout', this.hideTip)
@@ -147,7 +161,7 @@ export default {
       if (!this.container) return
 
       this.container
-        .selectAll('g.points circle.point')
+        .selectAll('g.stations circle.station')
         // only show site if there is at least one observed day
         .style('display', d => (deploymentMap.get(d.id) && deploymentMap.get(d.id).total === 0 ? 'none' : 'inline'))
         .style('fill', (d) => {
@@ -177,16 +191,15 @@ export default {
 
       this.container
         .selectAll('g.tracks path.track')
-        .style('display', d => !deploymentMap.has(d.id) || deploymentMap.get(d.id).total === 0 ? 'none' : 'inline')
+        .style('display', d => (!deploymentMap.has(d.id) || deploymentMap.get(d.id).total === 0 ? 'none' : 'inline'))
       this.container
         .selectAll('g.tracks path.track-overlay')
         .style('display', d => (!deploymentMap.has(d.id) || deploymentMap.get(d.id).total === 0 ? 'none' : 'inline'))
 
       this.container
-        .selectAll('g.symbols path.symbol')
-        .style('display', d => (isFiltered(d) && d.presence === 'y' ? 'inline' : 'none'))
+        .selectAll('g.points path.point')
+        .style('display', d => (xf.isElementFiltered(d.$index) ? 'inline' : 'none'))
         .style('fill', d => colorScale(d.presence))
-        .attr('r', sizeScale.range()[0] + 1)
     },
     showTip (d, type) {
       const el = d3.select('.d3-tip.map')
@@ -237,7 +250,7 @@ export default {
 .vue2leaflet-map svg path.track-overlay:hover {
   stroke: hsla(0, 0%, 30%, 1);
 }
-.vue2leaflet-map svg circle.point {
+/* .vue2leaflet-map svg circle.point {
   cursor: pointer;
   fill-opacity: 0.75;
   stroke-opacity: 0.5;
@@ -253,9 +266,9 @@ export default {
   fill-opacity: 1;
   stroke-opacity: 1;
   stroke-width: 3px;
-}
+} */
 
-.vue2leaflet-map svg path.symbol {
+.vue2leaflet-map svg circle.station {
   cursor: pointer;
   pointer-events: auto;
   fill-opacity: 0.75;
@@ -263,12 +276,31 @@ export default {
   stroke-width: 1.5px;
   stroke: rgb(255, 255, 255);
 }
-.vue2leaflet-map svg path.symbol.selected {
+.vue2leaflet-map svg circle.station.selected {
   stroke: rgb(255, 0, 0);
   stroke-opacity: 1;
   stroke-width: 2px;
 }
-.vue2leaflet-map svg path.symbol:hover {
+.vue2leaflet-map svg circle.station:hover {
+  fill-opacity: 1;
+  stroke-opacity: 1;
+  stroke-width: 3px;
+}
+
+.vue2leaflet-map svg path.point {
+  cursor: pointer;
+  pointer-events: auto;
+  fill-opacity: 0.75;
+  stroke-opacity: 0.5;
+  stroke-width: 1.5px;
+  stroke: rgb(255, 255, 255);
+}
+.vue2leaflet-map svg path.point.selected {
+  stroke: rgb(255, 0, 0);
+  stroke-opacity: 1;
+  stroke-width: 2px;
+}
+.vue2leaflet-map svg path.point:hover {
   fill-opacity: 1;
   stroke-opacity: 1;
   stroke-width: 3px;

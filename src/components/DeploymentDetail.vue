@@ -1,7 +1,7 @@
 <template>
   <div>
     <v-toolbar color="grey darken-2" dense dark>
-      <div class="subtitle-1 font-weight-bold">Project: {{ selectedDeployment.project }}</div>
+      <div class="subtitle-1 font-weight-bold">Project: {{ selectedDeployment.properties.project }}</div>
       <v-spacer></v-spacer>
       <v-btn icon small @click="close">
         <v-icon small>mdi-close</v-icon>
@@ -17,27 +17,27 @@
                 <tbody>
                   <tr v-if="deploymentType === 'station' || deploymentType === 'glider'">
                     <td class="px-2 text-right" style="width:140px">Site:</td>
-                    <td class="px-2 font-weight-bold">{{ selectedDeployment.site_id ? selectedDeployment.site_id : 'N/A' }}</td>
+                    <td class="px-2 font-weight-bold">{{ selectedDeployment.properties.site_id ? selectedDeployment.properties.site_id : 'N/A' }}</td>
                   </tr>
                   <tr>
                     <td class="px-2 text-right" style="width:140px">Platform Type:</td>
-                    <td class="px-2 font-weight-bold">{{ platformTypesMap.get(selectedDeployment.platform_type).label }}</td>
+                    <td class="px-2 font-weight-bold">{{ platformTypesMap.get(selectedDeployment.properties.platform_type).label }}</td>
                   </tr>
                   <tr>
                     <td class="px-2 text-right">Recorder Type:</td>
-                    <td class="px-2 font-weight-bold">{{ selectedDeployment.instrument_type ? selectedDeployment.instrument_type : 'N/A' }}</td>
+                    <td class="px-2 font-weight-bold">{{ selectedDeployment.properties.instrument_type ? selectedDeployment.properties.instrument_type : 'N/A' }}</td>
                   </tr>
                   <tr>
                     <td class="px-2 text-right">Detection Method:</td>
-                    <td class="px-2 font-weight-bold">{{ selectedDeployment.detection_method }}</td>
+                    <td class="px-2 font-weight-bold">{{ selectedDeployment.properties.detection_method }}</td>
                   </tr>
                   <tr v-if="deploymentType === 'station'">
                     <td class="px-2 text-right">Recorder Depth:</td>
-                    <td class="px-2 font-weight-bold">{{ selectedDeployment.recorder_depth_meters ? `${selectedDeployment.recorder_depth_meters} m` : 'N/A' }}</td>
+                    <td class="px-2 font-weight-bold">{{ selectedDeployment.properties.recorder_depth_meters ? `${(+selectedDeployment.properties.recorder_depth_meters).toFixed(0)} m` : 'N/A' }}</td>
                   </tr>
                   <tr v-if="deploymentType === 'station'">
                     <td class="px-2 text-right">Water Depth: </td>
-                    <td class="px-2 font-weight-bold">{{ selectedDeployment.water_depth_meters ? `${selectedDeployment.water_depth_meters} m` : 'N/A' }}</td>
+                    <td class="px-2 font-weight-bold">{{ selectedDeployment.properties.water_depth_meters ? `${(+selectedDeployment.properties.water_depth_meters).toFixed(0)} m` : 'N/A' }}</td>
                   </tr>
                   <tr>
                     <td class="px-2 text-right">Deployed:</td>
@@ -49,11 +49,11 @@
                   </tr>
                   <tr>
                     <td class="px-2 text-right">Point of Contact:</td>
-                    <td class="px-2 font-weight-bold">{{ selectedDeployment.data_poc_name }} ({{ selectedDeployment.data_poc_email }}), {{ selectedDeployment.data_poc_affiliation }} </td>
+                    <td class="px-2 font-weight-bold">{{ selectedDeployment.properties.data_poc_name }} ({{ selectedDeployment.properties.data_poc_email }}), {{ selectedDeployment.properties.data_poc_affiliation }} </td>
                   </tr>
                   <tr>
                     <td class="px-2 text-right">Protocol:</td>
-                    <td class="px-2 font-weight-bold">{{ selectedDeployment.protocol_reference }}</td>
+                    <td class="px-2 font-weight-bold">{{ selectedDeployment.properties.protocol_reference }}</td>
                   </tr>
                 </tbody>
               </template>
@@ -76,8 +76,10 @@ import { mapActions, mapGetters } from 'vuex'
 import moment from 'moment'
 
 import { xf } from '@/lib/crossfilter'
-import { detectionTypes, detectionTypesMap, platformTypesMap } from '@/lib/constants'
+import { detectionTypes, detectionTypesMap, platformTypes } from '@/lib/constants'
 import { monitoringPeriodLabels } from '@/lib/tip'
+
+const platformTypesMap = new Map(platformTypes.map(d => [d.id, d]))
 
 export default {
   name: 'DeploymentDetail',
@@ -140,19 +142,19 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['theme', 'isTowed', 'selectedDeployment']),
+    ...mapGetters(['theme', 'selectedDeployment']),
     deploymentType () {
-      if (this.selectedDeployment.platform_type === 'mooring' || this.selectedDeployment.platform_type === 'buoy') {
+      if (this.selectedDeployment.properties.platform_type === 'mooring' || this.selectedDeployment.properties.platform_type === 'buoy') {
         return 'station'
-      } else if (this.selectedDeployment.platform_type === 'slocum' || this.selectedDeployment.platform_type === 'wave') {
+      } else if (this.selectedDeployment.properties.platform_type === 'slocum' || this.selectedDeployment.properties.platform_type === 'wave') {
         return 'glider'
-      } else if (this.selectedDeployment.platform_type === 'towed') {
+      } else if (this.selectedDeployment.properties.platform_type === 'towed') {
         return 'towed'
       }
       return 'unknown'
     },
     monitoringPeriod () {
-      return monitoringPeriodLabels(this.selectedDeployment)
+      return monitoringPeriodLabels(this.selectedDeployment.properties)
     }
   },
   watch: {
@@ -185,8 +187,8 @@ export default {
           }
         }
       })
-      this.chart.xAxis.min = moment.utc(this.selectedDeployment.monitoring_start_datetime).startOf('date').toDate().valueOf()
-      this.chart.xAxis.max = moment.utc(this.selectedDeployment.monitoring_end_datetime).startOf('date').toDate().valueOf()
+      this.chart.xAxis.min = moment.utc(this.selectedDeployment.properties.monitoring_start_datetime).startOf('date').toDate().valueOf()
+      this.chart.xAxis.max = moment.utc(this.selectedDeployment.properties.monitoring_end_datetime).startOf('date').toDate().valueOf()
       this.chart.series = [{
         name: 'Detection',
         data: values

@@ -42,7 +42,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['tracks', 'loading'])
+    ...mapGetters(['loading'])
   },
   components: {
     Legend,

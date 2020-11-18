@@ -24,7 +24,7 @@ yarn-error.log*
 .Rproj.user
 .Rhistory
 
-r/rds/*.rds
+*.rds
 r/rmd/*.html
 
 public/data/**/*.csv

@@ -34,58 +34,66 @@
 
     <v-divider></v-divider>
 
-    <div class="mt-2" v-if="!isTowed">
+    <div class="mt-2" v-if="hasStation">
       <div class="subtitle-1 font-weight-medium mb-2">Monitoring Stations</div>
-      <svg width="180" height="190" v-if="normalizeEffort">
-        <text x="60" y="12" class="legend-text">% Days Detected</text>
-        <g v-for="(v, i) in [1, 0.75, 0.5, 0.25, 0.01]" :key="'size-' + v" transform="translate(30,20)">
+      <svg width="180" height="220" v-if="normalizeEffort">
+        <text x="55" y="12" class="legend-text">% Days Detected</text>
+        <g v-for="(v, i) in [1, 0.75, 0.5, 0.25, 0.01]" :key="'size-' + v" transform="translate(27,20)">
           <circle :cy="i * 20 + 20" :r="sizeScaleUnit(v)" stroke="white" stroke-opacity="0.5" :fill="detectionTypes[0].color" />
-          <text x="30" :y="i * 20 + 20" class="legend-text">{{(v * 100).toLocaleString()}}%</text>
+          <text x="27" :y="i * 20 + 20" class="legend-text">{{(v * 100).toLocaleString()}}%</text>
         </g>
-        <g transform="translate(30,145)">
-          <circle :cy="0" :r="sizeScale(0)" stroke="white" stroke-opacity="0.5" :fill="detectionTypes[1].color" />
-          <text x="30" :y="0" class="legend-text">0% ({{detectionTypes[1].label}})</text>
+        <g v-for="(v, i) in [0.25, 0.1, 0.01]" :key="'size-1-' + v" transform="translate(27,125)">
+          <circle :cy="i * 20 + 20" :r="sizeScaleUnit(v)" stroke="white" stroke-opacity="0.5" :fill="detectionTypes[1].color" />
+          <text x="27" :y="i * 20 + 20" class="legend-text">{{(v * 100).toLocaleString()}}% ({{detectionTypes[1].label}})</text>
         </g>
-        <g transform="translate(30,170)">
+        <g transform="translate(27,210)">
           <circle :cy="0" :r="sizeScale(0)" stroke="white" stroke-opacity="0.5" :fill="detectionTypes[2].color" />
-          <text x="30" :y="0" class="legend-text">0% ({{detectionTypes[2].label}})</text>
+          <text x="27" :y="0" class="legend-text">0% ({{detectionTypes[2].label}})</text>
         </g>
       </svg>
-      <svg width="180" height="190" v-else>
-        <text x="60" y="12" class="legend-text"># Days Detected</text>
-        <g v-for="(v, i) in [1000, 500, 100, 50, 1]" :key="'size-' + v" transform="translate(30,20)">
+      <svg width="180" height="220" v-else>
+        <text x="55" y="12" class="legend-text"># Days Detected</text>
+        <g v-for="(v, i) in [1000, 500, 100, 50, 1]" :key="'size-0-' + v" transform="translate(27,20)">
           <circle :cy="i * 20 + 20" :r="sizeScale(v)" stroke="white" stroke-opacity="0.5" :fill="detectionTypes[0].color" />
-          <text x="30" :y="i * 20 + 20" class="legend-text">{{v.toLocaleString()}}</text>
+          <text x="27" :y="i * 20 + 20" class="legend-text">{{v.toLocaleString()}}</text>
         </g>
-        <g transform="translate(30,145)">
-          <circle :cy="0" :r="sizeScale(0)" stroke="white" stroke-opacity="0.5" :fill="detectionTypes[1].color" />
-          <text x="30" :y="0" class="legend-text">0 ({{detectionTypes[1].label}})</text>
+        <g v-for="(v, i) in [50, 25, 1]" :key="'size-1-' + v" transform="translate(27,125)">
+          <circle :cy="i * 20 + 20" :r="sizeScale(v)" stroke="white" stroke-opacity="0.5" :fill="detectionTypes[1].color" />
+          <text x="27" :y="i * 20 + 20" class="legend-text">{{v.toLocaleString()}} ({{detectionTypes[1].label}})</text>
         </g>
-        <g transform="translate(30,170)">
+        <g transform="translate(27,210)">
           <circle :cy="0" :r="sizeScale(0)" stroke="white" stroke-opacity="0.5" :fill="detectionTypes[2].color" />
-          <text x="30" :y="0" class="legend-text">0 ({{detectionTypes[2].label}})</text>
+          <text x="27" :y="0" class="legend-text">0 ({{detectionTypes[2].label}})</text>
         </g>
       </svg>
+      <div>
+        <v-checkbox class="ml-4 my-0 d-inline-block" hide-details dense label="" :value="normalizeEffort" @change="setNormalizeEffort"></v-checkbox>
+        <span class="body-2 pl-1 grey--text text--darken-3">Normalize by effort</span>
+      </div>
     </div>
-    <div class="mt-2" v-if="!isTowed">
+    <div class="mt-2" v-if="hasGlider">
       <div class="subtitle-1 font-weight-medium mb-2">Gliders</div>
-      <svg width="180" height="50">
-        <g transform="translate(30,10)">
+      <svg width="180" height="70">
+        <g transform="translate(27,10)">
           <rect y="-6" x="-6" width="12" height="12" stroke="white" stroke-opacity="0.5" :fill="detectionTypes[0].color" />
-          <text x="30" :y="0" class="legend-text">{{detectionTypes[0].label}} (Daily)</text>
+          <text x="27" :y="0" class="legend-text">{{detectionTypes[0].label}} (Daily)</text>
         </g>
-        <g transform="translate(30,35)">
+        <g transform="translate(27,30)">
+          <rect y="-6" x="-6" width="12" height="12" stroke="white" stroke-opacity="0.5" :fill="detectionTypes[1].color" />
+          <text x="27" :y="0" class="legend-text">{{detectionTypes[1].label}} (Daily)</text>
+        </g>
+        <g transform="translate(27,55)">
           <line x1="-6" x2="6" y1="-6" y2="6" stroke="hsla(0, 0%, 30%, 0.5)" stroke-width="1px" />
-          <text x="30" :y="0" class="legend-text">Glider Track</text>
+          <text x="27" :y="0" class="legend-text">Glider Track</text>
         </g>
       </svg>
     </div>
-    <div class="mt-2" v-if="isTowed">
+    <div class="mt-2" v-if="hasTowed">
       <div class="subtitle-1 font-weight-medium mb-2">Towed Array</div>
       <svg width="180" height="50">
         <g transform="translate(30,10)">
           <rect y="-6" x="-6" width="12" height="12" stroke="white" stroke-opacity="0.5" :fill="detectionTypes[0].color" />
-          <text x="30" :y="0" class="legend-text">{{detectionTypes[0].label}}</text>
+          <text x="30" :y="0" class="legend-text">Detection</text>
         </g>
         <g transform="translate(30,35)">
           <line x1="-6" x2="6" y1="-6" y2="6" stroke="hsla(0, 0%, 30%, 0.5)" stroke-width="1px" />
@@ -93,11 +101,11 @@
         </g>
       </svg>
     </div>
-    <v-divider v-if="!isTowed"></v-divider>
-    <div class="mt-2" v-if="!isTowed">
+    <!-- <v-divider v-if="hasStation"></v-divider> -->
+    <!-- <div class="mt-2" v-if="hasStation">
       <div class="subtitle-1 font-weight-medium mb-2">Settings</div>
-      <v-checkbox class="ml-1 my-0" hide-details dense label="Normalize by effort" :value="normalizeEffort" @change="setNormalizeEffort"></v-checkbox>
-    </div>
+
+    </div> -->
   </div>
 </template>
 
@@ -115,7 +123,16 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['isTowed', 'normalizeEffort'])
+    ...mapGetters(['normalizeEffort', 'deployments']),
+    hasStation () {
+      return this.deployments.some(d => d.properties.deployment_type === 'station')
+    },
+    hasGlider () {
+      return this.deployments.some(d => d.properties.platform_type === 'slocum' || d.properties.platform_type === 'wave')
+    },
+    hasTowed () {
+      return this.deployments.some(d => d.properties.platform_type === 'towed')
+    }
   },
   methods: {
     ...mapActions(['setNormalizeEffort']),

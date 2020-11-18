@@ -19,19 +19,11 @@ import { xf } from '@/lib/crossfilter'
 import { mapGetters } from 'vuex'
 
 export default {
-  name: 'CallTypeFilter',
+  name: 'SpeciesFilter',
   data () {
     return {
       selected: [],
-      options: [
-        { id: 'Cuvier\'s' },
-        { id: 'Blainville\'s' },
-        { id: 'Gervais\'' },
-        { id: 'True\'s' },
-        { id: 'Gervais\'/True\'s' },
-        { id: 'Sowerby\'s' },
-        { id: 'Unid. Mesoplodon' }
-      ]
+      options: []
     }
   },
   computed: {
@@ -46,7 +38,7 @@ export default {
     }
   },
   mounted () {
-    this.dim = xf.dimension(d => d.call_type)
+    this.dim = xf.dimension(d => d.species)
     this.reset()
   },
   beforeDestroy () {
@@ -54,6 +46,7 @@ export default {
   },
   methods: {
     reset () {
+      this.options = [...new Set(xf.all().map(d => d.species))].sort().map(d => ({ id: d }))
       this.selected = this.options.map(d => d.id)
     },
     setFilter () {

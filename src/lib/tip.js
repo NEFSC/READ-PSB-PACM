@@ -29,9 +29,9 @@ export function tipOffset (el) {
   }
 }
 
-export function monitoringPeriodLabels (deployment) {
-  const start = moment.utc(deployment.monitoring_start_datetime).startOf('date')
-  const end = moment.utc(deployment.monitoring_end_datetime).startOf('date')
+export function monitoringPeriodLabels (props) {
+  const start = moment.utc(props.monitoring_start_datetime).startOf('date')
+  const end = moment.utc(props.monitoring_end_datetime).startOf('date')
   const duration = moment.duration(end.diff(start)).asDays() + 1
   return {
     start: start.format('ll'),
@@ -58,20 +58,28 @@ const detectionTableHtml = (deployment) => {
     .object(allDetections)
   allDetectionsSummary.total = allDetections.length
 
-  const detectionTypesIds = detectionTypes.map(d => d.id)
-  return htmlTable([detectionTypesIds[0]].map(id => [
-    id === 'total' ? 'Total' : detectionTypesMap.get(id).label,
-    `${pad(6, allDetectionsSummary[id].toLocaleString().toLocaleString(), '&nbsp;')} ${pad(8, filteredDetections[id].toLocaleString(), '&nbsp;')}`
-  ]))
-}
+  const detectionTypesIds = [...detectionTypes.map(d => d.id), 'total']
 
-const towedTrackHtml = (d, deployment) => {
-  const monitoring = monitoringPeriodLabels(deployment)
+  const rows = detectionTypesIds.map(id => {
+    return [
+      id === 'total' ? 'Total' : detectionTypesMap.get(id).label,
+      `${pad(6, allDetectionsSummary[id] ? allDetectionsSummary[id].toLocaleString() : 0, '&nbsp;')} ${pad(8, filteredDetections[id] ? filteredDetections[id].toLocaleString() : 0, '&nbsp;')}`
+    ]
+  })
+
+  return htmlTable(rows)
+}
+const trackHtml = (d, deployment) => {
+  const props = deployment.properties
+  const monitoring = monitoringPeriodLabels(props)
 
   const trackHtml = htmlTable([
-    [ 'Project', `${deployment.project}` ],
-    [ 'Platform Type', `${platformTypesMap.get(deployment.platform_type).label}` ],
-    [ 'Detection Method', `${deployment.detection_method}` ],
+    [ 'Project', `${props.project}` ],
+    [ 'Site', `${props.site_id ? props.site_id : 'N/A'}` ],
+    [ 'Platform Type', `${platformTypesMap.get(props.platform_type).label}` ],
+    [ 'Recorder Type', `${props.instrument_type ? props.instrument_type : 'N/A'}` ],
+    [ 'Detection Method', `${props.detection_method ? props.detection_method : 'N/A'}` ],
+    [ 'QAQC', `${props.qc_data ? props.qc_data : 'N/A'}` ],
     [ 'Deployed', `${monitoring.start} to ${monitoring.end}` ],
     [ 'Duration', `${monitoring.duration} days` ]
   ])
@@ -79,118 +87,68 @@ const towedTrackHtml = (d, deployment) => {
   const detectionHtml = detectionTableHtml(deployment)
 
   return `
-    Towed Array Deployment<br><br>
+    ${deployment.properties.platform_type === 'towed' ? 'Towed Array' : 'Glider'} Deployment<br><br>
 
     ${trackHtml}<br><br>
 
     <hr><br>
 
-    Deployment Summary (# Detections)<br><br>
-    ${pad(16, 'All', '&nbsp;')} ${pad(8, 'Filtered', '&nbsp;')}<br>
+    Deployment Summary (# Recorded Days)<br><br>
+    ${pad(20, 'All', '&nbsp;')} ${pad(8, 'Filtered', '&nbsp;')}<br>
     ${detectionHtml}
   `
 }
+
 const towedPointHtml = (d, deployment) => {
-  const trackHtml = towedTrackHtml(d, deployment)
-  const positionHtml = deployment.species === 'beaked' ? detectionBeakedHtml(d) : detectionKogiaHtml(d)
+  const detectionHtml = htmlTable([
+    [ 'Detection Start', `${moment.utc(d.analysis_period_start_datetime).format('ll LTS')}` ],
+    [ 'Detection End', `${d.analysis_period_end_datetime ? moment.utc(d.analysis_period_end_datetime).format('ll LTS') : 'N/A'}` ],
+    [ 'Duration', `${isFinite(d.analysis_period_effort_seconds) ? d.analysis_period_effort_seconds.toFixed(1) + ' sec' : 'N/A'}` ],
+    [ 'Position', `${d.latitude.toFixed(4)}, ${d.longitude.toFixed(4)}` ],
+    [ 'Detection', `${detectionTypesMap.get(d.presence).label}` ]
+    // [ 'Call Type/Species', `${d.properties.call_type ? d.properties.call_type : 'N/A'}` ]
+  ])
   return `
-    ${trackHtml}<br><br>
+    ${trackHtml(d, deployment)}<br><br>
 
     <hr><br>
 
     Highlighted Detection<br><br>
-    ${positionHtml}
+    ${detectionHtml}
   `
 }
-const detectionKogiaHtml = (d) => {
-  return htmlTable([
-    [ 'Analysis Start', `${moment.utc(d.analysis_period_start).format('ll LTS')}` ],
-    [ 'Analysis End', `${moment.utc(d.analysis_period_end).format('ll LTS')}` ],
-    [ 'Duration', `${(+d.analysis_period_effort_seconds).toFixed(1)} sec` ],
-    [ 'Position', `${d.latitude.toFixed(4)}, ${d.longitude.toFixed(4)}` ]
-  ])
-}
-const detectionBeakedHtml = (d) => {
-  return htmlTable([
-    [ 'Analysis Start', `${moment.utc(d.analysis_period_start).format('ll LTS')}` ],
-    [ 'Analysis End', `${moment.utc(d.analysis_period_end).format('ll LTS')}` ],
-    [ 'Duration', `${(+d.analysis_period_effort_seconds).toFixed(1)} sec` ],
+
+const gliderPointHtml = (d, deployment) => {
+  const detectionHtml = htmlTable([
+    [ 'Date', `${moment.utc(d.date).format('ll')}` ],
     [ 'Position', `${d.latitude.toFixed(4)}, ${d.longitude.toFixed(4)}` ],
-    [ 'Species', `${d.call_type}` ]
+    [ 'Detection', `${detectionTypesMap.get(d.presence).label}` ]
+    // [ 'Species', `${speciesTypesMap.get(deployment.species).label}` ]
   ])
+  return `
+    ${trackHtml(d, deployment)}<br><br>
+    <hr><br>
+    Highlighted Daily Detection<br><br>
+    ${detectionHtml}
+  `
 }
 
-const gliderTrackHtml = (d, deployment) => {
-  const monitoring = monitoringPeriodLabels(deployment)
+const stationHtml = (d, deployment) => {
+  const props = deployment.properties
+  const monitoring = monitoringPeriodLabels(props)
 
-  const trackHtml = htmlTable([
-    [ 'Project', `${deployment.project}` ],
-    [ 'Site', `${deployment.site_id ? deployment.site_id : 'N/A'}` ],
-    [ 'Platform Type', `${platformTypesMap.get(deployment.platform_type).label}` ],
-    [ 'Recorder Type', `${deployment.instrument_type}` ],
-    [ 'Detection Method', `${deployment.detection_method}` ],
+  const metaHtml = htmlTable([
+    [ 'Project', `${props.project}` ],
+    [ 'Site', `${props.site_id ? props.site_id : 'N/A'}` ],
+    [ 'Platform Type', `${platformTypesMap.get(props.platform_type).label}` ],
+    [ 'Recorder Type', `${props.instrument_type}` ],
+    [ 'Detection Method', `${props.detection_method}` ],
+    [ 'Recorder Depth', props.recorder_depth_meters ? `${(+props.recorder_depth_meters).toFixed(0)} m` : 'N/A' ],
+    [ 'Water Depth', props.water_depth_meters ? `${(+props.water_depth_meters).toFixed(0)} m` : 'N/A' ],
     [ 'Deployed', `${monitoring.start} to ${monitoring.end}` ],
     [ 'Duration', `${monitoring.duration} days` ]
   ])
   const detectionHtml = detectionTableHtml(deployment)
-
-  return `
-    Glider Deployment<br><br>
-
-    ${trackHtml}<br><br>
-
-    <hr><br>
-
-    Deployment Summary (# Daily Detections)<br><br>
-    ${pad(16, 'All', '&nbsp;')} ${pad(8, 'Filtered', '&nbsp;')}<br>
-    ${detectionHtml}
-  `
-}
-const gliderPointHtml = (d, deployment) => {
-  const trackHtml = gliderTrackHtml(d, deployment)
-  const positionHtml = htmlTable([
-    [ 'Date', `${moment.utc(d.date).format('ll')}` ],
-    [ 'Position', `${d.latitude.toFixed(4)}, ${d.longitude.toFixed(4)}` ]
-    // [ 'Species', `${speciesTypesMap.get(deployment.species).label}` ]
-  ])
-  return `
-    ${trackHtml}<br><br>
-    <hr><br>
-    Highlighted Daily Detection<br><br>
-    ${positionHtml}
-  `
-}
-
-const stationPointHtml = (d, deployment) => {
-  const monitoring = monitoringPeriodLabels(deployment)
-  const detectionTypesIds = detectionTypes.map(d => d.id)
-  const filteredDetections = deploymentMap.get(deployment.id)
-  const allDetections = xf.all().filter(d => d.id === deployment.id)
-
-  const allDetectionsSummary = nest()
-    .key(d => d.presence)
-    .rollup(v => v.length)
-    .object(allDetections)
-  detectionTypesIds.forEach(id => {
-    allDetectionsSummary[id] = allDetectionsSummary[id] || 0
-  })
-  allDetectionsSummary.total = allDetections.length
-
-  const metaHtml = htmlTable([
-    [ 'Project', `${deployment.project}` ],
-    [ 'Site', `${deployment.site_id ? deployment.site_id : 'N/A'}` ],
-    [ 'Platform Type', `${platformTypesMap.get(deployment.platform_type).label}` ],
-    [ 'Recorder Type', `${deployment.instrument_type}` ],
-    [ 'Detection Method', `${deployment.detection_method}` ],
-    [ 'Recorder Depth', deployment.recorder_depth_meters ? `${deployment.recorder_depth_meters} m` : 'N/A' ],
-    [ 'Water Depth', deployment.water_depth_meters ? `${deployment.water_depth_meters} m` : 'N/A' ],
-    [ 'Deployed', `${monitoring.start} to ${monitoring.end}` ],
-    [ 'Duration', `${monitoring.duration} days` ]
-  ])
-  const detectionsHtml = htmlTable([...detectionTypesIds, 'total'].map(id => [
-    id === 'total' ? 'Total' : detectionTypesMap.get(id).label,
-    `${pad(6, allDetectionsSummary[id].toLocaleString(), '&nbsp;')} ${pad(8, filteredDetections[id].toLocaleString(), '&nbsp;')}`
-  ]))
 
   return `
     Monitoring Station Deployment<br><br>
@@ -199,28 +157,22 @@ const stationPointHtml = (d, deployment) => {
 
     <hr><br>
 
-    Deployment Summary (# Daily Detections)<br><br>
+    Deployment Summary (# Recorded Days)<br><br>
     ${pad(20, 'All', '&nbsp;')} ${pad(8, 'Filtered', '&nbsp;')}<br>
-    ${detectionsHtml}
+    ${detectionHtml}
   `
 }
 
 export function tipHtml (d, deployment, type) {
-  // d: feature (data bound to element)
-  // deployment: associated with feature
-  // type: point, track
-  if (deployment.platform_type === 'towed') {
-    if (type === 'track') {
-      return towedTrackHtml(d, deployment)
-    } else if (type === 'point') {
+  if (type === 'track') {
+    return trackHtml(d, deployment)
+  } else if (type === 'point') {
+    if (deployment.properties.platform_type === 'towed') {
       return towedPointHtml(d, deployment)
-    }
-  } else if (deployment.platform_type === 'slocum' || deployment.platform_type === 'wave') {
-    if (type === 'track') {
-      return gliderTrackHtml(d, deployment)
-    } else if (type === 'point') {
+    } else {
       return gliderPointHtml(d, deployment)
     }
+  } else {
+    return stationHtml(d, deployment)
   }
-  return stationPointHtml(d, deployment)
 }

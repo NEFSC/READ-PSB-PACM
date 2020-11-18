@@ -47,7 +47,7 @@
 
         <v-list-item class="my-1" v-if="theme === 'beaked'">
           <v-list-item-content>
-            <CallTypeFilter></CallTypeFilter>
+            <SpeciesFilter></SpeciesFilter>
           </v-list-item-content>
         </v-list-item>
 
@@ -149,7 +149,7 @@ import Map from '@/components/Map'
 import AboutDialog from '@/components/AboutDialog'
 import SelectTheme from '@/components/SelectTheme'
 import YearFilter from '@/components/YearFilter'
-import CallTypeFilter from '@/components/CallTypeFilter'
+import SpeciesFilter from '@/components/SpeciesFilter'
 import PlatformTypeFilter from '@/components/PlatformTypeFilter'
 import SeasonFilter from '@/components/SeasonFilter'
 import DetectionFilter from '@/components/DetectionFilter'
@@ -167,7 +167,7 @@ export default {
     SelectTheme,
     YearFilter,
     PlatformTypeFilter,
-    CallTypeFilter,
+    SpeciesFilter,
     SeasonFilter,
     DetectionFilter,
     DeploymentDetail
@@ -272,12 +272,12 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['theme', 'isTowed', 'loading', 'selectedDeployment']),
+    ...mapGetters(['theme', 'loading', 'selectedDeployment']),
     showDialog () {
       return !!this.deployments.selected
     },
     yAxisLabel () {
-      return this.isTowed ? '# Detections' : '# Days Recorded'
+      return '# Days Recorded'
     }
   },
   mounted () {

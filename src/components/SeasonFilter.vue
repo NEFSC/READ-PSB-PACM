@@ -298,7 +298,7 @@ export default {
       // this.$emit('update', [this.start.jday, this.end.jday])
     },
     setFilter: debounce(function () {
-      console.log('SeasonFilter: setFilter')
+      // console.log('SeasonFilter: setFilter')
       // this.season.start = start
       // this.season.end = end === 365 ? 366 : end
       const start = this.start.jday

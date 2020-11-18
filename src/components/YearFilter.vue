@@ -112,6 +112,30 @@ export default {
         }
       }
     )
+    // alternative reduce method, count only unique dates
+    // so if there are multiple detections from different
+    // platform types or species (beaked) happen on same day
+    // then that day is only counted once
+    // NOTE: need to update the group accessor for the dc chart
+    // to .group(group, 'y', (d) => d.value.y.size)
+    // const group = dim.group().reduce(
+    //   (p, v) => {
+    //     p[v.presence].add(v.date)
+    //     return p
+    //   },
+    //   (p, v) => {
+    //     p[v.presence].delete(v.date)
+    //     return p
+    //   },
+    //   () => {
+    //     return {
+    //       y: new Set(),
+    //       n: new Set(),
+    //       m: new Set()
+    //     }
+    //   }
+    // )
+
     this.extent = d3.extent(xf.all().map(d => d.date.getFullYear()))
     this.filter = [this.extent[0], this.extent[1] + 1]
 

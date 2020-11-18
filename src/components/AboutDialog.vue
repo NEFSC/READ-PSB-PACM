@@ -18,13 +18,13 @@
         The Passive Acoustic Cetacean Map (PACM) shows when and where specific cetacean species were acoustically detected in the Atlantic Ocean based on Passive Acoustic Monitoring (PAM).
       </p>
       <p>
-        This application provides interactive data visualization tools for exploring PAM-based cetacean acoustic detection data. This application does not work in Internet Explorer. Click the Help button for a tour of how to use the site.
+        This application provides interactive data visualization tools for exploring PAM-based cetacean acoustic detection data. This application works best in Google Chrome. Click the Help button for a tour of how to use the site.
       </p>
       <p>
         Species that are currently represented are the North Atlantic right whale, fin whale, humpback whale, sei whale, blue whale, beaked whales and Kogia species (dwarf/pygmy sperm whales). Acoustic detections of specific call types are reported here and information on which call type was detected can be found in the metadata.
       </p>
       <p>
-        Acoustic detections were made either from bottom mounted recorders, surface buoy recorders, autonomous gliders or towed arrays. Bottom mounted and surface buoys are moored and represent acoustic detections from a fixed location. Gliders and towed arrays are mobile and detections are represented along track lines.
+        Acoustic detections were made either from bottom mounted recorders, surface buoy recorders, autonomous gliders or towed arrays. Bottom mounted and surface buoys are moored and represent acoustic detections from a fixed location. Gliders and towed arrays are mobile and detections are represented along track lines. The data have the capacity to be normalized by the number of recording days for all stationary recorders.
       </p>
       <p>
         The dataset was compiled by the NOAA NEFSC Passive Acoustic Research Program using detections collected from many collaborators. Information on data ownership can be found in the metadata. This map is an expansion of one created for us by Hansen Johnson.
