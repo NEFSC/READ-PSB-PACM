@@ -1,12 +1,12 @@
-# towed array dataset
+# towed array tracks
 
 library(tidyverse)
 library(lubridate)
 library(sf)
 library(readxl)
 
-FILE_DETECT <- "~/Dropbox/Work/nefsc/transfers/20200326 - towed arrays/"
-FILE_META <- "~/Dropbox/Work/nefsc/transfers/20200529 - towed array metadata/Towed_Array_effort_Walker_Website.xlsx"
+FILE_DETECT <- "~/Dropbox/Work/nefsc/transfers/20201030 - towed array/"
+FILE_META <- "~/Dropbox/Work/nefsc/transfers/20201030 - towed array/Towed_Array_effort_Walker_Website_Daily_Resolution.xlsx"
 
 # metadata ----------------------------------------------------------------
 
@@ -22,45 +22,25 @@ df_projects_kogia <- read_xlsx(
 ) %>% 
   mutate(species = "kogia")
 
-stopifnot(identical(names(df_projects_bw), names(df_projects_kogia)))
+df_projects_sperm <- read_xlsx(
+  FILE_META,
+  sheet = "SPWH"
+) %>% 
+  mutate(species = "sperm")
 
-df_projects <- bind_rows(df_projects_bw, df_projects_kogia) %>% 
+df_projects <- bind_rows(df_projects_bw, df_projects_kogia, df_projects_sperm) %>% 
   janitor::clean_names() %>% 
   mutate(
     submission_date = as_date(submission_date),
-    monitoring_start_datetime = lubridate::parse_date_time(monitoring_start_datetime_oracle, "d-b-y I.M.OS Op"),
-    monitoring_end_datetime = lubridate::parse_date_time(monitoring_end_datetime_oracle, "d-b-y I.M.OS Op"),
+    monitoring_start_datetime = as_date(monitoring_start_datetime_oracle),
+    monitoring_end_datetime = as_date(monitoring_end_datetime_oracle),
     sampling_rate_hz = sampling_rate_khz * 1000
   ) %>% 
   select(-ends_with(c("_excel", "_oracle")), -starts_with("analysis_"), -sampling_rate_khz)
 
-# ERROR: columns that vary by project/species include platform_type, qc_data
-
 df_projects <- df_projects %>%
-  select(-starts_with("monitoring")) %>% 
   rename(data_poc_name = data_poc) %>% 
   mutate(
-    # inconsistent columns by project
-    platform_type = case_when(
-      platform_type == "Towed Array, tetrahedral + linear" ~ "Towed Array, linear",
-      TRUE ~ platform_type
-    ),
-    qc_data = "UNKNOWN", # glider/moored use "YES"
-  ) %>% 
-  distinct() %>% 
-  left_join(
-    # monitoring start/end datetimes
-    df_projects %>% 
-      group_by(project, species) %>% 
-      summarise(
-        monitoring_start_datetime = min(monitoring_start_datetime),
-        monitoring_end_datetime = max(monitoring_end_datetime),
-        .groups = "drop"
-      ),
-    by = c("project", "species")
-  ) %>% 
-  mutate(
-    # missing columns
     id = project,
     platform_type = "towed",
     platform_id = NA_character_,
@@ -87,7 +67,8 @@ df_track_gu1303 <- read_xlsx(
   janitor::clean_names() %>% 
   mutate(
     echosounders = "ON",
-    track_id = "GU1303"
+    track_id = "GU1303",
+    track_leg = 1
   )
 
 df_track_gu1605 <- read_xlsx(
@@ -97,10 +78,10 @@ df_track_gu1605 <- read_xlsx(
   janitor::clean_names() %>% 
   mutate(
     echosounders = "OFF",
-    track_id = "GU1605"
+    track_id = "GU1605",
+    track_leg = 1
   )
 
-# TODO: get start/end timestamps in UTC for echosounders
 df_track_gu1803 <- list.files(file.path(FILE_DETECT, "ShipTracklines", "GU1803_ShipGPS_EffortAppended_FIXED")) %>% 
   map_df(function (fname) {
     read_xlsx(
@@ -116,7 +97,8 @@ df_track_gu1803 <- list.files(file.path(FILE_DETECT, "ShipTracklines", "GU1803_S
       "OFF",
       "ON"
     ),
-    track_id = "GU1803"
+    track_id = "GU1803",
+    track_leg = 1
   ) %>% 
   filter(
     user_field >= 0,
@@ -137,21 +119,26 @@ df_track_gu1803 %>%
   st_cast("LINESTRING") %>% 
   mapview::mapview()
 
+df_track_hb1103 <- read_xlsx(
+  file.path(FILE_DETECT, "ShipTracklines", "HB1103_gpsData.xlsx"),
+  col_types = "guess"
+) %>% 
+  janitor::clean_names() %>% 
+  mutate(
+    track_id = "HB1103",
+    track_leg = 1
+  )
+
 df_track_hb1303 <- read_xlsx(
   file.path(FILE_DETECT, "ShipTracklines", "HB1303_PG_GPS_ALL_AIedits.xlsx"),
   col_types = "guess"
 ) %>% 
   janitor::clean_names() %>% 
   mutate(
-    track_id = "HB1303"
+    track_id = "HB1303",
+    track_leg = 1
   )
 
-# TODO: fix HB1403 - 20180725 (GMT) sheet to match others, missing echosounders
-
-# Sheet: 20140725 (GMT)
-#    - drop `PC Time`? same as `GpsDate`? (assume so)
-#    - does `Recording Effort` column match `MF Rec Effort` or `HF Rec Effort` on other sheets? (set both to Recording Effort)
-#    - missing echosounders column (assume NA)
 df_track_hb1403_1 <- read_xlsx(
   file.path(FILE_DETECT, "ShipTracklines", "HB1403_Completed_GpsData_AIedits.xlsx"),
   sheet = 1,
@@ -170,7 +157,8 @@ df_track_hb1403_1 <- read_xlsx(
     hf_rec_effort = mf_rec_effort,
     date = format(as_date(gps_date), "%m/%d/%Y"),
     time = format(gps_date, "%H:%M:%S"),
-    echosounders = NA_character_
+    echosounders = NA_character_,
+    track_leg = 1
   )
 df_track_hb1403_2 <- read_xlsx(
   file.path(FILE_DETECT, "ShipTracklines", "HB1403_Completed_GpsData_AIedits.xlsx"),
@@ -182,6 +170,9 @@ df_track_hb1403_2 <- read_xlsx(
   rename(
     acoustic_effort = effort,
     distance_km = distance
+  ) %>% 
+  mutate(
+    track_leg = 2
   )
 df_track_hb1403_3 <- read_xlsx(
   file.path(FILE_DETECT, "ShipTracklines", "HB1403_Completed_GpsData_AIedits.xlsx"),
@@ -192,6 +183,9 @@ df_track_hb1403_3 <- read_xlsx(
   janitor::clean_names() %>% 
   rename(
     distance_km = distance
+  ) %>% 
+  mutate(
+    track_leg = 3
   )
 df_track_hb1403_4 <- read_xlsx(
   file.path(FILE_DETECT, "ShipTracklines", "HB1403_Completed_GpsData_AIedits.xlsx"),
@@ -199,7 +193,10 @@ df_track_hb1403_4 <- read_xlsx(
   col_types = "guess",
   range = "A1:T30509"
 ) %>% 
-  janitor::clean_names()
+  janitor::clean_names() %>% 
+  mutate(
+    track_leg = 4
+  )
 df_track_hb1403_5 <- read_xlsx(
   file.path(FILE_DETECT, "ShipTracklines", "HB1403_Completed_GpsData_AIedits.xlsx"),
   sheet = 5,
@@ -207,7 +204,10 @@ df_track_hb1403_5 <- read_xlsx(
   range = "A1:T14141"
 ) %>% 
   janitor::clean_names() %>% 
-  rename(echosounders = echsounders)
+  rename(echosounders = echsounders) %>% 
+  mutate(
+    track_leg = 5
+  )
 
 df_track_hb1403 <- bind_rows(
   df_track_hb1403_1,
@@ -234,19 +234,26 @@ df_track_hb1503_1 <- read_xlsx(
     pc_local_time = mdy_hms(pc_local_time),
     pc_time = mdy_hms(pc_time),
     gps_date = mdy_hms(gps_date),
-    gps_time = parse_number(gps_time)
+    gps_time = parse_number(gps_time),
+    track_leg = 1
   )
 df_track_hb1503_2 <- read_xlsx(
   file.path(FILE_DETECT, "ShipTracklines", "HB1503_Copy of Leg1_gps_June16-18.xlsx"),
   col_types = "guess"
 ) %>% 
-  janitor::clean_names()
+  janitor::clean_names() %>% 
+  mutate(
+    track_leg = 2
+  )
 df_track_hb1503_3 <- read_xlsx(
   file.path(FILE_DETECT, "ShipTracklines", "HB1503_Leg2_ShipGPS.xlsx"),
   col_types = "guess"
 ) %>% 
   janitor::clean_names() %>% 
-  select(-night)
+  select(-night) %>% 
+  mutate(
+    track_leg = 3
+  )
 
 df_track_hb1503 <- bind_rows(
   df_track_hb1503_1,
@@ -257,6 +264,9 @@ df_track_hb1503 <- bind_rows(
     echosounders = "OFF",
     track_id = "HB1503"
   )
+df_track_hb1503 %>% 
+  group_by(track_leg) %>% 
+  summarize(start = min(utc), end = max(utc))
 
 df_track_hb1603 <- read_xlsx(
   file.path(FILE_DETECT, "ShipTracklines", "HB1603_ship_GPS_EchoAdd_All_legs_combined.xlsx"),
@@ -265,7 +275,8 @@ df_track_hb1603 <- read_xlsx(
   janitor::clean_names() %>% 
   rename(echosounders = echosounder) %>% 
   mutate(
-    track_id = "HB1603"
+    track_id = "HB1603",
+    track_leg = 1
   )
 
 df_track_hrs1701 <- read_csv(
@@ -279,38 +290,47 @@ df_track_hrs1701 <- read_csv(
       "OFF",
       "ON"
     ),
-    track_id = "HRS1701"
+    track_id = "HRS1701",
+    track_leg = 1
   )
+
+df_track_hrs1910 <- read_csv(
+  file.path(FILE_DETECT, "ShipTracklines", "HRS1910_ship_GPS.csv")
+) %>% 
+  janitor::clean_names() %>% 
+  mutate(
+    # utc = mdy_hms(utc),
+    track_id = "HRS1910",
+    track_leg = 1
+  )
+
 
 df_tracks_raw <- list(
   df_track_gu1303,
   df_track_gu1605,
   df_track_gu1803,
+  df_track_hb1103,
   df_track_hb1303,
   df_track_hb1403,
   df_track_hb1503,
   df_track_hb1603,
-  df_track_hrs1701
+  df_track_hrs1701,
+  df_track_hrs1910
 ) %>% 
-  map_df(~ select(., id = track_id, datetime = utc, latitude, longitude, echosounders)) %>% 
+  map_df(~ select(., id = track_id, track_leg, datetime = utc, latitude, longitude)) %>% 
   mutate(
     id = if_else(
-      id %in% c("GU1605"),
+      id %in% c("GU1303", "GU1605"),
       str_c("SEFSC_", id, sep = ""),
       str_c("NEFSC_", id, sep = "")
     )
   )
 
-df_tracks_hr <- df_tracks %>% 
-  mutate(datetime2 = datetime) %>% 
-  group_by(project_id = id, datetime = floor_date(datetime, unit = "hour")) %>% 
+df_tracks_hr <- df_tracks_raw %>% 
+  group_by(project_id = id, track_leg, datetime = floor_date(datetime, unit = "hour")) %>% 
   summarise(
-    # n = n(),
-    # start = min(datetime2),
-    # end = max(datetime2),
     latitude = median(latitude, na.rm = TRUE),
     longitude = median(longitude, na.rm = TRUE),
-    # echosounders = any(echosounders == "ON"),
     .groups = "drop"
   ) %>% 
   mutate(
@@ -320,10 +340,10 @@ df_tracks_hr <- df_tracks %>%
 df_tracks_hr
 
 df_projects %>% 
-  anti_join(df_tracks_hr, by = c("id" = "track_id")) %>%
+  anti_join(df_tracks_hr, by = c("id" = "project_id")) %>%
   pull(id)
 
-setdiff(unique(df_tracks$id), unique(df_projects$id))
+setdiff(unique(df_tracks_hr$project_id), unique(df_projects$id))
 
 sf_points <- df_tracks_hr %>% 
   st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
@@ -331,16 +351,19 @@ sf_points <- df_tracks_hr %>%
 mapview::mapview(sf_points)
 
 sf_tracks <- sf_points %>% 
-  group_by(id = project_id) %>% 
+  group_by(id = project_id, track_leg) %>% 
   summarise(
-    # start = min(start),
-    # end = max(end),
-    do_union = FALSE
+    do_union = FALSE,
+    .groups = "drop_last"
   ) %>% 
-  st_cast("LINESTRING")
+  st_cast("LINESTRING") %>% 
+  summarise(
+    do_union = TRUE,
+    .groups = "drop"
+  )
 
 mapview::mapview(sf_tracks)
-
+mapview::mapview(filter(sf_tracks, id == "NEFSC_HB1403"))
 
 # detect: kogia -----------------------------------------------------------
 
@@ -485,6 +508,15 @@ df_beaked_hrs1701 <- read_xlsx(
   janitor::clean_names() %>% 
   mutate(id = "HRS1701")
 
+df_beaked_hrs1910 <- read_xlsx(
+  file.path(FILE_DETECT, "BeakedWhale_data", "HRS1910_RT_detections_edited_AID.xlsx"),
+  col_types = "guess",
+  sheet = "BW_only",
+  na = "NULL"
+) %>% 
+  janitor::clean_names() %>% 
+  mutate(id = "HRS1910")
+
 df_beaked <- list(
   df_beaked_gu1303,
   df_beaked_gu1605,
@@ -509,7 +541,22 @@ df_beaked <- list(
     ),
   df_beaked_hb1603 %>% 
     mutate(species = final_species_classification),
-  df_beaked_hrs1701
+  df_beaked_hrs1701,
+  df_beaked_hrs1910 %>% 
+    transmute(
+      id,
+      utc = date_time_start,
+      event_end = date_time_end,
+      tm_latitude1 = latlong_lat,
+      tm_longitude1 = latlong_lon,
+      event_type = "BEAK",
+      n_clicks = 1,
+      min_number = NA_real_,
+      best_number = NA_real_,
+      max_number = NA_real_,
+      species = species1_class1,
+      tm_model_name1 = "Unknown" 
+    )
 ) %>% 
   map_df(~ select(., id, utc, event_end, latitude = tm_latitude1, longitude = tm_longitude1, event_type, n_clicks, min_number, best_number, max_number, species, tm_model_name = tm_model_name1)) %>% 
   filter(event_type %in% c("POBK", "PRBK", "BEAK")) %>% # ignore BRAN, DOLP
@@ -548,13 +595,74 @@ janitor::tabyl(df_beaked$call_type)
 
 unique(df_beaked$call_type) %>% sort
 
+# missing detection coordinates
 df_beaked %>%
   filter(is.na(latitude)) %>% 
   janitor::tabyl(id)
 
+
+# detect: sperm -----------------------------------------------------------
+
+df_sperm_hb1103 <- read_xlsx(
+  file.path(FILE_DETECT, "SpermWhale_data", "HB1103_Pm_events.xlsx"),
+  col_types = "guess",
+  na = "NaN"
+) %>% 
+  janitor::clean_names() %>% 
+  mutate(
+    id = "HB1103",
+    utc = ymd_hms(utc),
+    event_end = ymd_hms(event_end),
+    latitude = parse_number(latitude),
+    longitude = parse_number(longitude)
+  )
+
+df_sperm_hb1303 <- read_xlsx(
+  file.path(FILE_DETECT, "SpermWhale_data", "HB1303_Pm_ALL_array_Events.xlsx"),
+  col_types = "guess",
+  na = "NaN"
+) %>% 
+  janitor::clean_names() %>% 
+  mutate(id = "HB1303")
+
+df_sperm <- list(
+  df_sperm_hb1103 %>% 
+    mutate(
+      tm_latitude1 = latitude,
+      tm_longitude1 = longitude
+    ),
+  df_sperm_hb1303 %>% 
+    mutate(
+      min_number = as.numeric(min_number),
+      best_number = as.numeric(best_number),
+      max_number = as.numeric(max_number)
+    )
+) %>% 
+  map_df(~ select(., id, utc, event_end, latitude = tm_latitude1, longitude = tm_longitude1, event_type, n_clicks, min_number, best_number, max_number, tm_model_name = tm_model_name1)) %>% 
+  mutate(
+    id = if_else(
+      id %in% c("GU1605", "GU1303"),
+      str_c("SEFSC_", id, sep = ""),
+      str_c("NEFSC_", id, sep = "")
+    )
+  ) %>%
+  filter(n_clicks > 0, latitude > 0) %>% 
+  transmute(
+    id,
+    analysis_period_start = utc,
+    analysis_period_end = event_end,
+    analysis_period_effort_seconds = as.numeric(difftime(analysis_period_end, analysis_period_start, units = "secs")),
+    latitude,
+    longitude,
+    call_type = NA_character_,
+    species = "sperm",
+    presence = "Detected"
+  )
+
+
 # detect: merge -----------------------------------------------------------
 
-df_detects_all <- bind_rows(df_kogia, df_beaked) %>% 
+df_detects_all <- bind_rows(df_kogia, df_beaked, df_sperm) %>% 
   filter(!is.na(latitude)) %>% 
   mutate(
     presence = "y"
@@ -564,42 +672,6 @@ df_detects <- df_detects_all %>%
     date = as_date(analysis_period_start),
     platform_type = "towed"
   )
-# select(species, id, date, presence, latitude, longitude)
-# 
-# df_detects_hr <- df_detects_all %>% 
-#   mutate(datetime = floor_date(analysis_period_start, unit = "hour")) %>% 
-#   arrange(id, species, datetime) %>% 
-#   group_by(id, species, datetime, call_type) %>% 
-#   summarise(
-#     n_detections = n(),
-#     # latitude = first(latitude),
-#     # longitude = first(longitude),
-#     .groups = "drop"
-#   ) %>% 
-#   mutate(
-#     presence = "y",
-#     point_id = str_c(id, format(datetime, "%Y%m%d%H"), sep = "@"),
-#     date = as_date(datetime),
-#     platform_type = "towed"
-#   ) %>% 
-#   select(species, point_id, date, presence, call_type, platform_type)
-# 
-# all(unique(df_detects_hr$point_id) %in% sf_points$id)
-# 
-# df_detects_hr %>% 
-#   filter(
-#     !point_id %in% sf_points$id
-#   )
-# 
-# sf_points %>% 
-#   filter(project_id == "NEFSC_HB1303") %>% 
-#   arrange(datetime) %>% 
-#   View()
-# 
-# df_detects_day %>% 
-#   group_by(species, id, date) %>%
-#   mutate(n = n()) %>% 
-#   filter(n > 1)
 
 summary(df_detects)
 
@@ -608,14 +680,22 @@ stopifnot(all(!is.na(df_detects)))
 unique(df_projects$id)
 setdiff(unique(df_projects$id), unique(df_detects$id))
 setdiff(unique(df_detects$id), unique(df_projects$id))
-setdiff(unique(df_tracks$id), unique(df_detects$id))
+setdiff(unique(sf_tracks$id), unique(df_detects$id))
+
+
+# daily -------------------------------------------------------------------
+
+df_daily <- df_detects %>% 
+  distinct(platform_type, species, call_type, id, date = as_date(analysis_period_start), presence) %>% 
+  arrange(species, id, date)
 
 # export ------------------------------------------------------------------
 
 list(
   projects = df_projects,
   tracks = sf_tracks,
-  detects = df_detects
+  detects = df_detects,
+  daily = df_daily
 ) %>% 
   saveRDS("rds/towed.rds")
 
