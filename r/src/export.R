@@ -10,9 +10,9 @@ towed <- readRDS("data/towed.rds")
 moored <- readRDS("data/moored.rds")
 glider <- readRDS("data/glider.rds")
 
-setdiff(names(towed$deployments), names(glider$deployments))
-setdiff(names(glider$deployments), names(towed$deployments))
-setdiff(names(moored$deployments), names(towed$deployments))
+# setdiff(names(towed$deployments), names(glider$deployments))
+# setdiff(names(glider$deployments), names(towed$deployments))
+# setdiff(names(moored$deployments), names(towed$deployments))
 
 df_deployments <- bind_rows(
   towed$deployments,
@@ -37,12 +37,22 @@ df_detections <- bind_rows(
 theme <- "narw"
 
 export_theme <- function (theme) {
-  x_deployments <- df_deployments %>% 
-    filter(theme == !!theme) %>% 
-    select(-theme)
   x_detections <- df_detections %>% 
     filter(theme == !!theme) %>% 
     select(-theme)
+  
+  x_deployments <- df_deployments %>% 
+    filter(theme == !!theme) %>% 
+    select(-theme)
+  
+  
+  missing_detections <- setdiff(x_deployments$id, unique(x_detections$deployment_id))
+  if (length(missing_detections) > 0) {
+    warning(glue("Found {length(missing_detections)} deployments without any detections ({str_c(missing_detections, collapse = ', ')}), removing from deployments table"))
+    x_deployments <- x_deployments %>% 
+      filter(!id %in% missing_detections)
+  }
+  
   x_stations <- x_deployments %>% 
     filter(deployment_type == "station") %>% 
     select(id)
@@ -54,7 +64,7 @@ export_theme <- function (theme) {
   if (length(missing_deployments) > 0) {
     warning(glue("Missing {length(missing_deployments)} deployments found in detections ({str_c(missing_deployments, collapse = ', ')}), removing detections"))
     x_detections <- x_detections %>% 
-      filter(!deployment_id %in% missing_deployments)
+      filter(!id %in% missing_deployments)
   }
   
   missing_stations <- setdiff(
