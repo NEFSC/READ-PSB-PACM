@@ -2,9 +2,11 @@
 import { mapGetters, mapActions } from 'vuex'
 import L from 'leaflet'
 import * as d3 from 'd3'
+import * as d3Hexbin from 'd3-hexbin'
 import d3Tip from 'd3-tip'
 
 import evt from '@/lib/events'
+import { detectionTypes } from '@/lib/constants'
 import { xf, deploymentMap } from '@/lib/crossfilter'
 import { colorScale, sizeScale, sizeScaleUnit } from '@/lib/scales'
 import { tipOffset, tipHtml } from '@/lib/tip'
@@ -16,8 +18,21 @@ export default {
     map () {
       return this.$parent.map
     },
+    svg () {
+      return this.$parent.svg
+    },
     container () {
       return this.$parent.container
+    },
+    stations () {
+      return this.deployments
+        .filter(d => d.properties.deployment_type === 'station')
+    },
+    points () {
+      return this.deployments
+        .filter(d => d.properties.deployment_type === 'track')
+        .map(d => d.trackDetections)
+        .flat()
     }
   },
   watch: {
@@ -35,6 +50,7 @@ export default {
     this.container.append('g').classed('tracks', true)
     this.container.append('g').classed('points', true)
     this.container.append('g').classed('stations', true)
+    this.container.append('g').classed('hexbins', true)
 
     this.tip = d3Tip()
       .attr('class', 'd3-tip map')
@@ -70,22 +86,58 @@ export default {
     },
     draw () {
       if (this.loading) return
+      // this.drawHexbin()
       this.drawTracks()
       this.drawStations()
       this.drawPoints()
       this.render()
       this.updateSelected()
     },
+    drawHexbin () {
+      const width = this.svg.attr('width')
+      const height = this.svg.attr('height')
+
+      const hexbin = d3Hexbin.hexbin()
+        .extent([[0, 0], [width, height]])
+        .radius(10)
+        .x((d) => {
+          let point
+          if (d.geometry) {
+            point = this.map.latLngToLayerPoint(new L.LatLng(d.geometry.coordinates[1], d.geometry.coordinates[0]))
+          } else {
+            point = this.map.latLngToLayerPoint(new L.LatLng(d.latitude, d.longitude))
+          }
+          return point.x
+        })
+        .y((d) => {
+          let point
+          if (d.geometry) {
+            point = this.map.latLngToLayerPoint(new L.LatLng(d.geometry.coordinates[1], d.geometry.coordinates[0]))
+          } else {
+            point = this.map.latLngToLayerPoint(new L.LatLng(d.latitude, d.longitude))
+          }
+          return point.y
+        })
+      const bins = hexbin([...this.stations, ...this.points])
+      const g = this.container.select('g.hexbins')
+      g.selectAll('path')
+        .data(bins)
+        .join('path')
+        .attr('class', 'hexbin')
+        .attr('transform', d => `translate(${d.x},${d.y})`)
+        .attr('d', d => hexbin.hexagon())
+        .attr('fill-opacity', 0)
+        .attr('stroke', 'red')
+        .on('click', (d) => console.log(d, this.getHexbinValue(d)))
+    },
     drawStations () {
       if (!this.deployments) return
 
       const g = this.container.select('g.stations')
 
-      const data = this.deployments.filter(d => d.properties.deployment_type === 'station')
-
       const map = this.map
       g.selectAll('circle.station')
-        .data(data, d => d.id)
+        .data(this.stations, d => d.id)
         .join('circle')
         .attr('class', 'station')
         .attr('r', 5)
@@ -108,13 +160,8 @@ export default {
         return [point.x, point.y]
       }
 
-      const data = this.deployments
-        .filter(d => d.properties.deployment_type === 'track')
-        .map(d => d.trackDetections)
-        .flat()
-
       g.selectAll('path.point')
-        .data(data)
+        .data(this.points)
         .join('path')
         .attr('class', 'point')
         .attr('d', d3.symbol().type(d3.symbolSquare))
@@ -157,8 +204,36 @@ export default {
         .on('mouseenter', d => this.showTip(d, 'track'))
         .on('mouseout', this.hideTip)
     },
+    renderHexbins () {
+      // const value = deploymentMap.get(d.id)
+      //     if (this.normalizeEffort) {
+      //       return value.y
+      const color = d3.scaleSequential(d3.interpolateTurbo)
+      if (!this.normalizeEffort) {
+        color.domain([0, 500])
+      }
+      this.container
+        .selectAll('g.hexbins path.hexbin')
+        .style('fill', (bin, i) => {
+          const value = this.getHexbinValue(bin)
+          return color(this.normalizeEffort ? value.y / value.total : value.y)
+        })
+    },
+    getHexbinValue (bin) {
+      const values = bin.map(d => deploymentMap.get(d.id))
+      return values.reduce((p, v) => {
+        p.y = v.y + (p.y || 0)
+        p.m = v.m + (p.m || 0)
+        p.n = v.n + (p.n || 0)
+        p.na = v.na + (p.na || 0)
+        p.total = v.total + (p.total || 0)
+        return p
+      }, {})
+    },
     render () {
       if (!this.container) return
+
+      // this.renderHexbins()
 
       this.container
         .selectAll('g.stations circle.station')
@@ -303,6 +378,21 @@ export default {
   stroke-width: 2px;
 }
 .vue2leaflet-map svg path.point:hover {
+  fill-opacity: 1;
+  stroke-opacity: 1;
+  stroke-width: 3px;
+}
+
+.vue2leaflet-map svg path.hexbin {
+  cursor: pointer;
+  pointer-events: auto;
+  fill-opacity: 1;
+  stroke-opacity: 0.5;
+  stroke-width: 1.5px;
+  stroke: black;
+  fill: white;
+}
+.vue2leaflet-map svg path.hexbin:hover {
   fill-opacity: 1;
   stroke-opacity: 1;
   stroke-width: 3px;

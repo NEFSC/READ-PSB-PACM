@@ -26,6 +26,7 @@ export const deploymentGroup = deploymentDim.group().reduce(
     y: 0,
     n: 0,
     m: 0,
+    na: 0,
     total: 0
   })
 )
@@ -46,6 +47,7 @@ export const deploymentDateGroup = deploymentDateDim.group().reduce(
     y: 0,
     n: 0,
     m: 0,
+    na: 0,
     total: 0
   })
 )

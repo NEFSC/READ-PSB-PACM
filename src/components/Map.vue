@@ -61,12 +61,12 @@ export default {
     const svgLayer = L.svg()
     this.map.addLayer(svgLayer)
 
-    const svg = d3.select(svgLayer.getPane()).select('svg')
+    this.svg = d3.select(svgLayer.getPane()).select('svg')
       .classed('leaflet-zoom-animated', false)
       .classed('leaflet-zoom-hide', true)
       .classed('map', true)
       .attr('pointer-events', null)
-    this.container = svg.select('g')
+    this.container = this.svg.select('g')
     this.ready = true
   },
   methods: {
