@@ -171,7 +171,9 @@ export default {
             ? colorScale('y')
             : value.m > 0
               ? colorScale('m')
-              : colorScale('n')
+              : value.n > 0
+                ? colorScale('n')
+                : colorScale('na')
         })
         .attr('r', (d) => {
           const value = deploymentMap.get(d.id)

@@ -36,7 +36,7 @@
 
     <div class="mt-2" v-if="hasStation">
       <div class="subtitle-1 font-weight-medium mb-2">Monitoring Stations</div>
-      <svg width="180" height="220" v-if="normalizeEffort">
+      <svg width="180" height="245" v-if="normalizeEffort">
         <text x="55" y="12" class="legend-text">% Days Detected</text>
         <g v-for="(v, i) in [1, 0.75, 0.5, 0.25, 0.01]" :key="'size-' + v" transform="translate(27,20)">
           <circle :cy="i * 20 + 20" :r="sizeScaleUnit(v)" stroke="white" stroke-opacity="0.5" :fill="detectionTypes[0].color" />
@@ -50,8 +50,12 @@
           <circle :cy="0" :r="sizeScale(0)" stroke="white" stroke-opacity="0.5" :fill="detectionTypes[2].color" />
           <text x="27" :y="0" class="legend-text">0% ({{detectionTypes[2].label}})</text>
         </g>
+        <g transform="translate(27,235)">
+          <circle :cy="0" :r="sizeScale(0)" stroke="white" stroke-opacity="0.5" :fill="detectionTypes[3].color" />
+          <text x="27" :y="0" class="legend-text">0% ({{detectionTypes[3].label}})</text>
+        </g>
       </svg>
-      <svg width="180" height="220" v-else>
+      <svg width="180" height="245" v-else>
         <text x="55" y="12" class="legend-text"># Days Detected</text>
         <g v-for="(v, i) in [1000, 500, 100, 50, 1]" :key="'size-0-' + v" transform="translate(27,20)">
           <circle :cy="i * 20 + 20" :r="sizeScale(v)" stroke="white" stroke-opacity="0.5" :fill="detectionTypes[0].color" />
@@ -64,6 +68,10 @@
         <g transform="translate(27,210)">
           <circle :cy="0" :r="sizeScale(0)" stroke="white" stroke-opacity="0.5" :fill="detectionTypes[2].color" />
           <text x="27" :y="0" class="legend-text">0 ({{detectionTypes[2].label}})</text>
+        </g>
+        <g transform="translate(27,235)">
+          <circle :cy="0" :r="sizeScale(0)" stroke="white" stroke-opacity="0.5" :fill="detectionTypes[3].color" />
+          <text x="27" :y="0" class="legend-text">0 ({{detectionTypes[3].label}})</text>
         </g>
       </svg>
       <div>

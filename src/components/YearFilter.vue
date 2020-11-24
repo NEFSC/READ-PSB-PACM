@@ -104,13 +104,10 @@ export default {
         p[v.presence] = (p[v.presence] || 0) - 1
         return p
       },
-      () => {
-        return {
-          y: 0,
-          n: 0,
-          m: 0
-        }
-      }
+      () => detectionTypes.reduce((p, v) => {
+        p[v.id] = 0
+        return p
+      }, {})
     )
     // alternative reduce method, count only unique dates
     // so if there are multiple detections from different
@@ -144,7 +141,7 @@ export default {
       .height(160)
       .margins({ top: 10, right: 20, bottom: 40, left: 60 })
       .dimension(dim)
-      .group(group, 'y', (d) => d.value.y)
+      .group(group, 'y', (d) => d.value['y'])
       .elasticY(true)
       .x(d3.scaleLinear().domain(this.filter.slice()))
       .xAxisLabel('Year')
@@ -164,9 +161,9 @@ export default {
       //   chart.selectAll('.axis.x .tick text')
       //     .attr('transform', `translate(${Math.floor(width / n / 2)} 0)`)
       // })
-
-    this.chart.stack(group, 'm', d => d.value.m)
-    this.chart.stack(group, 'n', d => d.value.n)
+    this.chart.stack(group, 'm', d => d.value['m'])
+    this.chart.stack(group, 'n', d => d.value['n'])
+    this.chart.stack(group, 'na', d => d.value['na'])
     this.chart.xAxis().ticks(this.extent[1] - this.extent[0]).tickFormat(v => {
       return (v % (this.extent[1] - this.extent[0] > 4 ? 2 : 1) > 0) || v >= (this.extent[1] + 1) ? '' : d3.format('d')(v)
     })

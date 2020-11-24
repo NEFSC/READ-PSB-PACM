@@ -4,11 +4,14 @@ library(tidyverse)
 library(lubridate)
 library(sf)
 library(glue)
+library(janitor)
 library(jsonlite)
 
 towed <- readRDS("data/towed.rds")
 moored <- readRDS("data/moored.rds")
 glider <- readRDS("data/glider.rds")
+nefsc_deployments <- moored$deployments %>% 
+  filter(data_poc_affiliation == "NOAA NEFSC")
 
 # setdiff(names(towed$deployments), names(glider$deployments))
 # setdiff(names(glider$deployments), names(towed$deployments))
@@ -44,7 +47,6 @@ export_theme <- function (theme) {
   x_deployments <- df_deployments %>% 
     filter(theme == !!theme) %>% 
     select(-theme)
-  
   
   missing_detections <- setdiff(x_deployments$id, unique(x_detections$deployment_id))
   if (length(missing_detections) > 0) {

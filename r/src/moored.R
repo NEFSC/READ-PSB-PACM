@@ -18,6 +18,50 @@ deployments <- deployments %>%
     longitude = if_else(id == "BERCHOK_SAMANA_200901_CH1_1", median(deployments_BERCHOK_SAMANA_200901$longitude), longitude)
   )
 
+
+# fill missing detection days ---------------------------------------------
+
+deployments_dates <- deployments %>% 
+  transmute(
+    theme,
+    deployment_id = id,
+    start = as_date(monitoring_start_datetime), 
+    end = as_date(monitoring_end_datetime),
+    n_day = as.numeric(difftime(end, start, unit = "day"))
+  ) %>%
+  rowwise() %>% 
+  mutate(
+    date = list(seq.Date(start, end, by = "day"))
+  ) %>% 
+  unnest(date)
+
+# detections that are outside the deployment monitoring period
+detections %>%
+  anti_join(deployments_dates, by = c("theme", "deployment_id", "date"))
+deployments %>%
+  filter(id == "WHOI_GOM_201810_mdr1018_buoy")
+
+# deployment monitoring days with no detection data (add rows with presence="na")
+deployments_dates %>% 
+  anti_join(detections, by = c("deployment_id", "date"))
+
+detections %>% 
+  janitor::tabyl(deployment_id, species)
+
+detections_fill <- deployments_dates %>%  
+  select(theme, deployment_id, date) %>% 
+  full_join(
+    detections,
+    by = c("theme", "deployment_id", "date")
+  ) %>% 
+  mutate(
+    presence = ordered(coalesce(presence, "na"), levels = c(levels(presence), "na"))
+  )
+janitor::tabyl(detections, theme, species)
+janitor::tabyl(detections_fill, theme, species)
+janitor::tabyl(detections, theme, presence)
+janitor::tabyl(detections_fill, theme, presence)
+
 # stations ----------------------------------------------------------------
 
 stations <- deployments %>% 
@@ -42,6 +86,6 @@ deployments_geom <- sf_stations %>%
 
 list(
   deployments = deployments_geom,
-  detections = detections
+  detections = detections_fill
 ) %>% 
   write_rds("data/moored.rds")

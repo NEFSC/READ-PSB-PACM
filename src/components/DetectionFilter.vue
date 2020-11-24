@@ -36,7 +36,8 @@ export default {
       .ordering(d => {
         return detectionTypes.map(d => d.label).indexOf(d.key)
       })
-      .ordinalColors(['#CC3833', '#78B334', '#0277BD'])
+      // .ordinalColors(['#CC3833', '#78B334', '#0277BD'])
+      .ordinalColors(detectionTypes.map(d => d.color))
       .on('postRender', () => {
         if (this.chart.svg().selectAll('.x-axis-label').nodes().length > 0) return
         const textSelection = this.chart.svg()

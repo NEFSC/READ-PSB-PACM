@@ -73,6 +73,11 @@ export const detectionTypes = [
     id: 'n',
     label: 'Not Detected',
     color: '#0277BD'
+  },
+  {
+    id: 'na',
+    label: 'Not Analyzed',
+    color: '#666666'
   }
 ]
 

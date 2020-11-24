@@ -33,13 +33,10 @@ export default {
         p[v.presence] = (p[v.presence] || 0) - 1
         return p
       },
-      () => {
-        return {
-          y: 0,
-          n: 0,
-          m: 0
-        }
-      }
+      () => detectionTypes.reduce((p, v) => {
+        p[v.id] = 0
+        return p
+      }, {})
     )
 
     this.tip = d3Tip()
@@ -53,7 +50,8 @@ export default {
           ${formatter(start)} to ${formatter(end)}<br><br>
           ${pad(12, detectionTypesMap.get('y').label, '&nbsp;')}: ${pad(6, d.data.value.y.toLocaleString(), '&nbsp;')}<br>
           ${pad(12, detectionTypesMap.get('m').label, '&nbsp;')}: ${pad(6, d.data.value.m.toLocaleString(), '&nbsp;')}<br>
-          ${pad(12, detectionTypesMap.get('n').label, '&nbsp;')}: ${pad(6, d.data.value.n.toLocaleString(), '&nbsp;')}
+          ${pad(12, detectionTypesMap.get('n').label, '&nbsp;')}: ${pad(6, d.data.value.n.toLocaleString(), '&nbsp;')}<br>
+          ${pad(12, detectionTypesMap.get('na').label, '&nbsp;')}: ${pad(6, d.data.value.na.toLocaleString(), '&nbsp;')}
         `
       })
 
@@ -85,6 +83,7 @@ export default {
     })
     this.chart.stack(group, 'm', d => d.value.m)
     this.chart.stack(group, 'n', d => d.value.n)
+    this.chart.stack(group, 'na', d => d.value.na)
     // this.chart.yAxis().ticks(4).tickFormat(d3.format('.2s'))
     this.chart.yAxis().ticks(4)
     this.chart.render()
