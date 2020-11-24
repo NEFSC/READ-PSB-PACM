@@ -6,7 +6,7 @@ import * as d3Hexbin from 'd3-hexbin'
 import d3Tip from 'd3-tip'
 
 import evt from '@/lib/events'
-import { detectionTypes } from '@/lib/constants'
+// import { detectionTypes } from '@/lib/constants'
 import { xf, deploymentMap } from '@/lib/crossfilter'
 import { colorScale, sizeScale, sizeScaleUnit } from '@/lib/scales'
 import { tipOffset, tipHtml } from '@/lib/tip'
@@ -135,9 +135,12 @@ export default {
 
       const g = this.container.select('g.stations')
 
+      const data = this.stations
+        .sort((a, b) => d3.ascending(deploymentMap.get(a.id).y, deploymentMap.get(b.id).y))
+
       const map = this.map
       g.selectAll('circle.station')
-        .data(this.stations, d => d.id)
+        .data(data, d => d.id)
         .join('circle')
         .attr('class', 'station')
         .attr('r', 5)
@@ -160,8 +163,11 @@ export default {
         return [point.x, point.y]
       }
 
+      const data = this.points
+        .sort((a, b) => d3.ascending(deploymentMap.get(a.id).y, deploymentMap.get(b.id).y))
+
       g.selectAll('path.point')
-        .data(this.points)
+        .data(data)
         .join('path')
         .attr('class', 'point')
         .attr('d', d3.symbol().type(d3.symbolSquare))
