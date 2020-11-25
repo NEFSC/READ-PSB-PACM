@@ -25,10 +25,12 @@ export default {
       return this.$parent.container
     },
     stations () {
+      if (!this.deployments) return []
       return this.deployments
         .filter(d => d.properties.deployment_type === 'station')
     },
     points () {
+      if (!this.deployments) return []
       return this.deployments
         .filter(d => d.properties.deployment_type === 'track')
         .map(d => d.trackDetections)

@@ -13,7 +13,7 @@
         attribution="Tiles &copy; Esri &mdash; Sources: GEBCO, NOAA, CHS, OSU, UNH, CSUMB, National Geographic, DeLorme, NAVTEQ, and Esri'">
       </l-tile-layer>
       <l-control position="topright">
-        <Legend :counts="counts" v-if="!loading"></Legend>
+        <Legend :counts="counts" v-if="theme && !loading"></Legend>
       </l-control>
     </l-map>
     <MapLayer v-if="ready && !loading"></MapLayer>
@@ -42,7 +42,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['loading'])
+    ...mapGetters(['loading', 'theme'])
   },
   components: {
     Legend,

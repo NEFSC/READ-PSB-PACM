@@ -133,13 +133,13 @@ export default {
   computed: {
     ...mapGetters(['normalizeEffort', 'deployments']),
     hasStation () {
-      return this.deployments.some(d => d.properties.deployment_type === 'station')
+      return this.deployments && this.deployments.some(d => d.properties.deployment_type === 'station')
     },
     hasGlider () {
-      return this.deployments.some(d => d.properties.platform_type === 'slocum' || d.properties.platform_type === 'wave')
+      return this.deployments && this.deployments.some(d => d.properties.platform_type === 'slocum' || d.properties.platform_type === 'wave')
     },
     hasTowed () {
-      return this.deployments.some(d => d.properties.platform_type === 'towed')
+      return this.deployments && this.deployments.some(d => d.properties.platform_type === 'towed')
     }
   },
   methods: {

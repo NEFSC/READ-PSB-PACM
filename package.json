@@ -23,6 +23,7 @@
     "pad": "^3.2.0",
     "vue": "^2.6.10",
     "vue-moment": "^4.0.0",
+    "vue-router": "^3.4.9",
     "vue-tour": "^1.2.0",
     "vue2-leaflet": "^2.2.1",
     "vuetify": "^2.1.0",

@@ -16,11 +16,20 @@
             <v-icon left>mdi-information</v-icon> About
           </v-btn>
         </template>
-        <AboutDialog @close="dialogs.about = false"></AboutDialog>
+        <AboutDialog @close="closeAbout"></AboutDialog>
+      </v-dialog>
+
+      <v-dialog v-model="dialogs.help" max-width="800" scrollable>
+        <template v-slot:activator="{ on }">
+          <v-btn color="default" dark text max-width="120" class="mr-4" v-on="on">
+            <v-icon left>mdi-information</v-icon> Help
+          </v-btn>
+        </template>
+        <HelpDialog @close="dialogs.help = false"></HelpDialog>
       </v-dialog>
 
       <v-btn color="default" dark text max-width="120" @click="startTour" data-v-step="6">
-        <v-icon left>mdi-help-circle</v-icon> Help
+        <v-icon left>mdi-help-circle</v-icon> Tour
       </v-btn>
 
       <div>
@@ -43,8 +52,23 @@
           </v-list-item-content>
         </v-list-item>
       </v-list>
-      <v-list class="pt-0" v-if="!loading">
-
+      <v-list class="pa-4" v-if="loading">
+        <v-list-item>
+          <v-spacer></v-spacer>
+          <v-progress-circular
+            indeterminate
+            :size="32"
+            :width="4"
+            color="white"
+            class="mr-4">
+          </v-progress-circular>
+          <v-list-item-content>
+            <v-list-item-title class="title">Loading</v-list-item-title>
+          </v-list-item-content>
+          <v-spacer></v-spacer>
+        </v-list-item>
+      </v-list>
+      <v-list class="pt-0" v-else-if="theme">
         <v-list-item class="my-1" v-if="theme === 'beaked'">
           <v-list-item-content>
             <SpeciesFilter></SpeciesFilter>
@@ -78,25 +102,9 @@
         </v-list-item>
 
         <!-- DEBUG -->
-        <!-- <v-list-item>
-          <v-list-item-content>
-            <pre>species: {{ species.selected }}</pre>
-            <pre>deployments: {{ deployments.length }}</pre>
-            <pre>counts: {{ counts }}</pre>
-          </v-list-item-content>
-        </v-list-item> -->
-      </v-list>
-      <v-list class="pa-4" v-else>
         <v-list-item>
-          <v-progress-circular
-            indeterminate
-            :size="32"
-            :width="4"
-            color="white"
-            class="mr-4">
-          </v-progress-circular>
           <v-list-item-content>
-            <v-list-item-title class="title">Loading</v-list-item-title>
+            <!-- <pre>path: {{ $router.params.id }}</pre> -->
           </v-list-item-content>
         </v-list-item>
       </v-list>
@@ -145,8 +153,11 @@
 </template>
 
 <script>
+import { mapActions, mapGetters } from 'vuex'
+
 import Map from '@/components/Map'
 import AboutDialog from '@/components/AboutDialog'
+import HelpDialog from '@/components/HelpDialog'
 import SelectTheme from '@/components/SelectTheme'
 import YearFilter from '@/components/YearFilter'
 import SpeciesFilter from '@/components/SpeciesFilter'
@@ -157,12 +168,13 @@ import DeploymentDetail from '@/components/DeploymentDetail'
 
 import evt from '@/lib/events'
 import { xf, deploymentGroup, deploymentMap } from '@/lib/crossfilter'
-import { mapActions, mapGetters } from 'vuex'
+import { themes } from '@/lib/constants'
 
 export default {
   name: 'App',
   components: {
     AboutDialog,
+    HelpDialog,
     Map,
     SelectTheme,
     YearFilter,
@@ -174,6 +186,7 @@ export default {
   },
   data () {
     return {
+      themes,
       auth: {
         isAuth: false,
         password: null,
@@ -192,7 +205,8 @@ export default {
         }
       },
       dialogs: {
-        about: false
+        about: false,
+        help: false
       },
       steps: [
         {
@@ -281,10 +295,10 @@ export default {
     }
   },
   mounted () {
-    if (process.env.NODE_ENV === 'development') {
-      this.auth.isAuth = true
-      this.setTheme('narw')
-    }
+    // if (process.env.NODE_ENV === 'development') {
+    //   this.auth.isAuth = true
+    // }
+    this.init()
 
     evt.$on('xf:filtered', this.onFiltered)
   },
@@ -297,10 +311,24 @@ export default {
       evt.$emit('reset:filters', 'app:loadData')
       this.counts.detections.total = xf.size()
       this.counts.deployments.total = this.$store.getters.deployments.length
+      this.$router.push({ path: this.theme || '/' })
     }
   },
   methods: {
     ...mapActions(['setTheme', 'selectDeployment']),
+    init () {
+      if (!this.auth.isAuth) return
+      if (this.$route.params.id) {
+        this.dialogs.about = false
+        this.setTheme(this.$route.params.id)
+      } else {
+        this.dialogs.about = true
+      }
+    },
+    closeAbout () {
+      this.dialogs.about = false
+      if (!this.theme) this.setTheme(this.themes[0].id)
+    },
     onFiltered () {
       // unselect deployment if no longer has any filtered detections
       if (this.selectedDeployment) {
@@ -324,7 +352,7 @@ export default {
       if (this.auth.password === 'narw123') {
         this.auth.isAuth = true
         this.auth.error = false
-        this.$nextTick(() => this.setTheme('narw'))
+        this.$nextTick(() => this.init())
       } else {
         this.auth.error = true
       }

@@ -9,7 +9,7 @@ Vue.use(Vuex)
 
 export default new Vuex.Store({
   state: {
-    loading: true,
+    loading: false,
     theme: null,
     deployments: null,
     selectedDeployment: null,
