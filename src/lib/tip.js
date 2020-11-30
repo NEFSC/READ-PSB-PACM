@@ -163,8 +163,32 @@ const stationHtml = (d, deployment) => {
   `
 }
 
+const deploymentHtml = (d, deployment) => {
+  const props = deployment.properties
+  const monitoring = monitoringPeriodLabels(props)
+
+  const metaHtml = htmlTable([
+    [ 'Project', `${props.project}` ],
+    [ 'Site', `${props.site_id ? props.site_id : 'N/A'}` ],
+    [ 'Platform Type', `${platformTypesMap.get(props.platform_type).label}` ],
+    [ 'Recorder Type', `${props.instrument_type}` ],
+    [ 'Recorder Depth', props.recorder_depth_meters ? `${(+props.recorder_depth_meters).toFixed(0)} m` : 'N/A' ],
+    [ 'Water Depth', props.water_depth_meters ? `${(+props.water_depth_meters).toFixed(0)} m` : 'N/A' ],
+    [ 'Deployed', `${monitoring.start} to ${monitoring.end}` ],
+    [ 'Duration', `${monitoring.duration} days` ]
+  ])
+
+  return `
+    Monitoring Station Deployment<br><br>
+
+    ${metaHtml}
+  `
+}
+
 export function tipHtml (d, deployment, type) {
-  if (type === 'track') {
+  if (type === 'deployment') {
+    return deploymentHtml(d, deployment)
+  } if (type === 'track') {
     return trackHtml(d, deployment)
   } else if (type === 'point') {
     if (deployment.properties.platform_type === 'towed') {

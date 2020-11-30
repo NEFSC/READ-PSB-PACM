@@ -26,7 +26,7 @@
           <v-icon left>mdi-video</v-icon>
           Watch Tutorial
         </v-btn>
-        <v-btn color="success" class="px-2 mx-0" x-large @click="$emit('close', {})">
+        <v-btn color="success" class="px-2 mx-0" x-large @click="$emit('close')">
           <v-icon left>mdi-play-circle</v-icon>
           Get Started
         </v-btn>

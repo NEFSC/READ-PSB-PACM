@@ -10,26 +10,26 @@
 
       <v-spacer></v-spacer>
 
-      <v-dialog v-model="dialogs.about" max-width="800" scrollable>
+      <v-dialog v-model="dialogs.about" max-width="1000" scrollable v-if="auth.isAuth">
         <template v-slot:activator="{ on }">
           <v-btn color="default" dark text max-width="120" class="mr-4" v-on="on">
-            <v-icon left>mdi-information</v-icon> About
+            <v-icon left>mdi-information-outline</v-icon> About
           </v-btn>
         </template>
         <AboutDialog @close="closeAbout"></AboutDialog>
       </v-dialog>
 
-      <v-dialog v-model="dialogs.help" max-width="800" scrollable>
+      <v-dialog v-model="dialogs.help" max-width="1000" scrollable v-if="auth.isAuth">
         <template v-slot:activator="{ on }">
           <v-btn color="default" dark text max-width="120" class="mr-4" v-on="on">
-            <v-icon left>mdi-information</v-icon> Help
+            <v-icon left>mdi-video</v-icon> Tutorial
           </v-btn>
         </template>
         <HelpDialog @close="closeHelp"></HelpDialog>
       </v-dialog>
 
-      <v-btn color="default" dark text max-width="120" @click="startTour" data-v-step="6">
-        <v-icon left>mdi-help-circle</v-icon> Tour
+      <v-btn color="default" dark text max-width="120" @click="startTour" data-v-step="6" v-if="auth.isAuth">
+        <v-icon left>mdi-cursor-default-click</v-icon> Tour
       </v-btn>
 
       <div>
@@ -331,9 +331,9 @@ export default {
     },
     closeAbout (evt) {
       this.dialogs.about = false
-      if (evt.tutorial) {
+      if (evt && evt.tutorial) {
         this.dialogs.help = true
-      } else if (evt.tour) {
+      } else if (evt && evt.tour) {
         if (!this.theme) {
           this.setTheme(this.themes[0])
             .then(() => this.startTour())

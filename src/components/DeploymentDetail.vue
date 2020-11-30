@@ -1,7 +1,7 @@
 <template>
   <div>
     <v-toolbar color="grey darken-2" dense dark>
-      <div class="subtitle-1 font-weight-bold">Project: {{ selectedDeployment.properties.project }}</div>
+      <div class="subtitle-1 font-weight-bold">Selected: {{ selectedDeployment.id }}</div>
       <v-spacer></v-spacer>
       <v-btn icon small @click="close">
         <v-icon small>mdi-close</v-icon>
@@ -15,6 +15,10 @@
             <v-simple-table dense>
               <template>
                 <tbody>
+                  <tr>
+                    <td class="px-2 text-right" style="width:140px">Project:</td>
+                    <td class="px-2 font-weight-bold">{{ selectedDeployment.properties.project }}</td>
+                  </tr>
                   <tr v-if="deploymentType === 'station' || deploymentType === 'glider'">
                     <td class="px-2 text-right" style="width:140px">Site:</td>
                     <td class="px-2 font-weight-bold">{{ selectedDeployment.properties.site_id ? selectedDeployment.properties.site_id : 'N/A' }}</td>
@@ -27,7 +31,7 @@
                     <td class="px-2 text-right">Recorder Type:</td>
                     <td class="px-2 font-weight-bold">{{ selectedDeployment.properties.instrument_type ? selectedDeployment.properties.instrument_type : 'N/A' }}</td>
                   </tr>
-                  <tr>
+                  <tr v-if="!theme.deploymentsOnly">
                     <td class="px-2 text-right">Detection Method:</td>
                     <td class="px-2 font-weight-bold">{{ selectedDeployment.properties.detection_method }}</td>
                   </tr>
@@ -51,7 +55,7 @@
                     <td class="px-2 text-right">Point of Contact:</td>
                     <td class="px-2 font-weight-bold">{{ selectedDeployment.properties.data_poc_name }} ({{ selectedDeployment.properties.data_poc_email }}), {{ selectedDeployment.properties.data_poc_affiliation }} </td>
                   </tr>
-                  <tr>
+                  <tr v-if="!theme.deploymentsOnly">
                     <td class="px-2 text-right">Protocol:</td>
                     <td class="px-2 font-weight-bold">{{ selectedDeployment.properties.protocol_reference }}</td>
                   </tr>
@@ -61,7 +65,7 @@
           </div>
         </v-col>
 
-        <v-col xs="12" md="12" lg="12" xl="8">
+        <v-col xs="12" md="12" lg="12" xl="8" v-if="!theme.deploymentsOnly">
           <div class="heading font-weight-bold">Daily Detections</div>
           <div class="subtitle-2 grey--text">Includes all detection data independent of filters</div>
           <highcharts class="chart" :options="chart"></highcharts>
@@ -142,7 +146,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['selectedDeployment']),
+    ...mapGetters(['selectedDeployment', 'theme']),
     deploymentType () {
       if (this.selectedDeployment.properties.platform_type === 'mooring' || this.selectedDeployment.properties.platform_type === 'buoy') {
         return 'station'
@@ -171,6 +175,7 @@ export default {
       this.selectDeployment()
     },
     updateChart () {
+      if (this.theme && this.theme.deploymentsOnly) return
       const detections = xf.all().filter(d => d.id === this.selectedDeployment.id)
       const ids = detectionTypes.map(d => d.id)
       const values = detections.map((d) => {

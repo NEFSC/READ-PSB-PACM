@@ -152,9 +152,8 @@ export default {
             .attr('cx', point.x)
             .attr('cy', point.y)
         })
-        // .on('click', d => console.log(d))
         .on('click', d => this.selectDeploymentById(d.id))
-        .on('mouseenter', d => this.showTip(d, 'station'))
+        .on('mouseenter', d => this.showTip(d, this.theme.deploymentsOnly ? 'deployment' : 'station'))
         .on('mouseout', this.hideTip)
     },
     drawPoints () {
