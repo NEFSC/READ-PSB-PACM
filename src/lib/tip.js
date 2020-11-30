@@ -143,6 +143,7 @@ const stationHtml = (d, deployment) => {
     [ 'Platform Type', `${platformTypesMap.get(props.platform_type).label}` ],
     [ 'Recorder Type', `${props.instrument_type}` ],
     [ 'Detection Method', `${props.detection_method}` ],
+    [ 'QAQC', `${props.qc_data ? props.qc_data : 'N/A'}` ],
     [ 'Recorder Depth', props.recorder_depth_meters ? `${(+props.recorder_depth_meters).toFixed(0)} m` : 'N/A' ],
     [ 'Water Depth', props.water_depth_meters ? `${(+props.water_depth_meters).toFixed(0)} m` : 'N/A' ],
     [ 'Deployed', `${monitoring.start} to ${monitoring.end}` ],
@@ -204,7 +205,7 @@ export function tipHtml (d, deployment, nNearby, type) {
   }
 
   if (nNearby > 0) {
-    html += `<hr><br>Warning: There are ${nNearby} station(s) near this location.<br>Zoom in to view other stations.`
+    html += `<br><br><hr><br>Warning: There are ${nNearby} station(s) near this location.<br>Zoom in to view other stations.`
   }
 
   return html

@@ -18,15 +18,15 @@
         The Passive Acoustic Cetacean Map (PACM) shows when and where specific cetacean species were acoustically detected in the Atlantic Ocean based on Passive Acoustic Monitoring (PAM).
       </p>
       <v-card-actions class="justify-space-around my-8">
-        <v-btn color="success" class="px-2 mx-0" x-large @click="$emit('close', { tour: true })">
+        <v-btn color="success" class="px-4 mx-0" x-large @click="$emit('close', { tour: true })">
           <v-icon left>mdi-cursor-default-click</v-icon>
           Take A Tour
         </v-btn>
-        <v-btn color="success" class="px-2 mx-0" x-large @click="$emit('close', { tutorial: true })">
+        <v-btn color="success" class="px-4 mx-0" x-large @click="$emit('close', { tutorial: true })">
           <v-icon left>mdi-video</v-icon>
           Watch Tutorial
         </v-btn>
-        <v-btn color="success" class="px-2 mx-0" x-large @click="$emit('close')">
+        <v-btn color="success" class="px-4 mx-0" x-large @click="$emit('close')">
           <v-icon left>mdi-play-circle</v-icon>
           Get Started
         </v-btn>

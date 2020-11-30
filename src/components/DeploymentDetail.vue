@@ -7,11 +7,10 @@
         <v-icon small>mdi-close</v-icon>
       </v-btn>
     </v-toolbar>
-    <!-- <div style="max-height:400px;overflow-y:auto;overflow-x:hidden"> -->
-    <div style="max-height:400px;overflow-y:auto;overflow-x:hidden">
+    <div style="max-height:420px;overflow-y:auto;overflow-x:hidden">
       <v-row class="px-4">
         <v-col xs="12" md="12" lg="12" xl="4">
-          <div :style="{ 'max-height': $vuetify.breakpoint.lgAndUp ? '380px' : null, 'overflow-y': 'auto' }">
+          <div :style="{ 'max-height': $vuetify.breakpoint.lgAndUp ? '420px' : null, 'overflow-y': 'auto' }">
             <v-simple-table dense>
               <template>
                 <tbody>
@@ -34,6 +33,10 @@
                   <tr v-if="!theme.deploymentsOnly">
                     <td class="px-2 text-right">Detection Method:</td>
                     <td class="px-2 font-weight-bold">{{ selectedDeployment.properties.detection_method }}</td>
+                  </tr>
+                  <tr v-if="!theme.deploymentsOnly">
+                    <td class="px-2 text-right">QAQC:</td>
+                    <td class="px-2 font-weight-bold">{{ selectedDeployment.properties.qc_data ? selectedDeployment.properties.qc_data : 'N/A'}}</td>
                   </tr>
                   <tr v-if="deploymentType === 'station'">
                     <td class="px-2 text-right">Recorder Depth:</td>

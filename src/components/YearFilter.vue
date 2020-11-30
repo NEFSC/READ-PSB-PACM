@@ -159,6 +159,8 @@ export default {
           .attr('transform', `translate(${Math.floor(width / n / 2)} 0)`)
         chart.selectAll('.axis.x .tick text')
           .attr('transform', `translate(${Math.floor(width / n / 2)} 0)`)
+        chart.selectAll('.axis.x .tick')
+          .filter(d => d > this.extent[1]).remove()
       })
     this.chart.stack(group, 'm', d => d.value['m'])
     this.chart.stack(group, 'n', d => d.value['n'])
