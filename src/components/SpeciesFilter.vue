@@ -46,7 +46,7 @@ export default {
   },
   methods: {
     reset () {
-      this.options = [...new Set(xf.all().map(d => d.species))].sort().map(d => ({ id: d }))
+      this.options = [...new Set(xf.all().filter(d => !!d.species).map(d => d.species))].sort().map(d => ({ id: d }))
       this.selected = this.options.map(d => d.id)
     },
     setFilter () {
@@ -56,7 +56,7 @@ export default {
       if (this.selected.length === this.options.length) {
         this.dim.filterAll()
       } else {
-        this.dim.filter(d => this.selected.includes(d))
+        this.dim.filter(d => !d || this.selected.includes(d))
       }
       dc.redrawAll()
     }
