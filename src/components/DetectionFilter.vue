@@ -7,6 +7,7 @@
 
 <script>
 import dc from 'dc'
+import * as d3 from 'd3'
 
 import ChartMixin from '@/mixins/ChartMixin'
 import { xf } from '@/lib/crossfilter'
@@ -25,7 +26,12 @@ export default {
     const dim = xf.dimension(d => detectionTypesMap.get(d.presence).label)
     const group = dim.group().reduceCount()
 
-    this.chart = dc.rowChart(this.$el.appendChild(document.createElement('div')))
+    const colorScale = d3.scaleOrdinal()
+      .domain(detectionTypes.map(d => d.label))
+      .range(detectionTypes.map(d => d.color))
+
+    const el = this.$el.appendChild(document.createElement('div'))
+    this.chart = dc.rowChart(el)
       .width(450)
       .height(140)
       .margins({ top: 10, right: 20, bottom: 40, left: 90 })
@@ -36,8 +42,7 @@ export default {
       .ordering(d => {
         return detectionTypes.map(d => d.label).indexOf(d.key)
       })
-      // .ordinalColors(['#CC3833', '#78B334', '#0277BD'])
-      .ordinalColors(detectionTypes.map(d => d.color))
+      .colors(colorScale)
       .on('postRender', () => {
         if (this.chart.svg().selectAll('.x-axis-label').nodes().length > 0) return
         const textSelection = this.chart.svg()

@@ -140,18 +140,26 @@ export default {
       const data = this.stations
         .sort((a, b) => d3.ascending(deploymentMap.get(a.id).y, deploymentMap.get(b.id).y))
 
-      const map = this.map
+      data.forEach((d) => {
+        const latLon = new L.LatLng(d.geometry.coordinates[1], d.geometry.coordinates[0])
+        const point = this.map.latLngToLayerPoint(latLon)
+        d.$x = point.x
+        d.$y = point.y
+      })
+
       g.selectAll('circle.station')
         .data(data, d => d.id)
         .join('circle')
         .attr('class', 'station')
         .attr('r', 5)
-        .each(function drawCircle (d) {
-          const point = map.latLngToLayerPoint(new L.LatLng(d.geometry.coordinates[1], d.geometry.coordinates[0]))
-          d3.select(this)
-            .attr('cx', point.x)
-            .attr('cy', point.y)
-        })
+        .attr('cx', d => d.$x)
+        .attr('cy', d => d.$y)
+        // .each(function drawCircle (d) {
+        //   const point = map.latLngToLayerPoint(new L.LatLng(d.geometry.coordinates[1], d.geometry.coordinates[0]))
+        //   d3.select(this)
+        //     .attr('cx', point.x)
+        //     .attr('cy', point.y)
+        // })
         .on('click', d => this.selectDeploymentById(d.id))
         .on('mouseenter', d => this.showTip(d, this.theme.deploymentsOnly ? 'deployment' : 'station'))
         .on('mouseout', this.hideTip)
@@ -166,6 +174,13 @@ export default {
 
       const data = this.points
         .sort((a, b) => d3.ascending(deploymentMap.get(a.id).y, deploymentMap.get(b.id).y))
+
+      data.forEach((d) => {
+        const latLon = new L.LatLng(d.latitude, d.longitude)
+        const point = this.map.latLngToLayerPoint(latLon)
+        d.$x = point.x
+        d.$y = point.y
+      })
 
       g.selectAll('path.point')
         .data(data)
@@ -289,11 +304,23 @@ export default {
         .style('display', d => (xf.isElementFiltered(d.$index) ? 'inline' : 'none'))
         .style('fill', d => colorScale(d.presence))
     },
+    countNearby (d) {
+      const distanceFrom = (x, y) => Math.sqrt(Math.pow(d.$x - x, 2) + Math.pow(d.$y - y, 2))
+      const maxDistance = 10
+      const stations = this.svg.select('g.stations').selectAll('circle.station')
+        .filter((d, i) => distanceFrom(d.$x, d.$y) < maxDistance)
+        .nodes()
+      const points = this.svg.select('g.points').selectAll('path.point')
+        .filter((d, i) => distanceFrom(d.$x, d.$y) < maxDistance)
+        .nodes()
+      return stations.length + points.length
+    },
     showTip (d, type) {
       const el = d3.select('.d3-tip.map')
 
       let deployment = this.$store.getters.deploymentById(d.id)
-      el.html(tipHtml(d, deployment, type))
+      const nNearby = this.countNearby(d) - 1
+      el.html(tipHtml(d, deployment, nNearby, type))
 
       const offset = tipOffset(el)
 
@@ -313,6 +340,10 @@ export default {
 </script>
 
 <style>
+.svg-rect {
+  stroke: red;
+  stroke-width: 1px;
+}
 .vue2leaflet-map svg path.track {
   stroke-linecap: round;
   stroke-linejoin: round;

@@ -45,7 +45,7 @@
         </g>
         <g transform="translate(27,235)">
           <circle :cy="0" :r="sizeScale(0)" stroke="white" stroke-opacity="0.5" :fill="detectionTypes[3].color" />
-          <text x="27" :y="0" class="legend-text">0% ({{detectionTypes[3].label}})</text>
+          <text x="27" :y="0" class="legend-text">{{detectionTypes[3].label}}</text>
         </g>
       </svg>
       <svg width="180" height="245" v-else>
@@ -64,7 +64,7 @@
         </g>
         <g transform="translate(27,235)">
           <circle :cy="0" :r="sizeScale(0)" stroke="white" stroke-opacity="0.5" :fill="detectionTypes[3].color" />
-          <text x="27" :y="0" class="legend-text">0 ({{detectionTypes[3].label}})</text>
+          <text x="27" :y="0" class="legend-text">{{detectionTypes[3].label}}</text>
         </g>
       </svg>
       <div v-if="!theme.deploymentsOnly">

@@ -311,8 +311,7 @@ export default {
       this.counts.detections.total = xf.size()
       this.counts.deployments.total = this.$store.getters.deployments.length
       if (this.$route.path === '/' || !this.theme || this.$route.params.id !== this.theme.id) {
-        console.log(this.$route.path, this.theme)
-        this.$router.push({ path: this.theme || '/' })
+        this.$router.push({ path: this.theme.id || '/' })
       }
     }
   },

@@ -185,18 +185,27 @@ const deploymentHtml = (d, deployment) => {
   `
 }
 
-export function tipHtml (d, deployment, type) {
-  if (type === 'deployment') {
-    return deploymentHtml(d, deployment)
-  } if (type === 'track') {
+export function tipHtml (d, deployment, nNearby, type) {
+  if (type === 'track') {
     return trackHtml(d, deployment)
+  }
+
+  let html
+  if (type === 'deployment') {
+    html = deploymentHtml(d, deployment)
   } else if (type === 'point') {
     if (deployment.properties.platform_type === 'towed') {
-      return towedPointHtml(d, deployment)
+      html = towedPointHtml(d, deployment)
     } else {
-      return gliderPointHtml(d, deployment)
+      html = gliderPointHtml(d, deployment)
     }
   } else {
-    return stationHtml(d, deployment)
+    html = stationHtml(d, deployment)
   }
+
+  if (nNearby > 0) {
+    html += `<hr><br>Warning: There are ${nNearby} station(s) near this location.<br>Zoom in to view other stations.`
+  }
+
+  return html
 }

@@ -55,7 +55,7 @@ export default {
       // console.log(`setFilter(${this.selected})`)
       if (!this.dim) return
 
-      this.dim.filter(d => this.selected.includes(d))
+      this.dim.filter(d => !d || this.selected.includes(d))
       dc.redrawAll()
     }
   }
