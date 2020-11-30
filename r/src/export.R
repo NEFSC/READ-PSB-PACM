@@ -27,9 +27,10 @@ df_detections <- bind_rows(
 )
 
 
-theme <- "narw"
 
 export_theme <- function (theme) {
+  # theme <- "narw"
+
   x_detections <- df_detections %>% 
     filter(theme == !!theme) %>% 
     select(-theme)
@@ -56,7 +57,7 @@ export_theme <- function (theme) {
   if (length(missing_deployments) > 0) {
     warning(glue("Missing {length(missing_deployments)} deployments found in detections ({str_c(missing_deployments, collapse = ', ')}), removing detections"))
     x_detections <- x_detections %>% 
-      filter(!id %in% missing_deployments)
+      filter(!deployment_id %in% !!missing_deployments)
   }
   
   missing_stations <- setdiff(

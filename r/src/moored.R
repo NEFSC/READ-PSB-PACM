@@ -55,7 +55,8 @@ detections_fill <- deployments_dates %>%
     by = c("theme", "deployment_id", "date")
   ) %>% 
   mutate(
-    presence = ordered(coalesce(presence, "na"), levels = c(levels(presence), "na"))
+    presence = ordered(coalesce(presence, "na"), levels = c(levels(presence), "na")),
+    species = coalesce(species, theme)
   )
 janitor::tabyl(detections, theme, species)
 janitor::tabyl(detections_fill, theme, species)
