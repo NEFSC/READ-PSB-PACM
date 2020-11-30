@@ -25,7 +25,7 @@
             <v-icon left>mdi-information</v-icon> Help
           </v-btn>
         </template>
-        <HelpDialog @close="dialogs.help = false"></HelpDialog>
+        <HelpDialog @close="closeHelp"></HelpDialog>
       </v-dialog>
 
       <v-btn color="default" dark text max-width="120" @click="startTour" data-v-step="6">
@@ -69,7 +69,7 @@
         </v-list-item>
       </v-list>
       <v-list class="pt-0" v-else-if="theme">
-        <v-list-item class="my-1" v-if="theme === 'beaked'">
+        <v-list-item class="my-1" v-if="theme.showSpeciesFilter">
           <v-list-item-content>
             <SpeciesFilter></SpeciesFilter>
           </v-list-item-content>
@@ -95,7 +95,7 @@
           </v-list-item-content>
         </v-list-item>
 
-        <v-list-item class="mt-2" data-v-step="5">
+        <v-list-item class="mt-2" data-v-step="5" v-if="!theme.deploymentsOnly">
           <v-list-item-content class="py-0">
             <DetectionFilter :y-axis-label="yAxisLabel"></DetectionFilter>
           </v-list-item-content>
@@ -295,23 +295,25 @@ export default {
     }
   },
   mounted () {
-    // if (process.env.NODE_ENV === 'development') {
-    //   this.auth.isAuth = true
-    // }
+    if (process.env.NODE_ENV === 'development') {
+      this.auth.isAuth = true
+    }
     this.init()
 
     evt.$on('xf:filtered', this.onFiltered)
   },
   beforeDestroy () {
     evt.$off('xf:filtered', this.onFiltered)
-    // this.deployments.dim && this.deployments.dim.dispose()
   },
   watch: {
     theme () {
       evt.$emit('reset:filters', 'app:loadData')
       this.counts.detections.total = xf.size()
       this.counts.deployments.total = this.$store.getters.deployments.length
-      this.$router.push({ path: this.theme || '/' })
+      if (this.$route.path === '/' || !this.theme || this.$route.params.id !== this.theme.id) {
+        console.log(this.$route.path, this.theme)
+        this.$router.push({ path: this.theme || '/' })
+      }
     }
   },
   methods: {
@@ -320,14 +322,33 @@ export default {
       if (!this.auth.isAuth) return
       if (this.$route.params.id) {
         this.dialogs.about = false
-        this.setTheme(this.$route.params.id)
+        const theme = themes.find(d => d.id === this.$route.params.id)
+        if (!theme) return alert(`Invalid URL, theme ${theme} not found`)
+        this.setTheme(theme)
       } else {
         this.dialogs.about = true
       }
     },
-    closeAbout () {
+    closeAbout (evt) {
       this.dialogs.about = false
-      if (!this.theme) this.setTheme(this.themes[0].id)
+      if (evt.tutorial) {
+        this.dialogs.help = true
+      } else if (evt.tour) {
+        if (!this.theme) {
+          this.setTheme(this.themes[0])
+            .then(() => this.startTour())
+        } else {
+          this.startTour()
+        }
+      } else if (!this.theme) {
+        this.setTheme(this.themes[0])
+      }
+    },
+    closeHelp () {
+      this.dialogs.help = false
+      if (!this.theme) {
+        this.dialogs.about = true
+      }
     },
     onFiltered () {
       // unselect deployment if no longer has any filtered detections

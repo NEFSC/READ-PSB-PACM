@@ -16,7 +16,7 @@ function fetchDetections (id) {
     }))
 }
 
-export function fetchData (id) {
+export function fetchData ({ id }) {
   return Promise.all([
     fetchDeployments(id),
     fetchDetections(id)

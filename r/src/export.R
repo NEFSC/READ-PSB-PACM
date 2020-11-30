@@ -10,30 +10,20 @@ library(jsonlite)
 towed <- readRDS("data/towed.rds")
 moored <- readRDS("data/moored.rds")
 glider <- readRDS("data/glider.rds")
-nefsc_deployments <- moored$deployments %>% 
-  filter(data_poc_affiliation == "NOAA NEFSC")
-
-# setdiff(names(towed$deployments), names(glider$deployments))
-# setdiff(names(glider$deployments), names(towed$deployments))
-# setdiff(names(moored$deployments), names(towed$deployments))
+nefsc_deployments <- read_rds("data/nefsc-deployments.rds")
 
 df_deployments <- bind_rows(
   towed$deployments,
   glider$deployments,
-  moored$deployments
+  moored$deployments,
+  nefsc_deployments$deployments
 )
-
-# mapview::mapview(df_deployments, zcol = "deployment_type")
-
-# setdiff(names(towed$detections), names(glider$detections))
-# setdiff(names(glider$detections), names(towed$detections))
-# setdiff(names(moored$detections), names(towed$detections))
-# setdiff(names(towed$detections), names(moored$detections))
 
 df_detections <- bind_rows(
   towed$detections,
   glider$detections,
-  moored$detections
+  moored$detections,
+  nefsc_deployments$detections
 )
 
 
@@ -89,6 +79,11 @@ export_theme <- function (theme) {
     warning(glue("Missing {length(missing_tracks)} tracks found in deployments ({str_c(missing_tracks, collapse = ', ')}), doing nothing"))
   }
   
+  if (!dir.exists(file.path("../public/data/", theme))) {
+    cat(glue("Creating theme folder: {file.path('../public/data/', theme)}"), "\n")
+    dir.create(file.path('../public/data/', theme))
+  }
+  
   x_detections %>% 
     relocate(locations, .after = last_col()) %>%
     mutate(
@@ -113,3 +108,4 @@ export_theme("sei")
 export_theme("beaked")
 export_theme("kogia")
 export_theme("sperm")
+export_theme("nefsc-deployments")

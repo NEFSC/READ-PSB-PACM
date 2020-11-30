@@ -20,6 +20,7 @@ export default new Vuex.Store({
   getters: {
     loading: state => state.loading,
     theme: state => state.theme,
+    themeId: state => state.theme ? state.theme.id : null,
     // isTowed: state => state.theme === 'beaked' || state.theme === 'kogia',
     deployments: state => state.deployments,
     deploymentById: state => id => state.deployments.find(d => d.id === id),
@@ -52,7 +53,10 @@ export default new Vuex.Store({
     }
   },
   actions: {
-    setTheme ({ commit }, theme) {
+    setTheme ({ commit, state }, theme) {
+      if (state.theme && state.theme.id === theme.id) {
+        return Promise.resolve(state.theme)
+      }
       commit('SET_LOADING', true)
       commit('SET_SELECTED_DEPLOYMENT', null)
       return fetchData(theme)
@@ -86,6 +90,7 @@ export default new Vuex.Store({
           commit('SET_DEPLOYMENTS', deployments)
           commit('SET_THEME', theme)
           commit('SET_LOADING', false)
+          return theme
         })
     },
     selectDeployment ({ commit }, deployment) {

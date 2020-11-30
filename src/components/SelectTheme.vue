@@ -7,6 +7,7 @@
     item-text="label"
     item-value="id"
     hide-details
+    return-object
     @input="setTheme"
   ></v-select>
 </template>

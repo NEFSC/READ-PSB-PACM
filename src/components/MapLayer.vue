@@ -260,18 +260,22 @@ export default {
         })
         .attr('r', (d) => {
           const value = deploymentMap.get(d.id)
-          if (this.normalizeEffort) {
+
+          if (this.theme.deploymentsOnly) {
+            return sizeScale(value.total)
+          } else if (this.normalizeEffort) {
             return value.y > 0
               ? sizeScaleUnit(value.total > 0 ? value.y / value.total : 0)
               : value.m > 0
                 ? sizeScaleUnit(value.total > 0 ? value.m / value.total : 0)
                 : sizeScaleUnit(0)
+          } else {
+            return value.y > 0
+              ? sizeScale(value.y)
+              : value.m > 0
+                ? sizeScale(value.m)
+                : sizeScale(0)
           }
-          return value.y > 0
-            ? sizeScale(value.y)
-            : value.m > 0
-              ? sizeScale(value.m)
-              : sizeScale(0)
         })
 
       this.container

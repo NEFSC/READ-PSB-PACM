@@ -21,7 +21,8 @@ export const themes = [
   },
   {
     id: 'beaked',
-    label: 'Beaked Whales'
+    label: 'Beaked Whales',
+    showSpeciesFilter: true
   },
   {
     id: 'kogia',
@@ -30,6 +31,11 @@ export const themes = [
   {
     id: 'sperm',
     label: 'Sperm Whales'
+  },
+  {
+    id: 'nefsc-deployments',
+    label: 'Deployments (NEFSC Only)',
+    deploymentsOnly: true
   }
 ]
 // export const speciesTypesMap = new Map(speciesTypes.map(d => [d.id, d]))

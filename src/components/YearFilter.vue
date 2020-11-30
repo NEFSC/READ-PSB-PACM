@@ -91,8 +91,6 @@ export default {
       }
     }
   },
-  watch: {
-  },
   mounted () {
     const dim = xf.dimension(d => d.date.getFullYear())
     const group = dim.group().reduce(
@@ -136,7 +134,8 @@ export default {
     this.extent = d3.extent(xf.all().map(d => d.date.getFullYear()))
     this.filter = [this.extent[0], this.extent[1] + 1]
 
-    this.chart = dc.barChart(this.$el.appendChild(document.createElement('div')))
+    const el = this.$el.appendChild(document.createElement('div'))
+    this.chart = dc.barChart(el)
       .width(450)
       .height(160)
       .margins({ top: 10, right: 20, bottom: 40, left: 60 })
@@ -153,22 +152,21 @@ export default {
         this.start.value = this.filter[0].toString()
         this.end.value = (this.filter[1] - 1).toString()
       })
-      // .on('postRender', (chart) => {
-      //   const n = chart.xUnitCount()
-      //   const width = chart.effectiveWidth()
-      //   // chart.selectAll('.axis.x .tick line')
-      //   //   .attr('transform', `translate(${Math.floor(width / n / 2)} 0)`)
-      //   chart.selectAll('.axis.x .tick text')
-      //     .attr('transform', `translate(${Math.floor(width / n / 2)} 0)`)
-      // })
+      .on('renderlet', (chart) => {
+        const n = chart.xUnitCount()
+        const width = chart.effectiveWidth()
+        chart.selectAll('.axis.x .tick line')
+          .attr('transform', `translate(${Math.floor(width / n / 2)} 0)`)
+        chart.selectAll('.axis.x .tick text')
+          .attr('transform', `translate(${Math.floor(width / n / 2)} 0)`)
+      })
     this.chart.stack(group, 'm', d => d.value['m'])
     this.chart.stack(group, 'n', d => d.value['n'])
     this.chart.stack(group, 'na', d => d.value['na'])
-    this.chart.xAxis().ticks(this.extent[1] - this.extent[0]).tickFormat(v => {
-      return (v % (this.extent[1] - this.extent[0] > 4 ? 2 : 1) > 0) || v >= (this.extent[1] + 1) ? '' : d3.format('d')(v)
-    })
+    this.chart.xAxis()
+      .ticks(Math.min(this.extent[1] - this.extent[0] + 1, 8))
+      .tickFormat(d3.format('d'))
     this.chart.yAxis().ticks(4)
-    // this.chart.yAxis().ticks(4).tickFormat(d3.format('.0s'))
     this.chart.render()
   },
   methods: {

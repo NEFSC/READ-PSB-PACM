@@ -142,7 +142,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['theme', 'selectedDeployment']),
+    ...mapGetters(['selectedDeployment']),
     deploymentType () {
       if (this.selectedDeployment.properties.platform_type === 'mooring' || this.selectedDeployment.properties.platform_type === 'buoy') {
         return 'station'
