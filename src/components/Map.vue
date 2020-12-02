@@ -17,6 +17,7 @@
       </l-control>
     </l-map>
     <MapLayer v-if="ready && !loading"></MapLayer>
+    <MapSelector v-if="ready"></MapSelector>
   </div>
 </template>
 
@@ -27,6 +28,7 @@ import L from 'leaflet'
 
 import Legend from '@/components/Legend'
 import MapLayer from '@/components/MapLayer'
+import MapSelector from '@/components/MapSelector'
 
 import ZoomMin from '@/lib/leaflet/L.Control.ZoomMin'
 import '@/lib/leaflet/L.Control.ZoomMin.css'
@@ -46,7 +48,9 @@ export default {
   },
   components: {
     Legend,
+
     MapLayer,
+    MapSelector,
 
     LMap,
     LTileLayer,
@@ -65,7 +69,8 @@ export default {
       .classed('leaflet-zoom-animated', false)
       .classed('leaflet-zoom-hide', true)
       .classed('map', true)
-      .attr('pointer-events', null)
+      .attr('pointer-events', 'none')
+      .style('z-index', 500)
     this.container = this.svg.select('g')
     this.ready = true
   },
