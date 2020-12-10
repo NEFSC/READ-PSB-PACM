@@ -55,7 +55,8 @@ export default {
         `
       })
 
-    this.chart = dc.barChart(this.$el.appendChild(document.createElement('div')))
+    const el = this.$el.appendChild(document.createElement('div'))
+    this.chart = dc.barChart(el)
       .width(450)
       .height(120)
       .margins({ top: 10, right: 20, bottom: 5, left: 60 })
@@ -70,13 +71,13 @@ export default {
       .gap(0)
       .barPadding(0.3)
       .renderTitle(false)
-      // .on('filtered', this.updateFill)
-      .on('postRender', (chart) => {
-        chart.g().call(this.tip)
-        chart.selectAll('rect.bar')
-          .on('mouseenter', this.tip.show)
-          .on('mouseout', this.tip.hide)
-      })
+
+    setTimeout(() => {
+      this.chart.g().call(this.tip)
+      this.chart.selectAll('rect.bar')
+        .on('mouseenter', this.tip.show)
+        .on('mouseout', this.tip.hide)
+    }, 500)
 
     dc.override(this.chart, 'legendables', () => {
       return this.chart._legendables().reverse()
