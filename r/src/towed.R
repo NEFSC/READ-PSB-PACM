@@ -44,6 +44,8 @@ deployments_dates %>%
 
 detections %>% 
   janitor::tabyl(deployment_id, theme)
+deployments %>% 
+  janitor::tabyl(id, theme)
 
 detections_fill <- deployments_dates %>%  
   select(theme, deployment_id, date) %>% 

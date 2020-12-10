@@ -38,12 +38,24 @@ deployments_dates <- deployments %>%
 # detections that are outside the deployment monitoring period
 detections %>%
   anti_join(deployments_dates, by = c("theme", "deployment_id", "date"))
-deployments %>%
+
+detections %>%
+  anti_join(deployments_dates, by = c("theme", "deployment_id", "date")) %>% 
+  # tabyl(deployment_id)
+  filter(deployment_id == "WHOI_GOM_201810_mdr1018_buoy") %>% 
+  summary()
+
+deployments %>% 
   filter(id == "WHOI_GOM_201810_mdr1018_buoy")
 
 # deployment monitoring days with no detection data (add rows with presence="na")
 deployments_dates %>% 
-  anti_join(detections, by = c("deployment_id", "date"))
+  anti_join(detections, by = c("deployment_id", "date")) %>% 
+  tabyl(deployment_id)
+
+deployments %>% 
+  filter(id == "NEFSC_NE_OFFSHORE_201604_WAT_OC_02_WAT_OC")
+
 
 detections %>% 
   janitor::tabyl(deployment_id, species)

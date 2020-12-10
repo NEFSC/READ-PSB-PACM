@@ -7,6 +7,36 @@ library(mapview)
 
 DATA_DIR <- config::get("data_dir")
 
+
+# cruise dates ------------------------------------------------------------
+
+cruise_dates <- read_xlsx(
+  file.path(DATA_DIR, "towed", "Towed_Array_effort_Walker_Website_Daily_Resolution.xlsx"),
+  sheet = "Cruise_dates"
+) %>% 
+  clean_names() %>% 
+  mutate(across(c(start_date, end_date), as_date)) %>% 
+  transmute(
+    deployment_id = if_else(
+      cruise_name %in% c("GU1303", "GU1605"),
+      str_c("SEFSC_", cruise_name, sep = ""),
+      str_c("NEFSC_", cruise_name, sep = "")
+    ),
+    start = start_date,
+    end = end_date
+  ) %>% 
+  arrange(deployment_id, start) %>% 
+  group_by(deployment_id) %>% 
+  mutate(leg = row_number()) %>% 
+  ungroup() %>% 
+  rowwise() %>% 
+  mutate(
+    date = list(seq.Date(start, end, by = "day"))
+  ) %>% 
+  unnest(date) %>% 
+  select(-start, -end)
+
+
 # GU1303 ------------------------------------------------------------------
 
 df_gu1303 <- read_xlsx(
@@ -16,7 +46,6 @@ df_gu1303 <- read_xlsx(
   janitor::clean_names() %>% 
   transmute(
     id = "SEFSC_GU1303",
-    leg = 1,
     datetime = utc,
     latitude,
     longitude
@@ -32,7 +61,6 @@ df_gu1605 <- read_xlsx(
   janitor::clean_names() %>% 
   transmute(
     id = "SEFSC_GU1605",
-    leg = 1,
     datetime = utc,
     latitude,
     longitude
@@ -57,7 +85,6 @@ df_gu1803 <- list.files(file.path(DATA_DIR, "towed", "tracks", "GU1803_ShipGPS_E
   ) %>% 
   transmute(
     id = "NEFSC_GU1803",
-    leg = 1,
     datetime = date_time_utc,
     latitude,
     longitude
@@ -73,7 +100,6 @@ df_hb1103 <- read_xlsx(
   janitor::clean_names() %>%
   transmute(
     id = "NEFSC_HB1103",
-    leg = 1,
     datetime = utc,
     latitude,
     longitude
@@ -89,7 +115,6 @@ df_hb1303 <- read_xlsx(
   janitor::clean_names() %>% 
   transmute(
     id = "NEFSC_HB1303",
-    leg = 1,
     datetime = utc,
     latitude,
     longitude
@@ -107,7 +132,6 @@ df_hb1403_1 <- read_xlsx(
   janitor::clean_names() %>% 
   transmute(
     id = "NEFSC_HB1403",
-    leg = 1,
     datetime = gps_date,
     latitude,
     longitude
@@ -121,7 +145,6 @@ df_hb1403_2 <- read_xlsx(
   janitor::clean_names() %>% 
   transmute(
     id = "NEFSC_HB1403",
-    leg = 2,
     datetime = gps_date,
     latitude,
     longitude
@@ -135,7 +158,6 @@ df_hb1403_3 <- read_xlsx(
   janitor::clean_names() %>% 
   transmute(
     id = "NEFSC_HB1403",
-    leg = 3,
     datetime = gps_date,
     latitude,
     longitude
@@ -149,7 +171,6 @@ df_hb1403_4 <- read_xlsx(
   janitor::clean_names() %>% 
   transmute(
     id = "NEFSC_HB1403",
-    leg = 4,
     datetime = gps_date,
     latitude,
     longitude
@@ -163,7 +184,6 @@ df_hb1403_5 <- read_xlsx(
   janitor::clean_names() %>% 
   transmute(
     id = "NEFSC_HB1403",
-    leg = 5,
     datetime = gps_date,
     latitude,
     longitude
@@ -187,7 +207,6 @@ df_hb1503_1 <- read_xlsx(
   janitor::clean_names() %>% 
   transmute(
     id = "NEFSC_HB1503",
-    leg = 1,
     datetime = mdy_hms(utc),
     latitude,
     longitude
@@ -199,7 +218,6 @@ df_hb1503_2 <- read_xlsx(
   janitor::clean_names() %>% 
   transmute(
     id = "NEFSC_HB1503",
-    leg = 2,
     datetime = utc,
     latitude,
     longitude
@@ -211,7 +229,6 @@ df_hb1503_3 <- read_xlsx(
   janitor::clean_names() %>% 
   transmute(
     id = "NEFSC_HB1503",
-    leg = 3,
     datetime = utc,
     latitude,
     longitude
@@ -233,7 +250,6 @@ df_hb1603 <- read_xlsx(
   janitor::clean_names() %>% 
   transmute(
     id = "NEFSC_HB1603",
-    leg = 1,
     datetime = utc,
     latitude,
     longitude
@@ -248,7 +264,6 @@ df_hrs1701 <- read_csv(
   janitor::clean_names() %>% 
   transmute(
     id = "NEFSC_HRS1701",
-    leg = 1,
     datetime = mdy_hms(utc),
     latitude,
     longitude
@@ -263,7 +278,6 @@ df_hrs1910 <- read_csv(
   janitor::clean_names() %>% 
   transmute(
     id = "NEFSC_HRS1910",
-    leg = 1,
     datetime = utc,
     latitude,
     longitude
@@ -287,7 +301,7 @@ df_raw <- bind_rows(
   arrange(id, datetime)
 
 df <- df_raw %>% 
-  group_by(deployment_id = id, leg, datetime = floor_date(datetime, unit = "hour")) %>% 
+  group_by(deployment_id = id, datetime = floor_date(datetime, unit = "hour")) %>% 
   summarise(
     latitude = median(latitude, na.rm = TRUE),
     longitude = median(longitude, na.rm = TRUE),
@@ -295,13 +309,37 @@ df <- df_raw %>%
   )
 
 
+# assign legs -------------------------------------------------------------
+
+# legs missing track data
+cruise_dates %>% 
+  anti_join(
+    df %>% 
+      mutate(date = as_date(datetime)),
+    by = c("deployment_id", "date")
+  )
+# all of GU1402
+# last two days of HB1103
+
+df_legs <- df %>% 
+  mutate(date = as_date(datetime)) %>% 
+  left_join(cruise_dates, by = c("deployment_id", "date"))
+
+# track data with missing legs (not included in Cruise Dates)
+df_legs %>% 
+  filter(is.na(leg)) %>% 
+  distinct(deployment_id, date)
+  # View()
+# what to do with data outside defined leg periods?
+
+
 # spatial -----------------------------------------------------------------
 
-sf_points <- df %>% 
+sf_points <- df_legs %>% 
+  filter(!is.na(leg)) %>% # only include days listed on cruise tab
   st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
 
 mapview(sf_points, zcol = "leg")
-
 
 sf_tracks <- sf_points %>% 
   group_by(deployment_id, leg) %>% 
@@ -320,6 +358,15 @@ sf_tracks <- sf_points %>%
   )
 
 mapview::mapview(sf_tracks, zcol = "deployment_id")
+
+sf_points %>% 
+  filter(deployment_id == "SEFSC_GU1605") %>% 
+  mapview::mapview(zcol = "leg")
+
+cruise_dates %>% 
+  filter(deployment_id == "SEFSC_GU1605") %>% 
+  View()
+
 
 
 # export ------------------------------------------------------------------

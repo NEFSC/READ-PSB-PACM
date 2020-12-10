@@ -21,15 +21,15 @@ df <- df_csv %>%
   ) %>% 
   pivot_longer(
     starts_with(c("narw", "humpback", "sei", "fin", "blue")),
-    names_to = c("species", ".value"),
+    names_to = c("theme", ".value"),
     names_sep = ":",
     values_drop_na = TRUE
   ) %>%
   filter(!is.na(presence)) %>% 
   transmute(
-    theme = species,
+    theme,
     deployment_id = unique_id,
-    species,
+    species = theme,
     date = as_date(ymd_hms(analysis_period_start_datetime)),
     presence = fct_recode(presence, y = "Detected", n = "Not Detected", m = "Possibly Detected"),
     call_type

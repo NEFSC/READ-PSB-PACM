@@ -327,6 +327,13 @@ df_sperm <- bind_rows(
   mutate(theme = "sperm", species = "sperm") %>% 
   select(theme, species, everything())
 
+# missing detection coordinates
+bind_rows(
+  df_sperm_hb1103,
+  df_sperm_hb1303
+) %>%
+  filter(is.na(latitude) | latitude < 0) %>% 
+  janitor::tabyl(id)
 
 # detect: merge -----------------------------------------------------------
 
@@ -361,9 +368,9 @@ df <- df_csv %>%
   ungroup()
 
 summary(select(df, -locations))
-tabyl(df, deployment_id, species)
-tabyl(df, presence, species)
-tabyl(df, call_type, species)
+tabyl(df, deployment_id, theme)
+tabyl(df, presence, theme)
+tabyl(df, call_type, theme)
 
 stopifnot(all(
   df %>%

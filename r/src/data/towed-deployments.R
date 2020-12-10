@@ -67,6 +67,10 @@ df <- df_csv %>%
     submitter_affiliation,
     submitter_email,
     submission_date = ymd(submission_date)
+  ) %>% 
+  mutate(
+    monitoring_start_datetime = if_else(project == "NEFSC_HB1303" & theme == "beaked", ymd("2013-06-28"), monitoring_start_datetime),
+    monitoring_end_datetime = if_else(project == "NEFSC_HB1303" & theme == "beaked", ymd("2013-08-24"), monitoring_end_datetime)
   )
 
 janitor::tabyl(df, id, theme)

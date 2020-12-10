@@ -26,7 +26,25 @@ df_detections <- bind_rows(
   nefsc_deployments$detections
 )
 
+# detections with no deployments
+df_detections %>% 
+  distinct(theme, deployment_id) %>% 
+  anti_join(
+    df_deployments,
+    by = c("theme", "deployment_id" = "id")
+  )
 
+# deployments with no detections
+# all are 
+df_deployments %>% 
+  anti_join(
+    df_detections %>% 
+       distinct(theme, deployment_id),
+    by = c("theme", "id" = "deployment_id")
+  ) %>% 
+  as_tibble() %>%
+  select(-geometry) %>% 
+  tabyl(id, theme)
 
 export_theme <- function (theme) {
   # theme <- "narw"
