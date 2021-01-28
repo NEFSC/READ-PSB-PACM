@@ -10,7 +10,7 @@ DATA_DIR <- config::get("data_dir")
 # load --------------------------------------------------------------------
 
 df_csv <- read_csv(
-  file.path(DATA_DIR, "glider", "Glider_detection_data_2020-08-06.csv"),
+  file.path(DATA_DIR, "glider", "20201223", "Glider_detection_data_2020-12-23.csv"),
   col_types = cols(.default = col_character())
 ) %>% 
   clean_names()
@@ -27,13 +27,13 @@ df <- df_csv %>%
     values_drop_na = TRUE
   ) %>% 
   transmute(
-    deployment_id = unique_id, 
+    id = unique_id, 
     datetime = ymd_hms(analysis_period_start_datetime), 
     latitude, 
     longitude
   ) %>% 
   distinct() %>% 
-  arrange(deployment_id, datetime)
+  arrange(id, datetime)
 
 
 # spatial -----------------------------------------------------------------
@@ -42,11 +42,12 @@ sf_points <- df %>%
   st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
 
 sf_tracks <- sf_points %>% 
-  group_by(deployment_id) %>% 
+  group_by(id) %>% 
   summarise(
     start = min(datetime),
     end = max(datetime),
-    do_union = FALSE
+    do_union = FALSE,
+    .groups = "drop"
   ) %>% 
   st_cast("LINESTRING")
 

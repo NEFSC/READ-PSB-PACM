@@ -8,7 +8,7 @@ DATA_DIR <- config::get("data_dir")
 # load --------------------------------------------------------------------
 
 df_csv <- read_csv(
-  file.path(DATA_DIR, "glider", "Glider_metadata_2020-08-06.csv"),
+  file.path(DATA_DIR, "glider", "20201223", "Glider_metadata_2020-12-23.csv"),
   col_types = cols(.default = col_character())
 ) %>% 
   janitor::clean_names()
@@ -42,14 +42,12 @@ df <- df_csv %>%
     
     instrument_type,
     instrument_id,
-    sampling_rate_hz,
+    sampling_rate_hz = as.numeric(sampling_rate_hz),
+    analysis_sampling_rate = 2000, # TODO: add analysis_sample_rate to metadata
     soundfiles_timezone,
     duty_cycle_seconds,
     channel,
     qc_data,
-
-    detection_method,
-    protocol_reference,
     
     data_poc_name,
     data_poc_affiliation,
@@ -58,12 +56,19 @@ df <- df_csv %>%
     submitter_name,
     submitter_affiliation,
     submitter_email,
-    submission_date = ymd(submission_date)
+    submission_date = ymd(submission_date),
+    
+    # species specific
+    detection_method,
+    protocol_reference,
+    call_type
   )
 
 janitor::tabyl(df, id, theme)
 janitor::tabyl(df, platform_type, theme)
+janitor::tabyl(df, call_type, theme)
 janitor::tabyl(df, detection_method, theme)
+janitor::tabyl(df, protocol_reference, theme)
 janitor::tabyl(df, instrument_type, theme)
 
 # export ------------------------------------------------------------------

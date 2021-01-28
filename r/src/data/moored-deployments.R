@@ -7,7 +7,7 @@ DATA_DIR <- config::get("data_dir")
 # load --------------------------------------------------------------------
 
 df_csv <- read_csv(
-  file.path(DATA_DIR, "moored", "Moored_metadata_2020-08-04.csv"),
+  file.path(DATA_DIR, "moored", "20201223", "Moored_metadata_2020-12-23.csv"),
   col_types = cols(.default = col_character())
 ) %>% 
   janitor::clean_names()
@@ -36,19 +36,17 @@ df <- df_csv %>%
     
     platform_type = fct_recode(platform_type, mooring = "Mooring", buoy = "surface buoy"),
     platform_id,
+
     water_depth_meters = parse_number(water_depth_meters),
     recorder_depth_meters = parse_number(recorder_depth_meters),
-    
     instrument_type,
     instrument_id,
-    sampling_rate_hz,
+    sampling_rate_hz = as.numeric(sampling_rate_hz),
+    analysis_sampling_rate = 2000, # TODO: add to metadata
     soundfiles_timezone,
     duty_cycle_seconds,
     channel,
     qc_data,
-    
-    detection_method,
-    protocol_reference,
     
     data_poc_name,
     data_poc_affiliation,
@@ -57,13 +55,21 @@ df <- df_csv %>%
     submitter_name,
     submitter_affiliation,
     submitter_email,
-    submission_date = ymd(submission_date)
+    submission_date = ymd(submission_date),
+    
+    # species specific
+    detection_method,
+    protocol_reference,
+    call_type
   )
 
 janitor::tabyl(df, id, theme)
 janitor::tabyl(df, platform_type, theme)
+janitor::tabyl(df, call_type, theme)
 janitor::tabyl(df, detection_method, theme)
+janitor::tabyl(df, protocol_reference, theme)
 janitor::tabyl(df, instrument_type, theme)
+
 
 # export ------------------------------------------------------------------
 

@@ -14,15 +14,14 @@ df_kogia <- df_kogia_raw %>%
   janitor::clean_names() %>% 
   transmute(
     theme = "kogia",
-    species = "kogia",
+    species = NA_character_,
     id = str_sub(database, 1, 6),
     analysis_period_start = utc,
     analysis_period_end = event_end,
     analysis_period_effort_seconds = as.numeric(difftime(analysis_period_end, analysis_period_start, units = "secs")),
     latitude = tm_latitude1,
     longitude = tm_longitude1,
-    presence = "y",
-    call_type = click_type
+    presence = "y"
   ) %>% 
   mutate(
     id = if_else(
@@ -31,7 +30,7 @@ df_kogia <- df_kogia_raw %>%
       str_c("NEFSC_", id, sep = "")
     )
   )
-
+summary(df_kogia)
 
 # beaked ------------------------------------------------------------------
 
@@ -100,7 +99,7 @@ df_beaked_gu1803a <- bind_rows(
     longitude,
     species,
     presence = "y",
-    event_type = "BEAK"
+    event_type = NA_character_
   )
 df_beaked_gu1803b <- read_xlsx(
   file.path(DATA_DIR, "towed", "detections", "BeakedWhale_data", "GU1803_OffEffort_BW_detections.xlsx"),
@@ -240,7 +239,7 @@ df_beaked_hrs1910 <- read_xlsx(
     longitude = latlong_lon,
     species = species1_class1,
     presence = "y",
-    event_type = "BEAK"
+    event_type = NA_character_
   )
 
 df_beaked <- bind_rows(
@@ -255,7 +254,7 @@ df_beaked <- bind_rows(
   df_beaked_hrs1910
 ) %>% 
   filter(
-    event_type %in% c("POBK", "PRBK", "BEAK") # ignore BRAN, DOLP
+    is.na(event_type) | event_type %in% c("POBK", "PRBK", "BEAK") # ignore BRAN, DOLP
   ) %>% 
   mutate(
     theme = "beaked",
@@ -318,21 +317,32 @@ df_sperm_hb1303 <- read_xlsx(
     longitude = tm_longitude1,
     presence = "y"
   )
-  
+
 df_sperm <- bind_rows(
   df_sperm_hb1103,
   df_sperm_hb1303
 ) %>% 
   filter(latitude > 0) %>% 
-  mutate(theme = "sperm", species = "sperm") %>% 
-  select(theme, species, everything())
+  mutate(
+    theme = "sperm",
+    species = NA_character_
+  ) %>% 
+  relocate(theme, species)
 
-# missing detection coordinates
+# missing coordinates
 bind_rows(
   df_sperm_hb1103,
   df_sperm_hb1303
 ) %>%
-  filter(is.na(latitude) | latitude < 0) %>% 
+  filter(is.na(latitude)) %>% 
+  janitor::tabyl(id)
+
+# invalid coordinates
+bind_rows(
+  df_sperm_hb1103,
+  df_sperm_hb1303
+) %>%
+  filter(latitude < 0) %>% 
   janitor::tabyl(id)
 
 # detect: merge -----------------------------------------------------------
@@ -343,38 +353,35 @@ df_csv <- bind_rows(df_kogia, df_beaked, df_sperm) %>%
 df <- df_csv %>%
   transmute(
     theme,
-    deployment_id = id,
+    id,
     species,
     date = as_date(analysis_period_start),
     presence = presence,
-    call_type,
     analysis_period_start_datetime = analysis_period_start,
     analysis_period_end_datetime = analysis_period_end,
     analysis_period_effort_seconds,
     latitude,
     longitude
   ) %>% 
-  arrange(theme, deployment_id, species, date, analysis_period_start_datetime) %>% 
-  nest(locations = c(analysis_period_start_datetime, analysis_period_end_datetime, analysis_period_effort_seconds, latitude, longitude, presence, call_type)) %>% 
+  arrange(theme, id, species, date, analysis_period_start_datetime) %>% 
+  nest(locations = c(analysis_period_start_datetime, analysis_period_end_datetime, analysis_period_effort_seconds, latitude, longitude, presence)) %>% 
   rowwise() %>% 
   mutate(
     presence = case_when(
       "y" %in% locations$presence ~ "y",
       "m" %in% locations$presence ~ "m",
       TRUE ~ "n"
-    ),
-    call_type = str_c(sort(unique(coalesce(locations$call_type, "N/A"))), collapse = ",")
+    )
   ) %>% 
   ungroup()
 
 summary(select(df, -locations))
-tabyl(df, deployment_id, theme)
+tabyl(df, id, theme)
 tabyl(df, presence, theme)
-tabyl(df, call_type, theme)
 
 stopifnot(all(
   df %>%
-    group_by(theme, deployment_id, species, date) %>% 
+    group_by(theme, id, species, date) %>% 
     count() %>% 
     pull(n) == 1
 ))

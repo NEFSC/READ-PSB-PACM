@@ -21,16 +21,14 @@ stopifnot(all(!duplicated(df_deployments$id)))
 
 df_detections <- moored$detections %>% 
   filter(
-    deployment_id %in% df_deployments$id
+    id %in% df_deployments$id
   ) %>% 
   mutate(
     theme = "nefsc-deployments"
   ) %>% 
-  distinct(theme, deployment_id, date) %>% 
+  distinct(theme, id, date) %>% 
   mutate(
-    species = NA_character_,
-    presence = "na",
-    call_type = NA_character_
+    presence = "na"
   )
 
 list(

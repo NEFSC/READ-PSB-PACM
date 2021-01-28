@@ -1,39 +1,52 @@
 library(tidyverse)
 library(lubridate)
 library(readxl)
+library(janitor)
 
 DATA_DIR <- config::get("data_dir")
 
-
 # load --------------------------------------------------------------------
 
-df_beaked <- read_excel(
+df_raw <- read_excel(
   file.path(DATA_DIR, "towed", "Towed_Array_effort_Walker_Website_Daily_Resolution.xlsx"),
-  sheet = "BW"
+  sheet = "Towed_array_metadata"
 ) %>% 
-  mutate(theme = "beaked")
-
-df_kogia <- read_xlsx(
-  file.path(DATA_DIR, "towed", "Towed_Array_effort_Walker_Website_Daily_Resolution.xlsx"),
-  sheet = "KOGIA"
-) %>% 
-  mutate(theme = "kogia")
-
-df_sperm <- read_xlsx(
-  file.path(DATA_DIR, "towed", "Towed_Array_effort_Walker_Website_Daily_Resolution.xlsx"),
-  sheet = "SPWH"
-) %>% 
-  mutate(theme = "sperm")
-
-
-# merge -------------------------------------------------------------------
-
-df_csv <- bind_rows(df_beaked, df_kogia, df_sperm) %>% 
   janitor::clean_names()
 
-df <- df_csv %>% 
+
+cruise_dates <- read_xlsx(
+  file.path(DATA_DIR, "towed", "Towed_Array_effort_Walker_Website_Daily_Resolution.xlsx"),
+  sheet = "Cruise_dates"
+) %>% 
+  clean_names() %>% 
+  mutate(across(c(start_date, end_date), as_date)) %>% 
   transmute(
-    theme,
+    id = if_else(
+      cruise_name %in% c("GU1303", "GU1605"),
+      str_c("SEFSC_", cruise_name, sep = ""),
+      str_c("NEFSC_", cruise_name, sep = "")
+    ),
+    start = start_date,
+    end = end_date
+  ) %>% 
+  arrange(id, start) %>% 
+  group_by(id) %>% 
+  mutate(leg = row_number()) %>% 
+  ungroup() %>% 
+  rowwise() %>% 
+  mutate(
+    date = list(seq.Date(start, end, by = "day"))
+  ) %>% 
+  unnest(date) %>% 
+  select(-start, -end) %>% 
+  nest(cruise_dates = c(leg, date))
+
+
+# clean -------------------------------------------------------------------
+
+df <- df_raw %>% 
+  transmute(
+    theme = species,
     id = project,
     project,
     site_id = NA_character_,
@@ -43,40 +56,62 @@ df <- df_csv %>%
     monitoring_start_datetime = as_date(monitoring_start_datetime_oracle),
     monitoring_end_datetime = as_date(monitoring_end_datetime_oracle),
     
-    platform_type = "towed",
+    platform_type = case_when(
+      platform_type == "Towed Array, linear" ~ "towed",
+      TRUE ~ NA_character_
+    ),
     platform_id = NA_character_,
     water_depth_meters = NA_real_,
     recorder_depth_meters = NA_real_,
     
-    instrument_type = recorder_type,
+    instrument_type,
     instrument_id = NA_character_,
-    sampling_rate_hz = as.character(sampling_rate_khz * 1000),
+    sampling_rate_hz,
+    analysis_sampling_rate,
     soundfiles_timezone,
     duty_cycle_seconds,
     channel = NA_character_,
     qc_data,
     
+    call_type,
     detection_method,
     protocol_reference,
     
-    data_poc_name = data_poc,
+    data_poc_name,
     data_poc_affiliation,
     data_poc_email,
     
     submitter_name,
     submitter_affiliation,
     submitter_email,
-    submission_date = ymd(submission_date)
-  ) %>% 
-  mutate(
-    monitoring_start_datetime = if_else(project == "NEFSC_HB1303" & theme == "beaked", ymd("2013-06-28"), monitoring_start_datetime),
-    monitoring_end_datetime = if_else(project == "NEFSC_HB1303" & theme == "beaked", ymd("2013-08-24"), monitoring_end_datetime)
-  )
+    submission_date = as_date(submission_date),
+    
+    analyzed = as.logical(species_analyzed)
+  ) %>%
+  left_join(cruise_dates, by = "id")
+  
 
 janitor::tabyl(df, id, theme)
+janitor::tabyl(df, analyzed, theme)
 janitor::tabyl(df, platform_type, theme)
 janitor::tabyl(df, detection_method, theme)
 janitor::tabyl(df, instrument_type, theme)
+
+df %>% 
+  filter(analyzed) %>% 
+  janitor::tabyl(id, theme)
+df %>% 
+  filter(analyzed) %>% 
+  janitor::tabyl(analyzed, theme)
+df %>% 
+  filter(analyzed) %>% 
+  janitor::tabyl(platform_type, theme)
+df %>% 
+  filter(analyzed) %>% 
+  janitor::tabyl(detection_method, theme)
+df %>% 
+  filter(analyzed) %>% 
+  janitor::tabyl(instrument_type, theme)
 
 # export ------------------------------------------------------------------
 

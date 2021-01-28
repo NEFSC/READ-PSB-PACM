@@ -24,40 +24,67 @@ df_detections <- bind_rows(
   glider$detections,
   moored$detections,
   nefsc_deployments$detections
-)
+) %>% 
+  left_join(
+    df_deployments %>% 
+      as_tibble() %>% 
+      distinct(id, deployment_type),
+    by = "id"
+  ) %>% 
+  mutate(
+    # presence = if_else(presence == "n" & deployment_type == "mobile", "nm", presence) # change presence to nm for mobile when not detected (for hiding on map)
+  ) %>% 
+  select(-deployment_type)
 
 # detections with no deployments
 df_detections %>% 
-  distinct(theme, deployment_id) %>% 
+  distinct(theme, id) %>% 
   anti_join(
     df_deployments,
-    by = c("theme", "deployment_id" = "id")
+    by = c("theme", "id")
   )
 
 # deployments with no detections
-# all are 
 df_deployments %>% 
   anti_join(
     df_detections %>% 
-       distinct(theme, deployment_id),
-    by = c("theme", "id" = "deployment_id")
+       distinct(theme, id),
+    by = c("theme", "id")
   ) %>% 
-  as_tibble() %>%
-  select(-geometry) %>% 
-  tabyl(id, theme)
+  as_tibble()
 
-export_theme <- function (theme) {
+df_detections %>% 
+  tabyl(theme, presence)
+
+# deployment_type = fixed for mooring, buoy
+# deployment_type = mobile for slocum, wave, towed
+df_deployments %>% 
+  as_tibble() %>%
+  tabyl(platform_type, deployment_type)
+
+# presence in y, m, n, na for fixed and mobile
+df_detections %>% 
+  left_join(
+    df_deployments %>% 
+      as_tibble() %>% 
+      select(theme, id, deployment_type),
+    by = c("theme", "id")
+  ) %>% 
+  filter(theme == "narw") %>% 
+  tabyl(deployment_type, presence)
+
+export_theme <- function (theme, deployments, detections) {
   # theme <- "narw"
 
-  x_detections <- df_detections %>% 
+  x_detections <- detections %>% 
     filter(theme == !!theme) %>% 
     select(-theme)
   
-  x_deployments <- df_deployments %>% 
+  x_deployments <- deployments %>% 
     filter(theme == !!theme) %>% 
     select(-theme)
   
-  missing_detections <- setdiff(x_deployments$id, unique(x_detections$deployment_id))
+  missing_detections <- setdiff(x_deployments$id, unique(x_detections$id))
   if (length(missing_detections) > 0) {
     warning(glue("Found {length(missing_detections)} deployments without any detections ({str_c(missing_detections, collapse = ', ')}), removing from deployments table"))
     x_deployments <- x_deployments %>% 
@@ -65,22 +92,22 @@ export_theme <- function (theme) {
   }
   
   x_stations <- x_deployments %>% 
-    filter(deployment_type == "station") %>% 
+    filter(deployment_type == "fixed") %>% 
     select(id)
   x_tracks <- x_deployments %>% 
-    filter(deployment_type == "track") %>% 
+    filter(deployment_type == "mobile") %>% 
     select(id)
   
-  missing_deployments <- setdiff(unique(x_detections$deployment_id), x_deployments$id)
+  missing_deployments <- setdiff(unique(x_detections$id), x_deployments$id)
   if (length(missing_deployments) > 0) {
     warning(glue("Missing {length(missing_deployments)} deployments found in detections ({str_c(missing_deployments, collapse = ', ')}), removing detections"))
     x_detections <- x_detections %>% 
-      filter(!deployment_id %in% !!missing_deployments)
+      filter(!id %in% !!missing_deployments)
   }
   
   missing_stations <- setdiff(
     x_deployments %>% 
-      filter(deployment_type == "station") %>% 
+      filter(deployment_type == "fixed") %>% 
       pull(id),
     x_stations$id
   )
@@ -90,7 +117,7 @@ export_theme <- function (theme) {
   
   missing_tracks <- setdiff(
     x_deployments %>% 
-      filter(deployment_type == "track") %>% 
+      filter(deployment_type == "mobile") %>% 
       pull(id),
     x_tracks$id
   )
@@ -108,23 +135,97 @@ export_theme <- function (theme) {
     mutate(
       locations = map_chr(locations, toJSON, null = 'null')
     ) %>%
-    rename(id = deployment_id) %>% 
     write_csv(file.path("../public/data/", theme, "detections.csv"), na = "")
   
   if (file.exists(file.path("../public/data/", theme, "deployments.json"))) {
     unlink(file.path("../public/data/", theme, "deployments.json"))
   }
   x_deployments %>%
-    mutate_at(vars(monitoring_start_datetime, monitoring_end_datetime, submission_date), format_ISO8601) %>% 
+    mutate_at(vars(monitoring_start_datetime, monitoring_end_datetime, analysis_start_date, analysis_end_date, submission_date), format_ISO8601) %>% 
     write_sf(file.path("../public/data/", theme, "deployments.json"), driver = "GeoJSON", layer_options = "ID_FIELD=id")
 }
 
-export_theme("narw")
-export_theme("fin")
-export_theme("blue")
-export_theme("humpback")
-export_theme("sei")
-export_theme("beaked")
-export_theme("kogia")
-export_theme("sperm")
-export_theme("nefsc-deployments")
+export_theme("narw", deployments = df_deployments, detections = df_detections)
+export_theme("fin", deployments = df_deployments, detections = df_detections)
+export_theme("blue", deployments = df_deployments, detections = df_detections)
+export_theme("humpback", deployments = df_deployments, detections = df_detections)
+export_theme("sei", deployments = df_deployments, detections = df_detections)
+export_theme("beaked", deployments = df_deployments, detections = df_detections)
+export_theme("kogia", deployments = df_deployments, detections = df_detections)
+export_theme("sperm", deployments = df_deployments, detections = df_detections)
+export_theme("nefsc-deployments", deployments = df_deployments, detections = df_detections)
+
+
+# demo theme --------------------------------------------------------------
+
+demo_deployments <- bind_rows(
+  df_deployments %>% 
+    filter(
+      theme == "narw",
+      id %in% c(
+        # "NEFSC_NC_201310_CH2_2",                         # moored | detected
+        # "DUKE_VA_201406_NFC01A_NFC01A",                  # moored | multi-possibly
+        # "MOORS-MURPHY_SCOTIAN_SHELF_200708_PU093_SWGUL", # moored | not detected
+        # "NEFSC_NE_OFFSHORE_201506_WAT_HZ_01_WAT_HZ",     # moored | not analyzed
+        "WHOI_SCOTIAN_SHELF_201509_rb0915_otn200",       # glider | detected/possibly
+        "WHOI_GOM_201812_gom1218_we03",                  # glider | not detected
+        "WHOI_MID-ATLANTIC_202001_hatteras0120_we14"     # glider | not analyzed
+      )
+    )
+) %>% 
+  mutate(
+    analyzed = if_else(id == "WHOI_MID-ATLANTIC_202001_hatteras0120_we14", FALSE, analyzed)
+  )
+demo_detections <- df_detections %>% 
+  semi_join(
+    demo_deployments,
+    by = c("theme", "id")
+  ) %>% 
+  mutate(
+    presence = case_when(
+      id == "NEFSC_NE_OFFSHORE_201506_WAT_HZ_01_WAT_HZ" ~ "na",
+      id == "WHOI_GOM_201812_gom1218_we03" ~ "nm",
+      id == "WHOI_MID-ATLANTIC_202001_hatteras0120_we14" ~ "na",
+      TRUE ~ presence
+    ),
+    presence = if_else(presence == "nm", "n", presence)
+  ) %>% 
+  mutate(theme = "demo")
+
+demo_detections_locations <- demo_detections %>% 
+  select(-presence) %>% 
+  unnest(locations) %>% 
+  filter(!id %in% c("WHOI_GOM_201812_gom1218_we03", "WHOI_MID-ATLANTIC_202001_hatteras0120_we14")) %>% 
+  select(id, starts_with("analysis_"), latitude, longitude, presence) %>% 
+  nest(locations = -id)
+
+demo_detections <- demo_detections %>% 
+  select(-locations) %>% 
+  left_join(demo_detections_locations, by = "id")
+
+tabyl(demo_detections, id, presence)
+
+demo_glider_ids <- demo_deployments %>% filter(deployment_type == "mobile") %>% pull(id)
+
+export_theme("demo", deployments = mutate(demo_deployments, theme = "demo"), detections = demo_detections)
+export_theme(
+  "demo-nm",
+  deployments = mutate(
+    demo_deployments,
+    theme = "demo-nm"
+  ), 
+  detections = demo_detections %>%
+    mutate(
+      theme = "demo-nm",
+      presence = if_else(presence == "n" & id %in% demo_glider_ids, "nm", presence)
+    )
+)
+
+
+demo_detections %>% 
+  filter(id == "NEFSC_NE_OFFSHORE_201506_WAT_HZ_01_WAT_HZ")
+  # filter(year(date) == 2016) %>% 
+  # tail()
+
+demo_detections %>% 
+  filter(year(date) == 2015)

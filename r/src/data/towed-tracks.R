@@ -17,7 +17,7 @@ cruise_dates <- read_xlsx(
   clean_names() %>% 
   mutate(across(c(start_date, end_date), as_date)) %>% 
   transmute(
-    deployment_id = if_else(
+    id = if_else(
       cruise_name %in% c("GU1303", "GU1605"),
       str_c("SEFSC_", cruise_name, sep = ""),
       str_c("NEFSC_", cruise_name, sep = "")
@@ -25,8 +25,8 @@ cruise_dates <- read_xlsx(
     start = start_date,
     end = end_date
   ) %>% 
-  arrange(deployment_id, start) %>% 
-  group_by(deployment_id) %>% 
+  arrange(id, start) %>% 
+  group_by(id) %>% 
   mutate(leg = row_number()) %>% 
   ungroup() %>% 
   rowwise() %>% 
@@ -51,6 +51,20 @@ df_gu1303 <- read_xlsx(
     longitude
   )
 
+
+# GU1402 ------------------------------------------------------------------
+
+df_gu1402 <- read_xlsx(
+  file.path(DATA_DIR, "towed", "tracks", "GU1402_GPS_data.xlsx"),
+  col_types = "guess"
+) %>% 
+  janitor::clean_names() %>% 
+  transmute(
+    id = "NEFSC_GU1402",
+    datetime = utc,
+    latitude,
+    longitude
+  )
 
 # GU1605 ------------------------------------------------------------------
 
@@ -93,7 +107,7 @@ df_gu1803 <- list.files(file.path(DATA_DIR, "towed", "tracks", "GU1803_ShipGPS_E
 
 # HB1103 ------------------------------------------------------------------
 
-df_hb1103 <- read_xlsx(
+df_hb1103a <- read_xlsx(
   file.path(DATA_DIR, "towed", "tracks", "HB1103_gpsData.xlsx"),
   col_types = "guess"
 ) %>% 
@@ -104,7 +118,22 @@ df_hb1103 <- read_xlsx(
     latitude,
     longitude
   )
+df_hb1103b <- read_xlsx(
+  file.path(DATA_DIR, "towed", "tracks", "HB1103_GPS_data_0729-0730.xlsx"),
+  col_types = "guess"
+) %>% 
+  janitor::clean_names() %>%
+  transmute(
+    id = "NEFSC_HB1103",
+    datetime = utc,
+    latitude,
+    longitude
+  )
 
+df_hb1103 <- bind_rows(
+  df_hb1103a,
+  df_hb1103b
+)
 
 # HB1303 ------------------------------------------------------------------
 
@@ -288,6 +317,7 @@ df_hrs1910 <- read_csv(
 
 df_raw <- bind_rows(
   df_gu1303,
+  df_gu1402,
   df_gu1605,
   df_gu1803,
   df_hb1103,
@@ -301,7 +331,7 @@ df_raw <- bind_rows(
   arrange(id, datetime)
 
 df <- df_raw %>% 
-  group_by(deployment_id = id, datetime = floor_date(datetime, unit = "hour")) %>% 
+  group_by(id, datetime = floor_date(datetime, unit = "hour")) %>% 
   summarise(
     latitude = median(latitude, na.rm = TRUE),
     longitude = median(longitude, na.rm = TRUE),
@@ -316,33 +346,37 @@ cruise_dates %>%
   anti_join(
     df %>% 
       mutate(date = as_date(datetime)),
-    by = c("deployment_id", "date")
+    by = c("id", "date")
   )
-# all of GU1402
-# last two days of HB1103
 
 df_legs <- df %>% 
   mutate(date = as_date(datetime)) %>% 
-  left_join(cruise_dates, by = c("deployment_id", "date"))
+  left_join(cruise_dates, by = c("id", "date"))
 
 # track data with missing legs (not included in Cruise Dates)
 df_legs %>% 
   filter(is.na(leg)) %>% 
-  distinct(deployment_id, date)
+  distinct(id, date)
   # View()
-# what to do with data outside defined leg periods?
 
 
 # spatial -----------------------------------------------------------------
 
 sf_points <- df_legs %>% 
   filter(!is.na(leg)) %>% # only include days listed on cruise tab
+  filter(
+    !(id == "NEFSC_HB1603" & datetime == ymd_hm(201608110000))
+  ) %>% 
   st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
 
 mapview(sf_points, zcol = "leg")
 
+sf_points %>% 
+  filter(id == "NEFSC_GU1402") %>% 
+  mapview(zcol = "leg")
+
 sf_tracks <- sf_points %>% 
-  group_by(deployment_id, leg) %>% 
+  group_by(id, leg) %>% 
   summarise(
     start = min(datetime),
     end = max(datetime),
@@ -357,17 +391,9 @@ sf_tracks <- sf_points %>%
     .groups = "drop"
   )
 
-mapview::mapview(sf_tracks, zcol = "deployment_id")
+mapview::mapview(sf_tracks, zcol = "id")
 
-sf_points %>% 
-  filter(deployment_id == "SEFSC_GU1605") %>% 
-  mapview::mapview(zcol = "leg")
-
-cruise_dates %>% 
-  filter(deployment_id == "SEFSC_GU1605") %>% 
-  View()
-
-
+plot(sf_tracks)
 
 # export ------------------------------------------------------------------
 

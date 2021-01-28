@@ -8,10 +8,10 @@ DATA_DIR <- config::get("data_dir")
 # load --------------------------------------------------------------------
 
 df_csv <- read_csv(
-  file.path(DATA_DIR, "moored", "Moored_detection_data_2020-08-04.csv"),
+  file.path(DATA_DIR, "moored", "20201223", "Moored_detection_data_2020-12-23.csv"),
   col_types = cols(.default = col_character())
 ) %>% 
-  janitor::clean_names()
+  clean_names()
 
 
 df <- df_csv %>%
@@ -28,21 +28,21 @@ df <- df_csv %>%
   filter(!is.na(presence)) %>% 
   transmute(
     theme,
-    deployment_id = unique_id,
-    species = theme,
+    id = unique_id,
+    species = NA_character_,
     date = as_date(ymd_hms(analysis_period_start_datetime)),
-    presence = fct_recode(presence, y = "Detected", n = "Not Detected", m = "Possibly Detected"),
-    call_type
+    presence = fct_recode(presence, y = "Detected", n = "Not Detected", m = "Possibly Detected")
   )
 
 summary(df)
-tabyl(df, deployment_id, species)
-tabyl(df, presence, species)
-tabyl(df, call_type, species)
+tabyl(df, id, theme)
+tabyl(df, presence, theme)
+tabyl(df, species, theme)
 
+# one value per theme, id, species, date
 stopifnot(all(
   df %>%
-    group_by(theme, deployment_id, species, date) %>% 
+    group_by(theme, id, species, date) %>% 
     count() %>% 
     pull(n) == 1
 ))
