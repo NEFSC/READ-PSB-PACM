@@ -131,7 +131,7 @@ export default {
     }
   },
   mounted () {
-    this.dim = xf.dimension(d => moment(d.date).dayOfYear())
+    this.dim = xf.dimension(d => d.doy)
 
     const margins = {
       left: 72,
@@ -302,7 +302,8 @@ export default {
       // this.season.start = start
       // this.season.end = end === 365 ? 366 : end
       const start = this.start.jday
-      const end = this.end.jday === 365 ? 366 : this.end.jday
+      const end = this.end.jday
+      // const end = this.end.jday === 365 ? 366 : this.end.jday
       if (start <= end) {
         this.dim.filterRange([start, end + 0.01])
       } else {

@@ -27,12 +27,12 @@ export default {
     stations () {
       if (!this.deployments) return []
       return this.deployments
-        .filter(d => d.properties.deployment_type === 'station')
+        .filter(d => d.properties.deployment_type === 'fixed')
     },
     points () {
       if (!this.deployments) return []
       return this.deployments
-        .filter(d => d.properties.deployment_type === 'track')
+        .filter(d => d.properties.deployment_type === 'mobile')
         .map(d => d.trackDetections)
         .flat()
     }
@@ -208,13 +208,14 @@ export default {
       const line = d3.geoPath()
         .projection(projection)
 
-      const data = this.deployments.filter(d => d.properties.deployment_type === 'track')
+      const data = this.deployments.filter(d => d.properties.deployment_type === 'mobile')
 
       g.selectAll('path.track')
         .data(data, d => d.id)
         .join('path')
         .attr('class', 'track')
         .attr('d', line)
+        .classed('not-analyzed', d => !d.properties.analyzed)
 
       g.selectAll('path.track-overlay')
         .data(data, d => d.id)
@@ -351,6 +352,9 @@ export default {
   stroke: hsla(0, 0%, 30%, 0.5);
   stroke-width: 1px;
 }
+.vue2leaflet-map svg path.track.not-analyzed {
+  stroke-dasharray: 3 2;
+}
 .vue2leaflet-map svg path.track-overlay.selected {
   stroke: hsla(0, 90%, 39%, 0.5);
 }
@@ -369,24 +373,6 @@ export default {
 .vue2leaflet-map svg path.track-overlay:hover {
   stroke: hsla(0, 0%, 30%, 1);
 }
-/* .vue2leaflet-map svg circle.point {
-  cursor: pointer;
-  fill-opacity: 0.75;
-  stroke-opacity: 0.5;
-  stroke-width: 1.5px;
-  stroke: rgb(255, 255, 255);
-}
-.vue2leaflet-map svg circle.point.selected {
-  stroke: rgb(255, 0, 0);
-  stroke-opacity: 1;
-  stroke-width: 2px;
-}
-.vue2leaflet-map svg circle.point:hover {
-  fill-opacity: 1;
-  stroke-opacity: 1;
-  stroke-width: 3px;
-} */
-
 .vue2leaflet-map svg circle.station {
   cursor: pointer;
   pointer-events: auto;

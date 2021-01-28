@@ -30,10 +30,9 @@ yarn build
 
 ## Deployment
 
-Deploy the files in `dist/` to web server.
+Deploy the files in `dist/` to web server (automatically builds first).
 
 ```
-# TODO
 yarn deploy
 ```
 

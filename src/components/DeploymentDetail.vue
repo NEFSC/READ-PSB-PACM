@@ -185,9 +185,9 @@ export default {
         if (!d.presence) {
           return null
         }
-        const status = detectionTypes.find(s => s.id === d.presence)
+        const status = detectionTypes.find(s => s.id === d.presence) || { label: 'hidden' }
         return {
-          x: d.date.valueOf(),
+          x: (new Date(d.date)).valueOf(),
           y: ids.indexOf(d.presence),
           label: status.label,
           marker: {
@@ -195,8 +195,12 @@ export default {
           }
         }
       })
-      this.chart.xAxis.min = moment.utc(this.selectedDeployment.properties.monitoring_start_datetime).startOf('date').toDate().valueOf()
-      this.chart.xAxis.max = moment.utc(this.selectedDeployment.properties.monitoring_end_datetime).startOf('date').toDate().valueOf()
+      this.chart.xAxis.min = moment
+        .utc(this.selectedDeployment.properties.analysis_start_date)
+        .startOf('date').toDate().valueOf()
+      this.chart.xAxis.max = moment
+        .utc(this.selectedDeployment.properties.analysis_end_date)
+        .startOf('date').toDate().valueOf()
       this.chart.series = [{
         name: 'Detection',
         data: values

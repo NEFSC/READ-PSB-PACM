@@ -79,6 +79,7 @@ const trackHtml = (d, deployment) => {
     [ 'Platform Type', `${platformTypesMap.get(props.platform_type).label}` ],
     [ 'Recorder Type', `${props.instrument_type ? props.instrument_type : 'N/A'}` ],
     [ 'Detection Method', `${props.detection_method ? props.detection_method : 'N/A'}` ],
+    [ 'Call Type', `${props.call_type ? props.call_type : 'N/A'}` ],
     [ 'QAQC', `${props.qc_data ? props.qc_data : 'N/A'}` ],
     [ 'Deployed', `${monitoring.start} to ${monitoring.end}` ],
     [ 'Duration', `${monitoring.duration} days` ]
@@ -106,7 +107,6 @@ const towedPointHtml = (d, deployment) => {
     [ 'Duration', `${isFinite(d.analysis_period_effort_seconds) ? d.analysis_period_effort_seconds.toFixed(1) + ' sec' : 'N/A'}` ],
     [ 'Position', `${d.latitude.toFixed(4)}, ${d.longitude.toFixed(4)}` ],
     [ 'Detection', `${detectionTypesMap.get(d.presence).label}` ]
-    // [ 'Call Type/Species', `${d.properties.call_type ? d.properties.call_type : 'N/A'}` ]
   ])
   return `
     ${trackHtml(d, deployment)}<br><br>
@@ -143,6 +143,7 @@ const stationHtml = (d, deployment) => {
     [ 'Platform Type', `${platformTypesMap.get(props.platform_type).label}` ],
     [ 'Recorder Type', `${props.instrument_type}` ],
     [ 'Detection Method', `${props.detection_method}` ],
+    [ 'Call Type', `${d.properties.call_type ? d.properties.call_type : 'N/A'}` ],
     [ 'QAQC', `${props.qc_data ? props.qc_data : 'N/A'}` ],
     [ 'Recorder Depth', props.recorder_depth_meters ? `${(+props.recorder_depth_meters).toFixed(0)} m` : 'N/A' ],
     [ 'Water Depth', props.water_depth_meters ? `${(+props.water_depth_meters).toFixed(0)} m` : 'N/A' ],

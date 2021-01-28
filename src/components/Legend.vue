@@ -22,14 +22,14 @@
 
     <div class="mt-2" v-if="hasStation">
       <div class="subtitle-1 font-weight-medium mb-2">Monitoring Stations</div>
-      <svg width="180" height="130" v-if="theme.deploymentsOnly">
+      <svg width="200" height="130" v-if="theme.deploymentsOnly">
         <text x="55" y="12" class="legend-text"># Days Recorded</text>
         <g v-for="(v, i) in [1000, 500, 100, 50, 1]" :key="'size-0-' + v" transform="translate(27,20)">
           <circle :cy="i * 20 + 20" :r="sizeScale(v)" stroke="white" stroke-opacity="0.5" :fill="detectionTypes[3].color" />
           <text x="27" :y="i * 20 + 20" class="legend-text">{{v.toLocaleString()}}</text>
         </g>
       </svg>
-      <svg width="180" height="245" v-else-if="normalizeEffort">
+      <svg width="200" height="245" v-else-if="normalizeEffort">
         <text x="55" y="12" class="legend-text">% Days Detected</text>
         <g v-for="(v, i) in [1, 0.75, 0.5, 0.25, 0.01]" :key="'size-' + v" transform="translate(27,20)">
           <circle :cy="i * 20 + 20" :r="sizeScaleUnit(v)" stroke="white" stroke-opacity="0.5" :fill="detectionTypes[0].color" />
@@ -48,7 +48,7 @@
           <text x="27" :y="0" class="legend-text">{{detectionTypes[3].label}}</text>
         </g>
       </svg>
-      <svg width="180" height="245" v-else>
+      <svg width="200" height="245" v-else>
         <text x="55" y="12" class="legend-text"># Days Detected</text>
         <g v-for="(v, i) in [1000, 500, 100, 50, 1]" :key="'size-0-' + v" transform="translate(27,20)">
           <circle :cy="i * 20 + 20" :r="sizeScale(v)" stroke="white" stroke-opacity="0.5" :fill="detectionTypes[0].color" />
@@ -75,7 +75,7 @@
 
     <div class="mt-2" v-if="hasGlider">
       <div class="subtitle-1 font-weight-medium mb-2">Gliders</div>
-      <svg width="180" height="70">
+      <svg width="200" height="85">
         <g transform="translate(27,10)">
           <rect y="-6" x="-6" width="12" height="12" stroke="white" stroke-opacity="0.5" :fill="detectionTypes[0].color" />
           <text x="27" :y="0" class="legend-text">{{detectionTypes[0].label}} (Daily)</text>
@@ -86,21 +86,29 @@
         </g>
         <g transform="translate(27,55)">
           <line x1="-6" x2="6" y1="-6" y2="6" stroke="hsla(0, 0%, 30%, 0.5)" stroke-width="1px" />
-          <text x="27" :y="0" class="legend-text">Glider Track</text>
+          <text x="27" :y="0" class="legend-text">Track</text>
+        </g>
+        <g transform="translate(27,75)">
+          <line x1="-6" x2="6" y1="-6" y2="6" stroke="hsla(0, 0%, 30%, 0.5)" stroke-width="1px" stroke-dasharray="3 2" />
+          <text x="27" :y="0" class="legend-text">Track (Not Analyzed)</text>
         </g>
       </svg>
     </div>
 
     <div class="mt-2" v-if="hasTowed">
       <div class="subtitle-1 font-weight-medium mb-2">Towed Array</div>
-      <svg width="180" height="50">
-        <g transform="translate(30,10)">
+      <svg width="200" height="65">
+        <g transform="translate(27,10)">
           <rect y="-6" x="-6" width="12" height="12" stroke="white" stroke-opacity="0.5" :fill="detectionTypes[0].color" />
-          <text x="30" :y="0" class="legend-text">Detection</text>
+          <text x="27" :y="0" class="legend-text">Detection</text>
         </g>
-        <g transform="translate(30,35)">
+        <g transform="translate(27,35)">
           <line x1="-6" x2="6" y1="-6" y2="6" stroke="hsla(0, 0%, 30%, 0.5)" stroke-width="1px" />
-          <text x="30" :y="0" class="legend-text">Ship Track</text>
+          <text x="27" :y="0" class="legend-text">Track</text>
+        </g>
+        <g transform="translate(27,55)">
+          <line x1="-6" x2="6" y1="-6" y2="6" stroke="hsla(0, 0%, 30%, 0.5)" stroke-width="1px" stroke-dasharray="3 2" />
+          <text x="27" :y="0" class="legend-text">Track (Not Analyzed)</text>
         </g>
       </svg>
     </div>
@@ -123,7 +131,7 @@ export default {
   computed: {
     ...mapGetters(['deployments', 'theme']),
     hasStation () {
-      return this.deployments && this.deployments.some(d => d.properties.deployment_type === 'station')
+      return this.deployments && this.deployments.some(d => d.properties.deployment_type === 'fixed')
     },
     hasGlider () {
       return this.deployments && this.deployments.some(d => d.properties.platform_type === 'slocum' || d.properties.platform_type === 'wave')

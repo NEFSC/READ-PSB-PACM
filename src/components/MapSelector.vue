@@ -6,7 +6,7 @@ import dc from 'dc'
 import { xf } from '@/lib/crossfilter'
 
 export default {
-  name: 'MapLayer',
+  name: 'MapSelector',
   data () {
     return {
       layer: new L.FeatureGroup(),
@@ -21,9 +21,9 @@ export default {
     points () {
       if (!this.deployments) return []
       const stations = this.deployments
-        .filter(d => d.properties.deployment_type === 'station')
+        .filter(d => d.properties.deployment_type === 'fixed')
       const points = this.deployments
-        .filter(d => d.properties.deployment_type === 'track')
+        .filter(d => d.properties.deployment_type === 'mobile')
         .map(d => d.trackDetections)
         .flat()
 
