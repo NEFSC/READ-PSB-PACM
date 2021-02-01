@@ -109,7 +109,4 @@ export default {
 </script>
 
 <style>
-.leaflet-top {
-  top: 60px !important;
-}
 </style>
