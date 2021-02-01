@@ -19,7 +19,7 @@
       </p>
       <v-container class="mb-6">
         <v-row justify="space-around">
-          <v-col cols="12" md="4" class="text-center">
+          <v-col cols="12" md="4" class="text-center" v-if="!$vuetify.breakpoint.mobile">
             <v-btn color="success" class="px-4 mx-0" x-large @click="$emit('close', { tour: true })">
               <v-icon left>mdi-cursor-default-click</v-icon>
               Take A Tour

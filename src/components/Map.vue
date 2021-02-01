@@ -1,10 +1,10 @@
 <template>
-  <div style="height:100%;position:relative">
+  <div style="height:100%;">
     <l-map
       ref="map"
       style="width:100%;height:100%"
       :center="[49, -50]"
-      :zoom="4"
+      :zoom="$vuetify.breakpoint.mobile ? 2 : 4"
       :options="{ zoomControl: false }"
       @zoomend="onZoom">
       <l-control-scale position="bottomleft"></l-control-scale>
@@ -13,7 +13,32 @@
         attribution="Tiles &copy; Esri &mdash; Sources: GEBCO, NOAA, CHS, OSU, UNH, CSUMB, National Geographic, DeLorme, NAVTEQ, and Esri'">
       </l-tile-layer>
       <l-control position="topright">
-        <Legend :counts="counts" v-if="theme && !loading"></Legend>
+        <v-dialog
+          v-model="legendDialog"
+          scrollable
+          :fullscreen="$vuetify.breakpoint.mobile"
+          v-if="$vuetify.breakpoint.mobile">
+          <template v-slot:activator="{ on }">
+            <v-btn color="default" v-on="on">
+              Show Legend
+            </v-btn>
+          </template>
+
+          <v-card>
+            <v-card-text class="pt-4">
+              <Legend :counts="counts" v-if="theme && !loading"></Legend>
+              <div>
+                Loading...
+              </div>
+            </v-card-text>
+
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn color="primary" text @click.native="legendDialog = false">Close</v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
+        <Legend :counts="counts" v-if="theme && !loading && !$vuetify.breakpoint.mobile"></Legend>
       </l-control>
     </l-map>
     <MapLayer v-if="ready && !loading"></MapLayer>
@@ -40,7 +65,8 @@ export default {
   props: ['points', 'counts'],
   data () {
     return {
-      ready: false
+      ready: false,
+      legendDialog: false
     }
   },
   computed: {
@@ -81,3 +107,9 @@ export default {
   }
 }
 </script>
+
+<style>
+.leaflet-top {
+  top: 60px !important;
+}
+</style>

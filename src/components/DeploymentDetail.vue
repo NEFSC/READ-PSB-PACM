@@ -1,7 +1,12 @@
 <template>
   <div>
     <v-toolbar color="grey darken-2" dense dark>
-      <div class="subtitle-1 font-weight-bold">Selected: {{ selectedDeployment.id }}</div>
+      <div class="subtitle-1 font-weight-bold" v-if="$vuetify.breakpoint.mobile">
+        Selected Deployment
+      </div>
+      <div class="subtitle-1 font-weight-bold" v-else>
+        Selected: {{ selectedDeployment.id }}
+      </div>
       <v-spacer></v-spacer>
       <v-btn icon small @click="close">
         <v-icon small>mdi-close</v-icon>

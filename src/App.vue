@@ -19,7 +19,7 @@
         :fullscreen="$vuetify.breakpoint.mobile"
         v-if="auth.isAuth">
         <template v-slot:activator="{ on }">
-          <v-btn color="default" dark text max-width="120" class="mr-4" v-on="on">
+          <v-btn color="default" dark text max-width="120" v-on="on">
             <v-icon :left="!$vuetify.breakpoint.mobile">mdi-information-outline</v-icon>
             <span v-if="!$vuetify.breakpoint.mobile"> About</span>
           </v-btn>
@@ -34,7 +34,7 @@
         :fullscreen="$vuetify.breakpoint.mobile"
         v-if="auth.isAuth">
         <template v-slot:activator="{ on }">
-          <v-btn color="default" dark text max-width="120" class="mr-4" v-on="on">
+          <v-btn color="default" dark text max-width="120" v-on="on">
             <v-icon :left="!$vuetify.breakpoint.mobile">mdi-video</v-icon>
             <span v-if="!$vuetify.breakpoint.mobile"> Tutorial</span>
           </v-btn>
@@ -42,7 +42,7 @@
         <HelpDialog @close="closeHelp"></HelpDialog>
       </v-dialog>
 
-      <v-btn color="default" dark text max-width="120" @click="startTour" data-v-step="6" v-if="auth.isAuth">
+      <v-btn color="default" dark text max-width="120" @click="startTour" data-v-step="6" v-if="auth.isAuth && !$vuetify.breakpoint.mobile">
         <v-icon :left="!$vuetify.breakpoint.mobile">mdi-cursor-default-click</v-icon>
         <span v-if="!$vuetify.breakpoint.mobile"> Tour</span>
       </v-btn>

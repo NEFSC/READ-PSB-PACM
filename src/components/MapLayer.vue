@@ -344,10 +344,6 @@ export default {
 </script>
 
 <style>
-.svg-rect {
-  stroke: red;
-  stroke-width: 1px;
-}
 .vue2leaflet-map svg path.track {
   stroke-linecap: round;
   stroke-linejoin: round;
