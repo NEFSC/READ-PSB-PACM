@@ -14,7 +14,7 @@ import { tipOffset, tipHtml } from '@/lib/tip'
 export default {
   name: 'MapLayer',
   computed: {
-    ...mapGetters(['theme', 'deployments', 'selectedDeployment', 'normalizeEffort']),
+    ...mapGetters(['theme', 'deployments', 'selectedDeployment', 'normalizeEffort', 'useSizeScale']),
     map () {
       return this.$parent.map
     },
@@ -45,6 +45,9 @@ export default {
       this.updateSelected()
     },
     normalizeEffort () {
+      this.render()
+    },
+    useSizeScale () {
       this.render()
     }
   },
@@ -277,7 +280,7 @@ export default {
           const value = deploymentMap.get(d.id)
 
           if (this.theme.deploymentsOnly) {
-            return sizeScale(value.total)
+            return this.useSizeScale ? sizeScale(value.total) : 7
           } else if (this.normalizeEffort) {
             return value.y > 0
               ? sizeScaleUnit(value.total > 0 ? value.y / value.total : 0)

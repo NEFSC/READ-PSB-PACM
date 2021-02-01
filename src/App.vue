@@ -5,35 +5,50 @@
       color="light-blue darken-3"
       clipped-left
       dark>
-      <v-icon color="white" dark class="mr-4">$whale</v-icon>
-      <v-toolbar-title>Passive Acoustic Cetacean Map</v-toolbar-title>
+      <v-app-bar-nav-icon v-if="$vuetify.breakpoint.mobile" @click="drawer = !drawer"></v-app-bar-nav-icon>
+      <v-icon color="white" dark class="mr-4" v-if="!$vuetify.breakpoint.mobile">$whale</v-icon>
+      <v-toolbar-title v-if="!$vuetify.breakpoint.mobile">Passive Acoustic Cetacean Map</v-toolbar-title>
+      <v-toolbar-title v-else class="font-weight-bold">PACM</v-toolbar-title>
 
       <v-spacer></v-spacer>
 
-      <v-dialog v-model="dialogs.about" max-width="1000" scrollable v-if="auth.isAuth">
+      <v-dialog
+        v-model="dialogs.about"
+        max-width="1000"
+        scrollable
+        :fullscreen="$vuetify.breakpoint.mobile"
+        v-if="auth.isAuth">
         <template v-slot:activator="{ on }">
           <v-btn color="default" dark text max-width="120" class="mr-4" v-on="on">
-            <v-icon left>mdi-information-outline</v-icon> About
+            <v-icon :left="!$vuetify.breakpoint.mobile">mdi-information-outline</v-icon>
+            <span v-if="!$vuetify.breakpoint.mobile"> About</span>
           </v-btn>
         </template>
         <AboutDialog @close="closeAbout"></AboutDialog>
       </v-dialog>
 
-      <v-dialog v-model="dialogs.help" max-width="1000" scrollable v-if="auth.isAuth">
+      <v-dialog
+        v-model="dialogs.help"
+        max-width="1000"
+        scrollable
+        :fullscreen="$vuetify.breakpoint.mobile"
+        v-if="auth.isAuth">
         <template v-slot:activator="{ on }">
           <v-btn color="default" dark text max-width="120" class="mr-4" v-on="on">
-            <v-icon left>mdi-video</v-icon> Tutorial
+            <v-icon :left="!$vuetify.breakpoint.mobile">mdi-video</v-icon>
+            <span v-if="!$vuetify.breakpoint.mobile"> Tutorial</span>
           </v-btn>
         </template>
         <HelpDialog @close="closeHelp"></HelpDialog>
       </v-dialog>
 
       <v-btn color="default" dark text max-width="120" @click="startTour" data-v-step="6" v-if="auth.isAuth">
-        <v-icon left>mdi-cursor-default-click</v-icon> Tour
+        <v-icon :left="!$vuetify.breakpoint.mobile">mdi-cursor-default-click</v-icon>
+        <span v-if="!$vuetify.breakpoint.mobile"> Tour</span>
       </v-btn>
 
       <div>
-        <v-img src="./assets/img/noaa-logo.gif" height="50px" width="50px" class="ma-2"></v-img>
+        <v-img src="./assets/img/noaa-logo.gif" height="40px" width="40px" class="ma-2"></v-img>
       </div>
     </v-app-bar>
 
@@ -41,11 +56,22 @@
       app
       dark
       clipped
-      permanent
+      :permanent="!$vuetify.breakpoint.mobile"
       color="blue-grey darken-4"
       width="500"
+      v-model="drawer"
       v-if="auth.isAuth">
-      <v-list class="pb-0">
+      <v-list class="py-0">
+        <v-list-item v-if="$vuetify.breakpoint.mobile">
+          <v-list-item-content class="pb-0" >
+            <div class="d-flex">
+              <v-spacer></v-spacer>
+              <!-- <v-btn color="success"><v-icon>mdi-close</v-icon></v-btn> -->
+
+              <v-btn icon small class="float-right" color="grey" @click="drawer = !drawer"><v-icon>mdi-close</v-icon></v-btn>
+            </div>
+          </v-list-item-content>
+        </v-list-item>
         <v-list-item class="my-1" data-v-step="1">
           <v-list-item-content>
             <SelectTheme></SelectTheme>
@@ -82,6 +108,16 @@
         </v-list-item>
 
         <v-divider class="my-4"></v-divider>
+
+        <v-alert
+          type="info"
+          color="grey darken-3"
+          border="left"
+          class="my-6 mb-4 py-1 mx-4 body-2"
+          v-if="theme.showSpeciesFilter"
+          dismissible>
+          For {{ theme.label }}, recorded days are counted separately for each species. If two species were detected on the same day, then that day would be counted twice in the charts below.
+        </v-alert>
 
         <v-list-item class="mt-0" data-v-step="3">
           <v-list-item-content class="pt-1">
@@ -187,6 +223,7 @@ export default {
   data () {
     return {
       themes,
+      drawer: null,
       auth: {
         isAuth: false,
         password: null,

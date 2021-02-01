@@ -185,7 +185,7 @@ export default {
         if (!d.presence) {
           return null
         }
-        const status = detectionTypes.find(s => s.id === d.presence) || { label: 'hidden' }
+        const status = detectionTypes.find(s => s.id === d.presence)
         return {
           x: (new Date(d.date)).valueOf(),
           y: ids.indexOf(d.presence),

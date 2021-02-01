@@ -22,13 +22,25 @@
 
     <div class="mt-2" v-if="hasStation">
       <div class="subtitle-1 font-weight-medium mb-2">Monitoring Stations</div>
-      <svg width="200" height="130" v-if="theme.deploymentsOnly">
-        <text x="55" y="12" class="legend-text"># Days Recorded</text>
-        <g v-for="(v, i) in [1000, 500, 100, 50, 1]" :key="'size-0-' + v" transform="translate(27,20)">
-          <circle :cy="i * 20 + 20" :r="sizeScale(v)" stroke="white" stroke-opacity="0.5" :fill="detectionTypes[3].color" />
-          <text x="27" :y="i * 20 + 20" class="legend-text">{{v.toLocaleString()}}</text>
-        </g>
-      </svg>
+
+      <!-- DEPLOYMENTS ONLY (# DAYS RECORDED) -->
+      <div v-if="theme.deploymentsOnly">
+        <svg width="200" height="130" v-if="useSizeScale">
+          <text x="55" y="12" class="legend-text"># Days Recorded</text>
+          <g v-for="(v, i) in [1000, 500, 100, 50, 1]" :key="'size-0-' + v" transform="translate(27,20)">
+            <circle :cy="i * 20 + 20" :r="sizeScale(v)" stroke="white" stroke-opacity="0.5" :fill="detectionTypes[3].color" />
+            <text x="27" :y="i * 20 + 20" class="legend-text">{{v.toLocaleString()}}</text>
+          </g>
+        </svg>
+        <svg width="200" height="25" v-else>
+          <g transform="translate(27,0)">
+            <circle cy="7" r="7" stroke="white" stroke-opacity="0.5" :fill="detectionTypes[3].color" />
+            <text x="20" y="8" class="legend-text">Station</text>
+          </g>
+        </svg>
+      </div>
+
+      <!-- NORMALIZED DETECTION DAYS -->
       <svg width="200" height="245" v-else-if="normalizeEffort">
         <text x="55" y="12" class="legend-text">% Days Detected</text>
         <g v-for="(v, i) in [1, 0.75, 0.5, 0.25, 0.01]" :key="'size-' + v" transform="translate(27,20)">
@@ -48,6 +60,8 @@
           <text x="27" :y="0" class="legend-text">{{detectionTypes[3].label}}</text>
         </g>
       </svg>
+
+      <!-- DETECTION DAYS -->
       <svg width="200" height="245" v-else>
         <text x="55" y="12" class="legend-text"># Days Detected</text>
         <g v-for="(v, i) in [1000, 500, 100, 50, 1]" :key="'size-0-' + v" transform="translate(27,20)">
@@ -67,9 +81,16 @@
           <text x="27" :y="0" class="legend-text">{{detectionTypes[3].label}}</text>
         </g>
       </svg>
+
+      <!-- OPTIONS -->
       <div v-if="!theme.deploymentsOnly">
         <v-checkbox class="ml-4 my-0 d-inline-block" hide-details dense label="" v-model="normalizeEffort"></v-checkbox>
         <span class="body-2 pl-1 grey--text text--darken-3">Normalize by effort</span>
+      </div>
+      <div v-if="theme.deploymentsOnly">
+        <v-divider class="mb-2"></v-divider>
+        <v-checkbox class="ml-4 my-0 d-inline-block" hide-details dense label="" v-model="useSizeScale" style="height:30px;vertical-align:middle"></v-checkbox>
+        <span class="body-2 pl-1 grey--text text--darken-3" style="display:inline;vertical-align:middle;height:20px">Size Scale</span>
       </div>
     </div>
 
@@ -145,6 +166,14 @@ export default {
       },
       set (value) {
         this.$store.dispatch('setNormalizeEffort', value)
+      }
+    },
+    useSizeScale: {
+      get () {
+        return this.$store.state.useSizeScale
+      },
+      set (value) {
+        this.$store.dispatch('setUseSizeScale', value)
       }
     }
   },

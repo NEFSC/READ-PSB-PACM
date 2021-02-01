@@ -208,24 +208,3 @@ tabyl(demo_detections, id, presence)
 demo_glider_ids <- demo_deployments %>% filter(deployment_type == "mobile") %>% pull(id)
 
 export_theme("demo", deployments = mutate(demo_deployments, theme = "demo"), detections = demo_detections)
-export_theme(
-  "demo-nm",
-  deployments = mutate(
-    demo_deployments,
-    theme = "demo-nm"
-  ), 
-  detections = demo_detections %>%
-    mutate(
-      theme = "demo-nm",
-      presence = if_else(presence == "n" & id %in% demo_glider_ids, "nm", presence)
-    )
-)
-
-
-demo_detections %>% 
-  filter(id == "NEFSC_NE_OFFSHORE_201506_WAT_HZ_01_WAT_HZ")
-  # filter(year(date) == 2016) %>% 
-  # tail()
-
-demo_detections %>% 
-  filter(year(date) == 2015)

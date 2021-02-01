@@ -3,7 +3,7 @@
     outlined
     :items="options"
     :value="theme"
-    label="Select a species/group"
+    label="Select a Species/Group"
     item-text="label"
     item-value="id"
     hide-details

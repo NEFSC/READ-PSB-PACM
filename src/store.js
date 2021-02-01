@@ -15,7 +15,8 @@ export default new Vuex.Store({
     selectedDeployment: null,
     // tracks: null,
     // points: null,
-    normalizeEffort: false
+    normalizeEffort: false,
+    useSizeScale: true
   },
   getters: {
     loading: state => state.loading,
@@ -27,7 +28,8 @@ export default new Vuex.Store({
     selectedDeployment: state => state.selectedDeployment,
     // tracks: state => state.tracks,
     // points: state => state.points,
-    normalizeEffort: state => state.normalizeEffort
+    normalizeEffort: state => state.normalizeEffort,
+    useSizeScale: state => state.useSizeScale
   },
   mutations: {
     SET_LOADING (state, loading) {
@@ -50,6 +52,9 @@ export default new Vuex.Store({
     },
     SET_NORMALIZE_EFFORT (state, normalizeEffort) {
       state.normalizeEffort = normalizeEffort
+    },
+    SET_USE_SIZE_SCALE (state, useSizeScale) {
+      state.useSizeScale = useSizeScale
     }
   },
   actions: {
@@ -105,6 +110,9 @@ export default new Vuex.Store({
     },
     setNormalizeEffort ({ commit }, normalizeEffort) {
       commit('SET_NORMALIZE_EFFORT', normalizeEffort)
+    },
+    setUseSizeScale ({ commit }, useSizeScale) {
+      commit('SET_USE_SIZE_SCALE', useSizeScale)
     }
   }
 })

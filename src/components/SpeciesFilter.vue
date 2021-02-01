@@ -3,7 +3,7 @@
     outlined
     :items="options"
     v-model="selected"
-    label="Select beaked whale species"
+    :label="`Select Species of ${theme.label}`"
     item-text="id"
     item-value="id"
     hide-details

@@ -3,7 +3,7 @@
     outlined
     :items="options"
     v-model="selected"
-    label="Select platform type(s)"
+    label="Select Platform Type(s)"
     item-text="label"
     item-value="id"
     hide-details

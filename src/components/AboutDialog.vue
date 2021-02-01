@@ -4,7 +4,7 @@
       <v-img src="../assets/img/noaa-logo.gif" height="54px" width="54px" style="float:right" class="ma-2"></v-img>
       <v-list-item>
         <v-list-item-content>
-          <v-list-item-title class="headline">Welcome to the Passive Acoustic Cetacean Map</v-list-item-title>
+          <v-list-item-title class="headline"><span v-if="!$vuetify.breakpoint.mobile">Welcome to the </span>Passive Acoustic Cetacean Map</v-list-item-title>
           <v-list-item-subtitle>by the <a href="https://www.nefsc.noaa.gov/psb/acoustics/index.html">NOAA Northeast Fisheries Science Center</a></v-list-item-subtitle>
         </v-list-item-content>
       </v-list-item>
@@ -14,23 +14,31 @@
       </v-img>
     </div>
     <v-card-text class="mt-8 body-1 grey--text text--darken-4">
-      <p class="font-weight-medium">
+      <p class="font-weight-medium pb-0">
         The Passive Acoustic Cetacean Map (PACM) shows when and where specific cetacean species were acoustically detected in the Atlantic Ocean based on Passive Acoustic Monitoring (PAM).
       </p>
-      <v-card-actions class="justify-space-around my-8">
-        <v-btn color="success" class="px-4 mx-0" x-large @click="$emit('close', { tour: true })">
-          <v-icon left>mdi-cursor-default-click</v-icon>
-          Take A Tour
-        </v-btn>
-        <v-btn color="success" class="px-4 mx-0" x-large @click="$emit('close', { tutorial: true })">
-          <v-icon left>mdi-video</v-icon>
-          Watch Tutorial
-        </v-btn>
-        <v-btn color="success" class="px-4 mx-0" x-large @click="$emit('close')">
-          <v-icon left>mdi-play-circle</v-icon>
-          Get Started
-        </v-btn>
-      </v-card-actions>
+      <v-container class="mb-6">
+        <v-row justify="space-around">
+          <v-col cols="12" md="4" class="text-center">
+            <v-btn color="success" class="px-4 mx-0" x-large @click="$emit('close', { tour: true })">
+              <v-icon left>mdi-cursor-default-click</v-icon>
+              Take A Tour
+            </v-btn>
+          </v-col>
+          <v-col cols="12" md="4" class="text-center">
+            <v-btn color="success" class="px-4 mx-0" x-large @click="$emit('close', { tutorial: true })">
+              <v-icon left>mdi-video</v-icon>
+              Watch Tutorial
+            </v-btn>
+          </v-col>
+          <v-col cols="12" md="4" class="text-center">
+            <v-btn color="success" class="px-4 mx-0" x-large @click="$emit('close')">
+              <v-icon left>mdi-play-circle</v-icon>
+              Get Started
+            </v-btn>
+          </v-col>
+        </v-row>
+      </v-container>
       <p>
         This application provides interactive data visualization tools for exploring PAM-based cetacean acoustic detection data. This application works best in Google Chrome. Click the Help button for a tour of how to use the site.
       </p>

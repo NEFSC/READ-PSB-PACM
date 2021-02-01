@@ -19,15 +19,15 @@ cruise_dates <- read_xlsx(
   sheet = "Cruise_dates"
 ) %>% 
   clean_names() %>% 
-  mutate(across(c(start_date, end_date), as_date)) %>% 
+  mutate(across(c(start, end), as_date)) %>% 
   transmute(
     id = if_else(
-      cruise_name %in% c("GU1303", "GU1605"),
-      str_c("SEFSC_", cruise_name, sep = ""),
-      str_c("NEFSC_", cruise_name, sep = "")
+      cruise %in% c("GU1303", "GU1605"),
+      str_c("SEFSC_", cruise, sep = ""),
+      str_c("NEFSC_", cruise, sep = "")
     ),
-    start = start_date,
-    end = end_date
+    start,
+    end
   ) %>% 
   arrange(id, start) %>% 
   group_by(id) %>% 
@@ -53,8 +53,8 @@ df <- df_raw %>%
     latitude = NA_real_,
     longitude = NA_real_,
     
-    monitoring_start_datetime = as_date(monitoring_start_datetime_oracle),
-    monitoring_end_datetime = as_date(monitoring_end_datetime_oracle),
+    monitoring_start_datetime = as_date(monitoring_start_datetime),
+    monitoring_end_datetime = as_date(monitoring_end_datetime),
     
     platform_type = case_when(
       platform_type == "Towed Array, linear" ~ "towed",
@@ -67,15 +67,11 @@ df <- df_raw %>%
     instrument_type,
     instrument_id = NA_character_,
     sampling_rate_hz,
-    analysis_sampling_rate,
+    analysis_sampling_rate_hz,
     soundfiles_timezone,
     duty_cycle_seconds,
     channel = NA_character_,
     qc_data,
-    
-    call_type,
-    detection_method,
-    protocol_reference,
     
     data_poc_name,
     data_poc_affiliation,
@@ -86,7 +82,10 @@ df <- df_raw %>%
     submitter_email,
     submission_date = as_date(submission_date),
     
-    analyzed = as.logical(species_analyzed)
+    analyzed = as.logical(analyzed),
+    call_type,
+    detection_method,
+    protocol_reference
   ) %>%
   left_join(cruise_dates, by = "id")
   

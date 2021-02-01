@@ -5,6 +5,8 @@ import pad from 'pad'
 import { xf, deploymentMap } from '@/lib/crossfilter'
 import { platformTypesMap, detectionTypes, detectionTypesMap } from '@/lib/constants'
 
+const orNa = (value) => value || 'N/A'
+
 export function tipOffset (el) {
   const padding = 20
 
@@ -34,8 +36,8 @@ export function monitoringPeriodLabels (props) {
   const end = moment.utc(props.monitoring_end_datetime).startOf('date')
   const duration = moment.duration(end.diff(start)).asDays() + 1
   return {
-    start: start.format('ll'),
-    end: end.format('ll'),
+    start: start.isValid() ? start.format('ll') : undefined,
+    end: end.isValid() ? end.format('ll') : undefined,
     duration
   }
 }
@@ -75,14 +77,14 @@ const trackHtml = (d, deployment) => {
 
   const trackHtml = htmlTable([
     [ 'Project', `${props.project}` ],
-    [ 'Site', `${props.site_id ? props.site_id : 'N/A'}` ],
+    [ 'Site', `${orNa(props.site_id)}` ],
     [ 'Platform Type', `${platformTypesMap.get(props.platform_type).label}` ],
-    [ 'Recorder Type', `${props.instrument_type ? props.instrument_type : 'N/A'}` ],
-    [ 'Detection Method', `${props.detection_method ? props.detection_method : 'N/A'}` ],
-    [ 'Call Type', `${props.call_type ? props.call_type : 'N/A'}` ],
-    [ 'QAQC', `${props.qc_data ? props.qc_data : 'N/A'}` ],
-    [ 'Deployed', `${monitoring.start} to ${monitoring.end}` ],
-    [ 'Duration', `${monitoring.duration} days` ]
+    [ 'Recorder Type', `${orNa(props.instrument_type)}` ],
+    [ 'Detection Method', `${orNa(props.detection_method)}` ],
+    [ 'Call Type', `${orNa(props.call_type)}` ],
+    [ 'QAQC', `${orNa(props.qc_data)}` ],
+    [ 'Deployed', `${orNa(monitoring.start)} to ${orNa(monitoring.end)}` ],
+    [ 'Duration', `${monitoring.duration ? monitoring.duration + ' days' : 'N/A'} ` ]
   ])
 
   const detectionHtml = detectionTableHtml(deployment)
@@ -139,16 +141,16 @@ const stationHtml = (d, deployment) => {
 
   const metaHtml = htmlTable([
     [ 'Project', `${props.project}` ],
-    [ 'Site', `${props.site_id ? props.site_id : 'N/A'}` ],
+    [ 'Site', `${orNa(props.site_id)}` ],
     [ 'Platform Type', `${platformTypesMap.get(props.platform_type).label}` ],
-    [ 'Recorder Type', `${props.instrument_type}` ],
-    [ 'Detection Method', `${props.detection_method}` ],
-    [ 'Call Type', `${d.properties.call_type ? d.properties.call_type : 'N/A'}` ],
-    [ 'QAQC', `${props.qc_data ? props.qc_data : 'N/A'}` ],
+    [ 'Recorder Type', `${orNa(props.instrument_type)}` ],
+    [ 'Detection Method', `${orNa(props.detection_method)}` ],
+    [ 'Call Type', `${orNa(props.call_type)}` ],
+    [ 'QAQC', `${orNa(props.qc_data)}` ],
     [ 'Recorder Depth', props.recorder_depth_meters ? `${(+props.recorder_depth_meters).toFixed(0)} m` : 'N/A' ],
     [ 'Water Depth', props.water_depth_meters ? `${(+props.water_depth_meters).toFixed(0)} m` : 'N/A' ],
-    [ 'Deployed', `${monitoring.start} to ${monitoring.end}` ],
-    [ 'Duration', `${monitoring.duration} days` ]
+    [ 'Deployed', `${orNa(monitoring.start)} to ${orNa(monitoring.end)}` ],
+    [ 'Duration', `${monitoring.duration ? monitoring.duration + ' days' : 'N/A'} ` ]
   ])
   const detectionHtml = detectionTableHtml(deployment)
 
@@ -171,13 +173,13 @@ const deploymentHtml = (d, deployment) => {
 
   const metaHtml = htmlTable([
     [ 'Project', `${props.project}` ],
-    [ 'Site', `${props.site_id ? props.site_id : 'N/A'}` ],
+    [ 'Site', `${orNa(props.site_id)}` ],
     [ 'Platform Type', `${platformTypesMap.get(props.platform_type).label}` ],
-    [ 'Recorder Type', `${props.instrument_type}` ],
+    [ 'Recorder Type', `${orNa(props.instrument_type)}` ],
     [ 'Recorder Depth', props.recorder_depth_meters ? `${(+props.recorder_depth_meters).toFixed(0)} m` : 'N/A' ],
     [ 'Water Depth', props.water_depth_meters ? `${(+props.water_depth_meters).toFixed(0)} m` : 'N/A' ],
-    [ 'Deployed', `${monitoring.start} to ${monitoring.end}` ],
-    [ 'Duration', `${monitoring.duration} days` ]
+    [ 'Deployed', `${orNa(monitoring.start)} to ${orNa(monitoring.end)}` ],
+    [ 'Duration', `${monitoring.duration ? monitoring.duration + ' days' : 'N/A'} ` ]
   ])
 
   return `

@@ -1,10 +1,8 @@
 <template>
   <v-card>
-    <v-list-item>
-      <v-list-item-content>
-        <v-list-item-title class="headline">Video Tutorial</v-list-item-title>
-      </v-list-item-content>
-    </v-list-item>
+    <v-card-title primary-title>
+      Video Tutorial
+    </v-card-title>
 
     <v-card-text class="mt-8 body-1 grey--text text--darken-4">
       <p class="font-weight-medium">

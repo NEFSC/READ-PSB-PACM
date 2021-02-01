@@ -13,16 +13,6 @@ import ChartMixin from '@/mixins/ChartMixin'
 import { xf } from '@/lib/crossfilter'
 import { detectionTypesMap, detectionTypes } from '@/lib/constants'
 
-function removeHiddenType (group) {
-  return {
-    all: function () {
-      return group.all().filter(function (d) {
-        return d.key !== 'hidden'
-      })
-    }
-  }
-}
-
 export default {
   name: 'DetectionFilter',
   mixins: [ChartMixin],
@@ -33,7 +23,7 @@ export default {
   },
   mounted () {
     // console.log('DetectionFilter mounted')
-    const dim = xf.dimension(d => detectionTypesMap.has(d.presence) ? detectionTypesMap.get(d.presence).label : 'hidden')
+    const dim = xf.dimension(d => detectionTypesMap.get(d.presence).label)
     const group = dim.group().reduceCount()
 
     const colorScale = d3.scaleOrdinal()
@@ -46,7 +36,7 @@ export default {
       .height(140)
       .margins({ top: 10, right: 20, bottom: 40, left: 90 })
       .dimension(dim)
-      .group(removeHiddenType(group))
+      .group(group)
       .elasticX(true)
       .labelOffsetX(-10)
       .ordering(d => {

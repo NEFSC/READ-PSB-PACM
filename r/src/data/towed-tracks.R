@@ -15,15 +15,15 @@ cruise_dates <- read_xlsx(
   sheet = "Cruise_dates"
 ) %>% 
   clean_names() %>% 
-  mutate(across(c(start_date, end_date), as_date)) %>% 
+  mutate(across(c(start, end), as_date)) %>% 
   transmute(
     id = if_else(
-      cruise_name %in% c("GU1303", "GU1605"),
-      str_c("SEFSC_", cruise_name, sep = ""),
-      str_c("NEFSC_", cruise_name, sep = "")
+      cruise %in% c("GU1303", "GU1605"),
+      str_c("SEFSC_", cruise, sep = ""),
+      str_c("NEFSC_", cruise, sep = "")
     ),
-    start = start_date,
-    end = end_date
+    start,
+    end
   ) %>% 
   arrange(id, start) %>% 
   group_by(id) %>% 
