@@ -1,5 +1,11 @@
 <template>
   <div style="height:100%;">
+    <v-overlay :value="loading" style="z-index:10000">
+      <v-progress-circular
+        indeterminate
+        size="64"
+      ></v-progress-circular>
+    </v-overlay>
     <l-map
       ref="map"
       style="width:100%;height:100%"
@@ -27,7 +33,7 @@
           <v-card>
             <v-card-text class="pt-4">
               <Legend :counts="counts" v-if="theme && !loading"></Legend>
-              <div>
+              <div v-else>
                 Loading...
               </div>
             </v-card-text>

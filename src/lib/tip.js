@@ -16,15 +16,14 @@ export function tipOffset (el) {
   const nodeWidth = el.node().clientWidth
   const nodeHeight = el.node().clientHeight
 
-  const distanceToBottom = screenHeight - event.y
-  const offsetY = distanceToBottom < nodeHeight + padding
-    ? -(nodeHeight + padding)
+  const offsetY = event.y + nodeHeight + padding > screenHeight
+    ? -1 * (event.y + nodeHeight + padding - screenHeight)
     : padding
 
-  const distanceToRight = screenWidth - event.x
-  const offsetX = distanceToRight < nodeWidth + padding
+  const offsetX = nodeWidth + padding + event.x > screenWidth
     ? -(nodeWidth + padding)
     : padding
+
   return {
     x: offsetX,
     y: offsetY
@@ -71,6 +70,7 @@ const detectionTableHtml = (deployment) => {
 
   return htmlTable(rows)
 }
+
 const trackHtml = (d, deployment) => {
   const props = deployment.properties
   const monitoring = monitoringPeriodLabels(props)

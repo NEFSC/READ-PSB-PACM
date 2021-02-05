@@ -3,7 +3,7 @@ import { debounce } from 'debounce'
 import evt from '@/lib/events'
 
 export const xf = crossfilter()
-window.xf = xf
+
 xf.onChange(debounce(function (eventType) {
   if (eventType === 'filtered') {
     evt.$emit('xf:filtered')

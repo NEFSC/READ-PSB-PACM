@@ -114,8 +114,7 @@
           color="grey darken-3"
           border="left"
           class="my-6 mb-4 py-1 mx-4 body-2"
-          v-if="theme.showSpeciesFilter"
-          dismissible>
+          v-if="theme.showSpeciesFilter">
           For {{ theme.label }}, recorded days are counted separately for each species. If two species were detected on the same day, then that day would be counted twice in the charts below.
         </v-alert>
 

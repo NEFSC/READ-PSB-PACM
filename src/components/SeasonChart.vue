@@ -35,7 +35,6 @@ export default {
       // return d2
       return moment.utc('2001-01-01').add(d.doySeason, 'days').toDate()
     })
-    window.dim = dim
     const group = dim.group().reduce(
       (p, v) => {
         p[v.presence] = (p[v.presence] || 0) + 1
@@ -50,7 +49,6 @@ export default {
         return p
       }, {})
     )
-    window.group = group
 
     this.tip = d3Tip()
       .attr('class', 'd3-tip season-chart')
