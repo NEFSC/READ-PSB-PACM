@@ -50,6 +50,7 @@ janitor::tabyl(detections, theme, presence)
 janitor::tabyl(detections_fill, theme, presence)
 
 janitor::tabyl(detections_fill, id, presence, theme)
+
 janitor::tabyl(deployments, id, analyzed, theme)
 
 # deployments ----------------------------------------------------------------

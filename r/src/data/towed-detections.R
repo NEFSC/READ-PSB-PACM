@@ -52,6 +52,24 @@ df_beaked_gu1303 <- read_xlsx(
     event_type
   )
 
+df_beaked_gu1402 <- read_xlsx(
+  file.path(DATA_DIR, "towed", "detections", "BeakedWhale_data", "GU1402_OfflineEvents_20160121.xlsx"),
+  col_types = "guess",
+  na = "NULL"
+) %>% 
+  janitor::clean_names() %>% 
+  transmute(
+    id = "NEFSC_GU1402",
+    analysis_period_start = utc,
+    analysis_period_end = event_end,
+    analysis_period_effort_seconds = as.numeric(difftime(analysis_period_end, analysis_period_start, units = "secs")),
+    latitude = tm_latitude1,
+    longitude = tm_longitude1,
+    species,
+    presence = "y",
+    event_type
+  )
+
 df_beaked_gu1605 <- read_xlsx(
   file.path(DATA_DIR, "towed", "detections", "BeakedWhale_data", "GU1605_PG_OfflineEvents_20190926.xlsx"),
   sheet = "BW_only",
@@ -244,6 +262,7 @@ df_beaked_hrs1910 <- read_xlsx(
 
 df_beaked <- bind_rows(
   df_beaked_gu1303,
+  df_beaked_gu1402,
   df_beaked_gu1605,
   df_beaked_gu1803,
   df_beaked_hb1303,
@@ -262,7 +281,6 @@ df_beaked <- bind_rows(
       species,
       "Cuvier's" = "Cuvier",
       "Cuvier's" = "Cuviers",
-      "Gervais'" = "Gervais",
       "Gervais'/True's" = "Mm/Me",
       "Gervais'/True's" = "MmMe.",
       "Gervais'/True's" = "MmMe",
@@ -280,14 +298,13 @@ tabyl(df_beaked, species, presence)
 
 # missing detection coordinates
 df_beaked %>%
-  filter(is.na(latitude)) %>% 
-  janitor::tabyl(id)
+  filter(is.na(latitude))
 
 
 # sperm -------------------------------------------------------------------
 
 df_sperm_hb1103 <- read_xlsx(
-  file.path(DATA_DIR, "towed", "detections", "SpermWhale_data", "HB1103_Pm_events.xlsx"),
+  file.path(DATA_DIR, "towed", "detections", "SpermWhale_data", "HB1103_Pm_revised_events_AW-15Jan2021.xlsx"),
   col_types = "guess",
   na = "NaN"
 ) %>% 
@@ -334,16 +351,15 @@ bind_rows(
   df_sperm_hb1103,
   df_sperm_hb1303
 ) %>%
-  filter(is.na(latitude)) %>% 
-  janitor::tabyl(id)
+  filter(is.na(latitude))
 
 # invalid coordinates
 bind_rows(
   df_sperm_hb1103,
   df_sperm_hb1303
 ) %>%
-  filter(latitude < 0) %>% 
-  janitor::tabyl(id)
+  filter(latitude < 0)
+
 
 # detect: merge -----------------------------------------------------------
 

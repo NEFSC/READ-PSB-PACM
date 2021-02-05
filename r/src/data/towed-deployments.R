@@ -87,7 +87,13 @@ df <- df_raw %>%
     detection_method,
     protocol_reference
   ) %>%
-  left_join(cruise_dates, by = "id")
+  left_join(analysis_dates, by = "id") %>% 
+  left_join(cruise_dates, by = "id") %>% 
+  group_by(theme, id) %>% 
+  mutate(
+    analysis_start_date = if_else(analyzed, ymd(map(cruise_dates, ~ as.character(min(.x$date)))), NA_Date_),
+    analysis_end_date = if_else(analyzed, ymd(map(cruise_dates, ~ as.character(max(.x$date)))), NA_Date_)
+  )
   
 
 janitor::tabyl(df, id, theme)
@@ -95,6 +101,7 @@ janitor::tabyl(df, analyzed, theme)
 janitor::tabyl(df, platform_type, theme)
 janitor::tabyl(df, detection_method, theme)
 janitor::tabyl(df, instrument_type, theme)
+janitor::tabyl(df, analyzed, analysis_start_date)
 
 df %>% 
   filter(analyzed) %>% 
