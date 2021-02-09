@@ -1,6 +1,7 @@
 library(tidyverse)
 library(lubridate)
 library(glue)
+library(janitor)
 library(sf)
 
 detections <- read_rds("data/towed/detections.rds")
@@ -24,7 +25,7 @@ deployments_dates <- deployments %>%
 detections %>%
   anti_join(deployments_dates, by = c("theme", "id", "date"))
 
-# analyzed deployment monitoring days with no detection data (add rows with presence="na")
+# analyzed deployment monitoring days with no detection data (add rows with presence="n")
 deployments_dates %>% 
   filter(analyzed) %>% 
   anti_join(detections, by = c("id", "date")) %>%

@@ -8,6 +8,14 @@ deployments <- read_rds("data/glider/deployments.rds")
 tracks <- read_rds("data/glider/tracks.rds")$sf
 
 
+# remove wave -------------------------------------------------------------
+
+deployments <- deployments %>% 
+  filter(platform_type != "wave")
+
+detections <- detections %>% 
+  filter(id %in% unique(deployments$id))
+
 # export analysis period based on detection data --------------------------
 
 # TODO: add analysis start/end date to deployments metadata
