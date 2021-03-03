@@ -61,19 +61,27 @@ npm run serve
 
 Then navigate to http://127.0.0.1:8080 in your browser to view the application.
 
-### Deployment
+### Production
 
-To deploy this application to a production web server, first build the application by running:
+To deploy this application to a production web server, first verify that the public path to this application is correctly set using the `publicPath` option in the `vue.config.js` file. For example, if the production application will be hosted using the URL `https://noaa.gov/apps/pacm`, then `publicPath` must be set to `/apps/pacm`.
+
+Once the public path is set, build the application by running:
 
 ```
 npm run build
 ```
 
-Be sure to verify that the public path to this application is correctly set using the `publicPath` option in the `vue.config.js` file. For example, if the production application will be hosted using the URL `https://noaa.gov/apps/pacm`, then `publicPath` must be set to `/apps/pacm`.
-
 After the application is built, the output files will be available in the `dist/` folder.
 
+### Deployment
+
 To deploy the application, copy the files in the `dist/` folder to the remote web server.
+
+One method for doing this is to use `rsync`:
+
+```
+rsync -av --delete dist/* user@mydomain.com:/path/to/pacm
+```
 
 ## Disclaimer
 
