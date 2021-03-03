@@ -6,7 +6,6 @@ import router from './router'
 
 import vuetify from './plugins/vuetify'
 
-import './plugins/axios'
 import './plugins/dc'
 import './plugins/highcharts'
 import './plugins/leaflet'

@@ -1,12 +1,9 @@
-NEFSC North American Right Whale Map (Prototype)
-================================================
+Passive Acoustic Cetacean Map
+=============================
 
-Jeffrey D Walker, PhD <jeff@walkerenvres.com>  
-[Walker Environmental Research LLC](https://walkerenvres.com)
+## Overview
 
-## About
-
-This repo contains the source code for the North American Right Whale mapping application. The goal is replicate an existing application that was built using Shiny for R: [https://leviathan.ocean.dal.ca/rw_pam_map/]().
+This repo contains the source code for the Passive Acoustic Cetacean Map (PACM) web application. The PACM application is an interactive data visualization tool for exploring historical observations of whales and other cetaceans based on passive acoustic montoring data.
 
 ## Data Processing
 
@@ -105,3 +102,11 @@ geometry      LINESTRING/MULTILINESTRING
 
 stations.fixed <- deployments
 stations.mobile <- detections.points
+
+## Disclaimer
+
+This repository is a scientific product and is not official communication of the National Oceanic and Atmospheric Administration, or the United States Department of Commerce. All NOAA GitHub project code is provided on an ‘as is’ basis and the user assumes responsibility for its use. Any claims against the Department of Commerce or Department of Commerce bureaus stemming from the use of this GitHub project will be governed by all applicable Federal law. Any reference to specific commercial products, processes, or services by service mark, trademark, manufacturer, or otherwise, does not constitute or imply their endorsement, recommendation or favoring by the Department of Commerce. The Department of Commerce seal and logo, or the seal and logo of a DOC bureau, shall not be used in any manner to imply endorsement of any commercial product or activity by DOC or the United States Government.
+
+## License
+
+See [`LICENSE` file](LICENSE).
