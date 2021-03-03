@@ -3,105 +3,71 @@ Passive Acoustic Cetacean Map
 
 ## Overview
 
-This repo contains the source code for the Passive Acoustic Cetacean Map (PACM) web application. The PACM application is an interactive data visualization tool for exploring historical observations of whales and other cetaceans based on passive acoustic montoring data.
+This repo contains the source code for the Passive Acoustic Cetacean Map (PACM) web application. The PACM application is an interactive data visualization tool for exploring historical observations of whales and other cetaceans based on passive acoustic montoring (PAM) data.
+
+## Project Summary
+
+**Who is involved in this project?** This application was developed by Jeffrey D Walker, PhD ([Walker Environmental Research LLC](https://walkerenvres.com)) for Sofie Van Parijs, Genevieve Davis, and Annamaria DeAngelis of the [NEFSC Passive Acoustic Research group](https://www.fisheries.noaa.gov/new-england-mid-atlantic/endangered-species-conservation/passive-acoustic-research-atlantic-ocean).
+
+**When was this project created?** Development of this application began in 2019. The first public release is expected in Spring 2021, after which the project will be ongoing for the foreseeable future.
+
+**What is this project?** The goal of this application is provide a user-friendly and map-based data visualization interface for exploring historical detections of whales and other cetaceans based on passive acoustic monitoring data. The dataset includes PAM data collected by the [NEFSC Passive Acoustic Research group](https://www.fisheries.noaa.gov/new-england-mid-atlantic/endangered-species-conservation/passive-acoustic-research-atlantic-ocean) as well as numerous other collaborators.
+
+**Why is this project useful?** Existing PAM datasets are not easily accessible for resource managers, decision makers, other researchers or the general public. PACM was developed in large part to make these datasets more widely available for supporting management, research, and public interest.
+
+**How do I use this code?**: This repo contains the source code for both the web application itself, as well as the data processing scripts used to generate the datasets shown on the application. To use this code, follow the instructions provided below in this README file.
+
+**Where do I get help?**: For help running or understanding the code in this repo, contact Jeff Walker (jeff@walkerenvres.com). For questions about contributing data or other general questions about the project, contact Sofie Van Parijs (sofie.vanparijs@noaa.gov).
+
+**Who maintains this code?**: Ongoing maintenance of this code will be performed by Jeffrey D Walker, PhD ([Walker Environmental Research LLC](https://walkerenvres.com)) with approval from NEFSC.
 
 ## Data Processing
 
-Data files are processed using various R scripts in the `r/` directory.
+The `r/` directory contains an RStudio project that includse a series of R scripts for processing the raw data and generating the final datasets that are loaded by the web application.
 
-## Development
+To get started, open the `r/r.Rproj` file in [RStudio Desktop](https://rstudio.com/products/rstudio/).
 
-Run development server:
+Due to their size, the raw data files are not included in this repo. To tell R where to find these files, edit the `data_dir` option in the `r/config.yml` file.
 
-```
-yarn serve
-```
+To process the datasets and genrate the final datasets for the web application, open the `r/src/main.R` script, and run the series of `source()` commands (in order) to run each script.
 
-## Production
+If successful, these scripts should load, clean, and merge the various raw data files, and save the final datasets for the web applciatio in the `public/data` folder.
 
-Builds the application to `dist/` folder.
+## Web Application Development
 
-```
-yarn build
-```
+### Dependencies
 
-## Deployment
+The web application requires a recent version of [Node.js](https://nodejs.org/en/) to be installed on your computer.
 
-Deploy the files in `dist/` to web server (automatically builds first).
+Once Node is installed, you need to install the project dependencies using this command:
 
 ```
-yarn deploy
+npm install
 ```
 
-## Data Structure
+### Development
+
+To work on this application, run the following command to start a local development server:
+
+```
+npm run serve
+```
+
+Then navigate to http://127.0.0.1:8080 in your browser to view the application.
 
 ### Deployment
 
-Unique: `theme,id`
+To deploy this application to a production web server, first build the application by running:
 
 ```
-theme                     STRING(->themes)*
-id                        STRING*
-project                   STRING*
-site_id                   STRING
-latitude                  REAL
-longitude                 REAL
-
-monitoring_start_datetime STRING("YYYY-MM-DDTHH:mm:ssZ")
-monitoring_end_datetime   STRING("YYYY-MM-DDTHH:mm:ssZ")
-
-platform_type             STRING(->platform_types)*
-platform_id               STRING
-water_depth_meters        REAL
-recorder_depth_meters     REAL
-
-detection_method          STRING
-instrument_type           STRING
-instrument_id             STRING
-sampling_rate_hz          STRING
-soundfiles_timezone       STRING
-duty_cycle_seconds        STRING
-channel                   STRING
-qc_data                   STRING
-protocol_reference        STRING
-
-data_poc_name             STRING
-data_poc_affiliation      STRING
-data_poc_email            STRING
-
-submitter_name            STRING
-submitter_affiliation     STRING
-submitter_email           STRING
-submission_date           STRING("YYYY-MM-DD")
+npm run build
 ```
 
-### Detections
+Be sure to verify that the public path to this application is correctly set using the `publicPath` option in the `vue.config.js` file. For example, if the production application will be hosted using the URL `https://noaa.gov/apps/pacm`, then `publicPath` must be set to `/apps/pacm`.
 
-Unique: `theme,deployment_id,species,date`
+After the application is built, the output files will be available in the `dist/` folder.
 
-```
-theme         STRING(->themes)
-deployment_id STRING(->deployment.id)
-species       STRING
-date          STRING("YYYY-MM-DD")
-presence      STRING({y,m,n})
-call_type     STRING
-locations     JSON([{analysis_period_start_datetime,analysis_period_end_datetime,latitude,longitude}])
-```
-
-### Tracks
-
-Unique: `theme,deployment_id`
-
-```
-theme         STRING(->themes)
-track_id      INTEGER(UNIQUE)
-deployment_id STRING(->deployment.id)
-geometry      LINESTRING/MULTILINESTRING
-```
-
-stations.fixed <- deployments
-stations.mobile <- detections.points
+To deploy the application, copy the files in the `dist/` folder to the remote web server.
 
 ## Disclaimer
 
@@ -109,4 +75,4 @@ This repository is a scientific product and is not official communication of the
 
 ## License
 
-See [`LICENSE` file](LICENSE).
+See [`LICENSE`](LICENSE).
