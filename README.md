@@ -27,6 +27,12 @@ The `r/` directory contains an RStudio project that includse a series of R scrip
 
 To get started, open the `r/r.Rproj` file in [RStudio Desktop](https://rstudio.com/products/rstudio/).
 
+The R packages required for these scripts are managed using the [`renv`](https://rstudio.github.io/renv/articles/renv.html) dependency management package. When opening this project in RStudio for the first time, run the following command to install the required R packages.
+
+```r
+renv::restore()
+```
+
 Due to their size, the raw data files are not included in this repo. To tell R where to find these files, edit the `data_dir` option in the `r/config.yml` file.
 
 To process the datasets and genrate the final datasets for the web application, open the `r/src/main.R` script, and run the series of `source()` commands (in order) to run each script.
