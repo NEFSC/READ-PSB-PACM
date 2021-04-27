@@ -6,6 +6,11 @@ module.exports = {
     ? '/projects/nefsc/pam/'
     : '/',
   configureWebpack: {
-    devtool: 'source-map'
+    devtool: 'source-map',
+    devServer: {
+      watchOptions: {
+        ignored: [/node_modules/, /public/, /dist/]
+      }
+    }
   }
 }

@@ -4,35 +4,116 @@ library(tidyverse)
 library(lubridate)
 library(sf)
 
+DATA_DIR <- config::get("data_dir")
+
 moored <- read_rds("data/moored.rds")
 
-df_deployments <- moored$deployments %>% 
-  filter(
-    data_poc_affiliation == "NOAA NEFSC"
-  ) %>% 
-  mutate(
+# load --------------------------------------------------------------------
+
+df_csv <- read_csv(
+  file.path(DATA_DIR, "moored", "20210407", "Moored_metadata_2021-04-07.csv"),
+  col_types = cols(.default = col_character())
+) %>% 
+  janitor::clean_names()
+
+
+# deployments -------------------------------------------------------------
+
+df_deployments <- df_csv %>% 
+  filter(data_poc_affiliation == "NOAA NEFSC") %>% 
+  transmute(
     theme = "nefsc-deployments",
+    id = unique_id,
+    project,
+    site_id,
+    latitude = parse_number(latitude),
+    longitude = parse_number(longitude),
+
+    monitoring_start_datetime = ymd_hms(monitoring_start_datetime),
+    monitoring_end_datetime = ymd_hms(monitoring_end_datetime),
+
+    platform_type = fct_recode(platform_type, mooring = "Mooring"),
+    platform_id,
+
+    water_depth_meters = parse_number(water_depth_meters),
+    recorder_depth_meters = parse_number(recorder_depth_meters),
+    instrument_type,
+    instrument_id,
+    sampling_rate_hz = as.numeric(sampling_rate_hz),
+    analysis_sampling_rate = 2000, # TODO: add to metadata
+    soundfiles_timezone,
+    duty_cycle_seconds,
+    channel,
+    qc_data,
+
+    data_poc_name,
+    data_poc_affiliation,
+    data_poc_email,
+
+    submitter_name,
+    submitter_affiliation,
+    submitter_email,
+    submission_date = ymd(submission_date),
+
+    # species specific
     detection_method = NA_character_,
-    protocol_reference = NA_character_
+    protocol_reference = NA_character_,
+    call_type = NA_character_
   ) %>% 
-  distinct(.keep_all = TRUE)
+  filter(!is.na(monitoring_end_datetime)) # exclude active deployments
 
-stopifnot(all(!duplicated(df_deployments$id)))
+stations <- df_deployments %>% 
+  select(id, latitude, longitude) %>% 
+  distinct()
 
-df_detections <- moored$detections %>% 
-  filter(
-    id %in% df_deployments$id
+stopifnot(all(!duplicated(stations$id)))
+stopifnot(all(!is.na(stations$latitude)))
+stopifnot(all(!is.na(stations$longitude)))
+
+sf_stations <- stations %>% 
+  st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
+
+mapview::mapview(sf_stations, legend = FALSE)
+
+sf_deployments <- sf_stations %>% 
+  full_join(df_deployments, by = "id") %>% 
+  mutate(deployment_type = "stationary") %>% 
+  relocate(deployment_type, geometry, .after = last_col())
+
+stopifnot(all(!duplicated(sf_deployments$id)))
+stopifnot(identical(df_deployments$id, sf_deployments$id))
+
+
+# detections --------------------------------------------------------------
+
+df_detections <- df_deployments %>% 
+  distinct(theme, id, monitoring_start_datetime, monitoring_end_datetime) %>% 
+  left_join(
+    moored$deployments %>% 
+      filter(analyzed) %>% 
+      as_tibble() %>% 
+      select(id, analysis_start_date, analysis_end_date) %>% 
+      distinct(),
+    by = "id"
   ) %>% 
   mutate(
-    theme = "nefsc-deployments"
+    start = coalesce(analysis_start_date, as_date(monitoring_start_datetime)),
+    end = coalesce(analysis_end_date, as_date(monitoring_end_datetime))
   ) %>% 
-  distinct(theme, id, date) %>% 
+  select(theme, id, start, end) %>% 
+  rowwise() %>% 
   mutate(
-    presence = "na"
-  )
+    date = list(seq.Date(start, end, by = "day"))
+  ) %>% 
+  unnest(date) %>% 
+  select(-start, -end) %>% 
+  mutate(species = NA_character_, presence = "rd")
+
+
+# export ------------------------------------------------------------------
 
 list(
-  deployments = df_deployments,
+  deployments = sf_deployments,
   detections = df_detections
 ) %>% 
   write_rds("data/nefsc-deployments.rds")

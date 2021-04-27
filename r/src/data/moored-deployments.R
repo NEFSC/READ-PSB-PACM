@@ -7,7 +7,7 @@ DATA_DIR <- config::get("data_dir")
 # load --------------------------------------------------------------------
 
 df_csv <- read_csv(
-  file.path(DATA_DIR, "moored", "20201223", "Moored_metadata_2020-12-23.csv"),
+  file.path(DATA_DIR, "moored", "20210407", "Moored_metadata_2021-04-07.csv"),
   col_types = cols(.default = col_character())
 ) %>% 
   janitor::clean_names()

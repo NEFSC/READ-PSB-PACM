@@ -13,8 +13,9 @@ import pad from 'pad'
 import ChartMixin from '@/mixins/ChartMixin'
 import { xf } from '@/lib/crossfilter'
 import { detectionTypes, detectionTypesMap } from '@/lib/constants'
+import { mapGetters } from 'vuex'
 
-const NDAY = 5
+const NDAY_PER_GROUP = 5
 
 export default {
   name: 'SeasonChart',
@@ -24,15 +25,11 @@ export default {
       chart: null
     }
   },
+  computed: {
+    ...mapGetters(['theme'])
+  },
   mounted () {
     const dim = xf.dimension(d => {
-      // const doy = moment.utc(d.date).dayOfYear() - 1
-      // const startDoy = Math.floor(doy / NDAY) * NDAY
-      // const d2 = moment('2001-01-01').add(startDoy, 'days').toDate()
-      // if (d.id === 'DUKE_VA_201406_NFC01A_NFC01A') {
-      //   console.log(d.$date, d.date.getUTCFullYear(), d.date, doy, startDoy, d2)
-      // }
-      // return d2
       return moment.utc('2001-01-01').add(d.doySeason, 'days').toDate()
     })
     const group = dim.group().reduce(
@@ -55,26 +52,35 @@ export default {
       .direction('e')
       .html((d) => {
         const start = d.data.key
-        const end = moment.utc(start).add(NDAY - 1, 'days').toDate()
+        const end = moment.utc(start).add(NDAY_PER_GROUP - 1, 'days').toDate()
         const formatter = d3.timeFormat('%b %d')
-        return `
-          ${formatter(start)} to ${formatter(end)}<br><br>
-          ${pad(12, detectionTypesMap.get('y').label, '&nbsp;')}: ${pad(6, d.data.value.y.toLocaleString(), '&nbsp;')}<br>
-          ${pad(12, detectionTypesMap.get('m').label, '&nbsp;')}: ${pad(6, d.data.value.m.toLocaleString(), '&nbsp;')}<br>
-          ${pad(12, detectionTypesMap.get('n').label, '&nbsp;')}: ${pad(6, d.data.value.n.toLocaleString(), '&nbsp;')}<br>
-          ${pad(12, detectionTypesMap.get('na').label, '&nbsp;')}: ${pad(6, d.data.value.na.toLocaleString(), '&nbsp;')}
-        `
+        const header = `${formatter(start)} to ${formatter(end)}<br><br>`
+
+        let body
+        if (this.theme.deploymentsOnly) {
+          body = `
+            ${pad(12, detectionTypesMap.get('rd').label, '&nbsp;')}: ${pad(6, d.data.value.rd.toLocaleString(), '&nbsp;')}<br>
+          `
+        } else {
+          body = `
+            ${pad(12, detectionTypesMap.get('y').label, '&nbsp;')}: ${pad(6, d.data.value.y.toLocaleString(), '&nbsp;')}<br>
+            ${pad(12, detectionTypesMap.get('m').label, '&nbsp;')}: ${pad(6, d.data.value.m.toLocaleString(), '&nbsp;')}<br>
+            ${pad(12, detectionTypesMap.get('n').label, '&nbsp;')}: ${pad(6, d.data.value.n.toLocaleString(), '&nbsp;')}<br>
+            ${pad(12, detectionTypesMap.get('na').label, '&nbsp;')}: ${pad(6, d.data.value.na.toLocaleString(), '&nbsp;')}
+          `
+        }
+        return `${header} ${body}`
       })
 
     const el = this.$el.appendChild(document.createElement('div'))
     this.chart = dc.barChart(el)
       .width(450)
       .height(120)
-      .margins({ top: 10, right: 20, bottom: 5, left: 60 })
+      .margins({ top: 10, right: 20, bottom: 22, left: 60 })
       .dimension(dim)
       .group(group, 'y', (d) => d.value.y)
       .x(d3.scaleTime().domain([new Date(2001, 0, 1), new Date(2001, 11, 31)]))
-      .xUnits(() => Math.ceil(365 / NDAY))
+      .xUnits(() => Math.ceil(365 / NDAY_PER_GROUP))
       .colors(d3.scaleOrdinal().range(detectionTypes.map(d => d.color)))
       .elasticY(true)
       .brushOn(false)
@@ -96,7 +102,8 @@ export default {
     this.chart.stack(group, 'm', d => d.value.m)
     this.chart.stack(group, 'n', d => d.value.n)
     this.chart.stack(group, 'na', d => d.value.na)
-    // this.chart.yAxis().ticks(4).tickFormat(d3.format('.2s'))
+    this.chart.stack(group, 'rd', d => d.value.rd)
+    this.chart.xAxis().tickFormat(d3.timeFormat('%b'))
     this.chart.yAxis().ticks(4)
     this.chart.render()
   },

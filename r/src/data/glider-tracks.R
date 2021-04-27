@@ -10,7 +10,7 @@ DATA_DIR <- config::get("data_dir")
 # load --------------------------------------------------------------------
 
 df_csv <- read_csv(
-  file.path(DATA_DIR, "glider", "20201223", "Glider_detection_data_2020-12-23.csv"),
+  file.path(DATA_DIR, "glider", "20210323", "Glider_detection_data_2021-03-23.csv"),
   col_types = cols(.default = col_character())
 ) %>% 
   clean_names()

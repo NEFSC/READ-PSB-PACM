@@ -8,7 +8,7 @@ DATA_DIR <- config::get("data_dir")
 # load --------------------------------------------------------------------
 
 df_csv <- read_csv(
-  file.path(DATA_DIR, "glider", "20201223", "Glider_metadata_2020-12-23.csv"),
+  file.path(DATA_DIR, "glider", "20210323", "Glider_metadata_2021-03-23.csv"),
   col_types = cols(.default = col_character())
 ) %>% 
   janitor::clean_names()
@@ -32,8 +32,8 @@ df <- df_csv %>%
     latitude = NA_real_,
     longitude = NA_real_,
     
-    monitoring_start_datetime = ymd_hms(monitoring_start_datetime),
-    monitoring_end_datetime = ymd_hms(monitoring_end_datetime),
+    monitoring_start_datetime = ymd(monitoring_start_datetime),
+    monitoring_end_datetime = ymd(monitoring_end_datetime),
     
     platform_type,
     platform_id,
@@ -64,12 +64,14 @@ df <- df_csv %>%
     call_type
   )
 
+summary(df)
 janitor::tabyl(df, id, theme)
 janitor::tabyl(df, platform_type, theme)
 janitor::tabyl(df, call_type, theme)
 janitor::tabyl(df, detection_method, theme)
 janitor::tabyl(df, protocol_reference, theme)
 janitor::tabyl(df, instrument_type, theme)
+
 
 # export ------------------------------------------------------------------
 

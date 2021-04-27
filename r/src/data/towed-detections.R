@@ -96,7 +96,8 @@ df_beaked_gu1803a_1 <- read_xlsx(
   range = "A1:I394",
   na = "NULL"
 ) %>% 
-  janitor::clean_names()
+  janitor::clean_names() %>% 
+  filter(!is.na(species))
 df_beaked_gu1803a_2 <- read_xlsx(
   file.path(DATA_DIR, "towed", "detections", "BeakedWhale_data", "GU1803_Leg2_BW_detections_4GIS.xlsx"),
   col_types = "guess",
@@ -284,8 +285,7 @@ df_beaked <- bind_rows(
       "Gervais'/True's" = "Mm/Me",
       "Gervais'/True's" = "MmMe.",
       "Gervais'/True's" = "MmMe",
-      "True's" = "True's.",
-      "Unid. Mesoplodon" = "Unid Mesoplodon"
+      "True's" = "True's."
     )
   ) %>% 
   select(-event_type) %>% 
@@ -314,8 +314,8 @@ df_sperm_hb1103 <- read_xlsx(
     analysis_period_start = ymd_hms(utc),
     analysis_period_end = ymd_hms(event_end),
     analysis_period_effort_seconds = as.numeric(difftime(analysis_period_end, analysis_period_start, units = "secs")),
-    latitude = parse_number(latitude),
-    longitude = parse_number(longitude),
+    latitude = latitude,
+    longitude = longitude,
     presence = "y"
   )
 

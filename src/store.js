@@ -12,9 +12,7 @@ export default new Vuex.Store({
     loading: false,
     theme: null,
     deployments: null,
-    selectedDeployment: null,
-    // tracks: null,
-    // points: null,
+    selectedDeployments: [],
     normalizeEffort: false,
     useSizeScale: true
   },
@@ -22,12 +20,9 @@ export default new Vuex.Store({
     loading: state => state.loading,
     theme: state => state.theme,
     themeId: state => state.theme ? state.theme.id : null,
-    // isTowed: state => state.theme === 'beaked' || state.theme === 'kogia',
     deployments: state => state.deployments,
     deploymentById: state => id => state.deployments.find(d => d.id === id),
-    selectedDeployment: state => state.selectedDeployment,
-    // tracks: state => state.tracks,
-    // points: state => state.points,
+    selectedDeployments: state => state.selectedDeployments,
     normalizeEffort: state => state.normalizeEffort,
     useSizeScale: state => state.useSizeScale
   },
@@ -41,14 +36,8 @@ export default new Vuex.Store({
     SET_DEPLOYMENTS (state, deployments) {
       state.deployments = Object.freeze(deployments)
     },
-    // SET_TRACKS (state, tracks) {
-    //   state.tracks = Object.freeze(tracks)
-    // },
-    // SET_POINTS (state, points) {
-    //   state.points = Object.freeze(points)
-    // },
-    SET_SELECTED_DEPLOYMENT (state, selectedDeployment) {
-      state.selectedDeployment = selectedDeployment
+    SET_SELECTED_DEPLOYMENTS (state, selectedDeployments) {
+      state.selectedDeployments = selectedDeployments || []
     },
     SET_NORMALIZE_EFFORT (state, normalizeEffort) {
       state.normalizeEffort = normalizeEffort
@@ -63,7 +52,7 @@ export default new Vuex.Store({
         return Promise.resolve(state.theme)
       }
       commit('SET_LOADING', true)
-      commit('SET_SELECTED_DEPLOYMENT', null)
+      commit('SET_SELECTED_DEPLOYMENTS', [])
       return fetchData(theme)
         .then(([deployments, detections]) => {
           const deploymentsMap = Object.fromEntries(deployments.map(d => [d.id, d]))
@@ -98,15 +87,19 @@ export default new Vuex.Store({
           return theme
         })
     },
-    selectDeployment ({ commit }, deployment) {
-      commit('SET_SELECTED_DEPLOYMENT', deployment)
-    },
-    selectDeploymentById ({ commit, getters, state }, id) {
-      const deployment = getters.deploymentById(id)
-      if (getters.selectedDeployment && getters.selectedDeployment === deployment) {
-        return commit('SET_SELECTED_DEPLOYMENT', null)
+    selectDeployments ({ commit, getters, state }, ids) {
+      if (!ids || ids.length === 0) return commit('SET_SELECTED_DEPLOYMENTS', [])
+
+      if (state.selectedDeployments.length > 0) {
+        // clear existing selection if it includes clicked deployment
+        const selectedIds = state.selectedDeployments.map(d => d.id)
+        if (selectedIds.some(id => ids.includes(id))) {
+          return commit('SET_SELECTED_DEPLOYMENTS', [])
+        }
       }
-      commit('SET_SELECTED_DEPLOYMENT', deployment)
+
+      const deployments = getters.deployments.filter(d => ids.includes(d.id))
+      commit('SET_SELECTED_DEPLOYMENTS', deployments)
     },
     setNormalizeEffort ({ commit }, normalizeEffort) {
       commit('SET_NORMALIZE_EFFORT', normalizeEffort)

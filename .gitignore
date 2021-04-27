@@ -19,13 +19,14 @@ yarn-error.log*
 *.njsproj
 *.sln
 *.sw?
-.Rproj.user
 
+# R
 .Rproj.user
 .Rhistory
-
 *.rds
 r/rmd/*.html
+r/data/qaqc/*.csv
 
+# datasets
 public/data/**/*.csv
 public/data/**/*.json

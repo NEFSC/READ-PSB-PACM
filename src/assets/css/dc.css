@@ -1,0 +1,24 @@
+.dc-chart .axis path, .dc-chart .axis line {
+  stroke: hsl(0, 0%, 75%) !important;
+}
+.dc-chart rect.bar.deselected {
+  fill: #455A64 !important;
+}
+.dc-chart rect {
+  fill-opacity: 0.8;
+}
+.dc-chart .row rect.deselected {
+  fill: #455A64 !important;
+}
+.dc-chart .y-axis-label.y-label {
+  fill: hsl(0, 0%, 90%) !important;
+  font-weight: 600 !important;
+  font-size: 10pt !important;
+}
+.dc-chart .axis.y text {
+  fill: hsl(0, 0%, 90%) !important;
+  font-weight: 600 !important;
+}
+.dc-chart .axis text {
+  font-size: 12px !important;
+}

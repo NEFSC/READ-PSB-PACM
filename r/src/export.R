@@ -56,13 +56,13 @@ df_deployments %>%
 df_detections %>% 
   tabyl(theme, presence)
 
-# deployment_type = fixed for mooring, buoy
+# deployment_type = stationary for mooring, buoy
 # deployment_type = mobile for slocum, wave, towed
 df_deployments %>% 
   as_tibble() %>%
   tabyl(platform_type, deployment_type)
 
-# presence in y, m, n, na for fixed and mobile
+# presence in y, m, n, na for stationary and mobile
 df_detections %>% 
   left_join(
     df_deployments %>% 
@@ -73,14 +73,14 @@ df_detections %>%
   filter(theme == "narw") %>% 
   tabyl(deployment_type, presence)
 
-export_theme <- function (theme, deployments, detections) {
+export_theme <- function (theme) {
   # theme <- "narw"
 
-  x_detections <- detections %>% 
+  x_detections <- df_detections %>% 
     filter(theme == !!theme) %>% 
     select(-theme)
   
-  x_deployments <- deployments %>% 
+  x_deployments <- df_deployments %>% 
     filter(theme == !!theme) %>% 
     select(-theme)
   
@@ -92,7 +92,7 @@ export_theme <- function (theme, deployments, detections) {
   }
   
   x_stations <- x_deployments %>% 
-    filter(deployment_type == "fixed") %>% 
+    filter(deployment_type == "stationary") %>% 
     select(id)
   x_tracks <- x_deployments %>% 
     filter(deployment_type == "mobile") %>% 
@@ -107,7 +107,7 @@ export_theme <- function (theme, deployments, detections) {
   
   missing_stations <- setdiff(
     x_deployments %>% 
-      filter(deployment_type == "fixed") %>% 
+      filter(deployment_type == "stationary") %>% 
       pull(id),
     x_stations$id
   )
@@ -145,66 +145,66 @@ export_theme <- function (theme, deployments, detections) {
     write_sf(file.path("../public/data/", theme, "deployments.json"), driver = "GeoJSON", layer_options = "ID_FIELD=id")
 }
 
-export_theme("narw", deployments = df_deployments, detections = df_detections)
-export_theme("fin", deployments = df_deployments, detections = df_detections)
-export_theme("blue", deployments = df_deployments, detections = df_detections)
-export_theme("humpback", deployments = df_deployments, detections = df_detections)
-export_theme("sei", deployments = df_deployments, detections = df_detections)
-export_theme("beaked", deployments = df_deployments, detections = df_detections)
-export_theme("kogia", deployments = df_deployments, detections = df_detections)
-export_theme("sperm", deployments = df_deployments, detections = df_detections)
-export_theme("nefsc-deployments", deployments = df_deployments, detections = df_detections)
+export_theme("narw")
+export_theme("fin")
+export_theme("blue")
+export_theme("humpback")
+export_theme("sei")
+export_theme("beaked")
+export_theme("kogia")
+export_theme("sperm")
+export_theme("nefsc-deployments")
 
 
 # demo theme --------------------------------------------------------------
-
-demo_deployments <- bind_rows(
-  df_deployments %>% 
-    filter(
-      theme == "narw",
-      id %in% c(
-        # "NEFSC_NC_201310_CH2_2",                         # moored | detected
-        # "DUKE_VA_201406_NFC01A_NFC01A",                  # moored | multi-possibly
-        # "MOORS-MURPHY_SCOTIAN_SHELF_200708_PU093_SWGUL", # moored | not detected
-        # "NEFSC_NE_OFFSHORE_201506_WAT_HZ_01_WAT_HZ",     # moored | not analyzed
-        "WHOI_SCOTIAN_SHELF_201509_rb0915_otn200",       # glider | detected/possibly
-        "WHOI_GOM_201812_gom1218_we03",                  # glider | not detected
-        "WHOI_MID-ATLANTIC_202001_hatteras0120_we14"     # glider | not analyzed
-      )
-    )
-) %>% 
-  mutate(
-    analyzed = if_else(id == "WHOI_MID-ATLANTIC_202001_hatteras0120_we14", FALSE, analyzed)
-  )
-demo_detections <- df_detections %>% 
-  semi_join(
-    demo_deployments,
-    by = c("theme", "id")
-  ) %>% 
-  mutate(
-    presence = case_when(
-      id == "NEFSC_NE_OFFSHORE_201506_WAT_HZ_01_WAT_HZ" ~ "na",
-      id == "WHOI_GOM_201812_gom1218_we03" ~ "nm",
-      id == "WHOI_MID-ATLANTIC_202001_hatteras0120_we14" ~ "na",
-      TRUE ~ presence
-    ),
-    presence = if_else(presence == "nm", "n", presence)
-  ) %>% 
-  mutate(theme = "demo")
-
-demo_detections_locations <- demo_detections %>% 
-  select(-presence) %>% 
-  unnest(locations) %>% 
-  filter(!id %in% c("WHOI_GOM_201812_gom1218_we03", "WHOI_MID-ATLANTIC_202001_hatteras0120_we14")) %>% 
-  select(id, starts_with("analysis_"), latitude, longitude, presence) %>% 
-  nest(locations = -id)
-
-demo_detections <- demo_detections %>% 
-  select(-locations) %>% 
-  left_join(demo_detections_locations, by = "id")
-
-tabyl(demo_detections, id, presence)
-
-demo_glider_ids <- demo_deployments %>% filter(deployment_type == "mobile") %>% pull(id)
-
-export_theme("demo", deployments = mutate(demo_deployments, theme = "demo"), detections = demo_detections)
+# 
+# demo_deployments <- bind_rows(
+#   df_deployments %>% 
+#     filter(
+#       theme == "narw",
+#       id %in% c(
+#         # "NEFSC_NC_201310_CH2_2",                         # moored | detected
+#         # "DUKE_VA_201406_NFC01A_NFC01A",                  # moored | multi-possibly
+#         # "MOORS-MURPHY_SCOTIAN_SHELF_200708_PU093_SWGUL", # moored | not detected
+#         # "NEFSC_NE_OFFSHORE_201506_WAT_HZ_01_WAT_HZ",     # moored | not analyzed
+#         "WHOI_SCOTIAN_SHELF_201509_rb0915_otn200",       # glider | detected/possibly
+#         "WHOI_GOM_201812_gom1218_we03",                  # glider | not detected
+#         "WHOI_MID-ATLANTIC_202001_hatteras0120_we14"     # glider | not analyzed
+#       )
+#     )
+# ) %>% 
+#   mutate(
+#     analyzed = if_else(id == "WHOI_MID-ATLANTIC_202001_hatteras0120_we14", FALSE, analyzed)
+#   )
+# demo_detections <- df_detections %>% 
+#   semi_join(
+#     demo_deployments,
+#     by = c("theme", "id")
+#   ) %>% 
+#   mutate(
+#     presence = case_when(
+#       id == "NEFSC_NE_OFFSHORE_201506_WAT_HZ_01_WAT_HZ" ~ "na",
+#       id == "WHOI_GOM_201812_gom1218_we03" ~ "nm",
+#       id == "WHOI_MID-ATLANTIC_202001_hatteras0120_we14" ~ "na",
+#       TRUE ~ presence
+#     ),
+#     presence = if_else(presence == "nm", "n", presence)
+#   ) %>% 
+#   mutate(theme = "demo")
+# 
+# demo_detections_locations <- demo_detections %>% 
+#   select(-presence, -date) %>% 
+#   unnest(locations) %>% 
+#   filter(!id %in% c("WHOI_GOM_201812_gom1218_we03", "WHOI_MID-ATLANTIC_202001_hatteras0120_we14")) %>% 
+#   select(id, starts_with("analysis_"), latitude, longitude, presence) %>% 
+#   nest(locations = -id)
+# 
+# demo_detections <- demo_detections %>% 
+#   select(-locations) %>% 
+#   left_join(demo_detections_locations, by = "id")
+# 
+# tabyl(demo_detections, id, presence)
+# 
+# demo_glider_ids <- demo_deployments %>% filter(deployment_type == "mobile") %>% pull(id)
+# 
+# export_theme("demo", deployments = mutate(demo_deployments, theme = "demo"), detections = demo_detections)

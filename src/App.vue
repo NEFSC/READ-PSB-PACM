@@ -19,7 +19,7 @@
         :fullscreen="$vuetify.breakpoint.mobile"
         v-if="auth.isAuth">
         <template v-slot:activator="{ on }">
-          <v-btn color="default" dark text max-width="120" v-on="on">
+          <v-btn color="default" dark text v-on="on" data-v-step="about-button">
             <v-icon :left="!$vuetify.breakpoint.mobile">mdi-information-outline</v-icon>
             <span v-if="!$vuetify.breakpoint.mobile"> About</span>
           </v-btn>
@@ -28,21 +28,21 @@
       </v-dialog>
 
       <v-dialog
-        v-model="dialogs.help"
-        max-width="1000"
+        v-model="dialogs.guide"
+        max-width="1200"
         scrollable
         :fullscreen="$vuetify.breakpoint.mobile"
         v-if="auth.isAuth">
         <template v-slot:activator="{ on }">
-          <v-btn color="default" dark text max-width="120" v-on="on">
-            <v-icon :left="!$vuetify.breakpoint.mobile">mdi-video</v-icon>
-            <span v-if="!$vuetify.breakpoint.mobile"> Tutorial</span>
+          <v-btn color="default" dark text v-on="on" data-v-step="user-guide-button">
+            <v-icon :left="!$vuetify.breakpoint.mobile">mdi-book-open-variant</v-icon>
+            <span v-if="!$vuetify.breakpoint.mobile"> User Guide</span>
           </v-btn>
         </template>
-        <HelpDialog @close="closeHelp"></HelpDialog>
+        <UserGuideDialog @close="closeGuide"></UserGuideDialog>
       </v-dialog>
 
-      <v-btn color="default" dark text max-width="120" @click="startTour" data-v-step="6" v-if="auth.isAuth && !$vuetify.breakpoint.mobile">
+      <v-btn color="default" dark text @click="startTour" data-v-step="tour-button" v-if="auth.isAuth && !$vuetify.breakpoint.mobile">
         <v-icon :left="!$vuetify.breakpoint.mobile">mdi-cursor-default-click</v-icon>
         <span v-if="!$vuetify.breakpoint.mobile"> Tour</span>
       </v-btn>
@@ -61,18 +61,16 @@
       width="500"
       v-model="drawer"
       v-if="auth.isAuth">
-      <v-list class="py-0">
+      <v-list class="mt-4 py-0">
         <v-list-item v-if="$vuetify.breakpoint.mobile">
           <v-list-item-content class="pb-0" >
             <div class="d-flex">
               <v-spacer></v-spacer>
-              <!-- <v-btn color="success"><v-icon>mdi-close</v-icon></v-btn> -->
-
               <v-btn icon small class="float-right" color="grey" @click="drawer = !drawer"><v-icon>mdi-close</v-icon></v-btn>
             </div>
           </v-list-item-content>
         </v-list-item>
-        <v-list-item class="my-1" data-v-step="1">
+        <v-list-item class="my-1" data-v-step="theme">
           <v-list-item-content>
             <SelectTheme></SelectTheme>
           </v-list-item-content>
@@ -101,7 +99,7 @@
           </v-list-item-content>
         </v-list-item>
 
-        <v-list-item class="my-1" data-v-step="2">
+        <v-list-item class="my-1" data-v-step="platform">
           <v-list-item-content>
             <PlatformTypeFilter></PlatformTypeFilter>
           </v-list-item-content>
@@ -118,37 +116,30 @@
           For {{ theme.label }}, recorded days are counted separately for each species. If two species were detected on the same day, then that day would be counted twice in the charts below.
         </v-alert>
 
-        <v-list-item class="mt-0" data-v-step="3">
+        <v-list-item class="mt-0" data-v-step="season">
           <v-list-item-content class="pt-1">
             <SeasonFilter :y-axis-label="yAxisLabel"></SeasonFilter>
           </v-list-item-content>
         </v-list-item>
 
-        <v-list-item class="mt-2" data-v-step="4">
+        <v-list-item class="mt-2" data-v-step="year">
           <v-list-item-content class="py-0">
             <YearFilter :y-axis-label="yAxisLabel"></YearFilter>
           </v-list-item-content>
         </v-list-item>
 
-        <v-list-item class="mt-2" data-v-step="5" v-if="!theme.deploymentsOnly">
-          <v-list-item-content class="py-0">
+        <v-list-item class="mt-2" data-v-step="detection">
+          <v-list-item-content class="py-0" v-if="!theme.deploymentsOnly">
             <DetectionFilter :y-axis-label="yAxisLabel"></DetectionFilter>
-          </v-list-item-content>
-        </v-list-item>
-
-        <!-- DEBUG -->
-        <v-list-item>
-          <v-list-item-content>
-            <!-- <pre>path: {{ $router.params.id }}</pre> -->
           </v-list-item-content>
         </v-list-item>
       </v-list>
     </v-navigation-drawer>
 
-    <v-main data-v-step="0" style="z-index:0">
+    <v-main data-v-step="map" style="z-index:0">
       <div v-if="auth.isAuth" style="height:100%;position:relative">
         <Map :counts="counts"></Map>
-        <div style="position:absolute;bottom:0;left:0;width:100%;z-index:1000;background:white;max-height:500px" v-if="!!selectedDeployment">
+        <div style="position:absolute;bottom:0;left:0;width:100%;z-index:1000;background:white;max-height:600px" v-if="selectedDeployments.length > 0">
           <DeploymentDetail></DeploymentDetail>
         </div>
       </div>
@@ -183,7 +174,26 @@
       </div>
     </v-main>
 
-    <v-tour name="tour" :steps="steps"></v-tour>
+    <v-tour name="tour" :steps="tour.steps" :options="tour.options">
+      <template slot-scope="tour">
+        <transition name="fade">
+          <v-step
+            v-if="tour.steps[tour.currentStep]"
+            :key="tour.currentStep"
+            :step="tour.steps[tour.currentStep]"
+            :previous-step="tour.previousStep"
+            :next-step="tour.nextStep"
+            :stop="tour.stop"
+            :skip="tour.skip"
+            :is-first="tour.isFirst"
+            :is-last="tour.isLast"
+            :labels="tour.labels"
+            :style="{ 'max-width': (tour.currentStep === 0 ? '650px' : '450px') }"
+          >
+          </v-step>
+        </transition>
+      </template>
+    </v-tour>
   </v-app>
 </template>
 
@@ -191,8 +201,8 @@
 import { mapActions, mapGetters } from 'vuex'
 
 import Map from '@/components/Map'
-import AboutDialog from '@/components/AboutDialog'
-import HelpDialog from '@/components/HelpDialog'
+import AboutDialog from '@/components/dialogs/About'
+import UserGuideDialog from '@/components/dialogs/UserGuide'
 import SelectTheme from '@/components/SelectTheme'
 import YearFilter from '@/components/YearFilter'
 import SpeciesFilter from '@/components/SpeciesFilter'
@@ -203,13 +213,14 @@ import DeploymentDetail from '@/components/DeploymentDetail'
 
 import evt from '@/lib/events'
 import { xf, deploymentGroup, deploymentMap } from '@/lib/crossfilter'
-import { themes, tour } from '@/lib/constants'
+import { themes } from '@/lib/constants'
+import tour from '@/lib/tour'
 
 export default {
   name: 'App',
   components: {
     AboutDialog,
-    HelpDialog,
+    UserGuideDialog,
     Map,
     SelectTheme,
     YearFilter,
@@ -242,20 +253,23 @@ export default {
       },
       dialogs: {
         about: false,
-        help: false
+        guide: false
       },
-      // draw: {
-      //   enabled: false,
-      //   control: null,
-      //   operation: 'intersection',
-      //   rect: null,
-      //   count: 0
-      // },
-      steps: tour
+      tour: {
+        options: {
+          labels: {
+            buttonSkip: 'Close tour',
+            buttonPrevious: 'Previous',
+            buttonNext: 'Next',
+            buttonStop: 'Finish'
+          }
+        },
+        steps: tour
+      }
     }
   },
   computed: {
-    ...mapGetters(['theme', 'loading', 'selectedDeployment']),
+    ...mapGetters(['theme', 'loading', 'selectedDeployments']),
     showDialog () {
       return !!this.deployments.selected
     },
@@ -285,7 +299,7 @@ export default {
     }
   },
   methods: {
-    ...mapActions(['setTheme', 'selectDeployment']),
+    ...mapActions(['setTheme', 'selectDeployments']),
     init () {
       if (!this.auth.isAuth) return
       if (this.$route.params.id) {
@@ -299,8 +313,8 @@ export default {
     },
     closeAbout (evt) {
       this.dialogs.about = false
-      if (evt && evt.tutorial) {
-        this.dialogs.help = true
+      if (evt && evt.guide) {
+        this.dialogs.guide = true
       } else if (evt && evt.tour) {
         if (!this.theme) {
           this.setTheme(this.themes[0])
@@ -312,18 +326,19 @@ export default {
         this.setTheme(this.themes[0])
       }
     },
-    closeHelp () {
-      this.dialogs.help = false
+    closeGuide () {
+      this.dialogs.guide = false
       if (!this.theme) {
         this.dialogs.about = true
       }
     },
     onFiltered () {
-      // unselect deployment if no longer has any filtered detections
-      if (this.selectedDeployment) {
-        let deployment = deploymentMap.get(this.selectedDeployment.id)
-        if (deployment.total === 0) {
-          this.selectDeployment()
+      // unselect deployments that no longer have any filtered detections
+      if (this.selectedDeployments.length > 0) {
+        const deploymentCounts = this.selectedDeployments.map(d => ({ id: d.id, ...deploymentMap.get(d.id) }))
+        const newSelection = deploymentCounts.filter(d => d.total > 0)
+        if (newSelection.length < this.selectedDeployments.length) {
+          this.selectDeployments(newSelection.map(d => d.id))
         }
       }
       this.updateCounts()
@@ -349,52 +364,3 @@ export default {
   }
 }
 </script>
-
-<style>
-a {
-  text-decoration:none;
-}
-.dc-chart .axis path, .dc-chart .axis line {
-  stroke: hsl(0, 0%, 75%) !important;
-}
-.dc-chart rect.bar.deselected {
-  fill: #455A64 !important;
-}
-.dc-chart rect {
-  fill-opacity: 0.8;
-}
-.dc-chart .row rect.deselected {
-  fill: #455A64 !important;
-}
-.dc-chart .y-axis-label.y-label {
-  fill: hsl(0, 0%, 90%) !important;
-  font-weight: 600 !important;
-  font-size: 10pt !important;
-}
-.dc-chart .x-axis-label {
-  fill: hsl(0, 0%, 90%) !important;
-  font-weight: 600 !important;
-  font-size: 10pt !important;
-}
-.dc-chart .axis.y text {
-  fill: hsl(0, 0%, 90%) !important;
-  font-weight: 600 !important;
-}
-.dc-chart .axis.x text {
-  fill: hsl(0, 0%, 90%) !important;
-  font-weight: 400 !important;
-  font-size: 10pt !important;
-  text-anchor: middle;
-}
-
-.filter-value {
-  border-bottom: 1px solid #546E7A;
-  border-bottom-style: dashed;
-  cursor: pointer;
-}
-
-.v-step {
-  max-width: 400px !important;
-  text-align: left !important;
-}
-</style>

@@ -1,0 +1,9 @@
+a {
+  text-decoration: none;
+}
+
+.pacm-filter-value {
+  border-bottom: 1px solid #546E7A;
+  border-bottom-style: dashed;
+  cursor: pointer;
+}

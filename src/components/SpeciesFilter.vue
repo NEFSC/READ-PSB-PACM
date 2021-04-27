@@ -3,7 +3,7 @@
     outlined
     :items="options"
     v-model="selected"
-    :label="`Select Species of ${theme.label}`"
+    :label="`Select ${theme.label}`"
     item-text="id"
     item-value="id"
     hide-details

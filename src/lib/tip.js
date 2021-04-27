@@ -59,7 +59,7 @@ const detectionTableHtml = (deployment) => {
     .object(allDetections)
   allDetectionsSummary.total = allDetections.length
 
-  const detectionTypesIds = [...detectionTypes.map(d => d.id), 'total']
+  const detectionTypesIds = [...detectionTypes.filter(d => d.id !== 'rd').map(d => d.id), 'total']
 
   const rows = detectionTypesIds.map(id => {
     return [
@@ -96,7 +96,7 @@ const trackHtml = (d, deployment) => {
 
     <hr><br>
 
-    Deployment Summary (# Recorded Days)<br><br>
+    Detection Summary (# Recorded Days)<br><br>
     ${pad(20, 'All', '&nbsp;')} ${pad(8, 'Filtered', '&nbsp;')}<br>
     ${detectionHtml}
   `
@@ -131,7 +131,9 @@ const gliderPointHtml = (d, deployment) => {
     ${trackHtml(d, deployment)}<br><br>
     <hr><br>
     Highlighted Daily Detection<br><br>
-    ${detectionHtml}
+    ${detectionHtml}<br><br>
+    Note: Only the first detection on each date is shown on the map.
+    There may be other detections on this date at nearby locations.
   `
 }
 
@@ -155,13 +157,13 @@ const stationHtml = (d, deployment) => {
   const detectionHtml = detectionTableHtml(deployment)
 
   return `
-    Monitoring Station Deployment<br><br>
+    Stationary Platform Deployment<br><br>
 
     ${metaHtml}<br><br>
 
     <hr><br>
 
-    Deployment Summary (# Recorded Days)<br><br>
+    Detection Summary (# Recorded Days)<br><br>
     ${pad(20, 'All', '&nbsp;')} ${pad(8, 'Filtered', '&nbsp;')}<br>
     ${detectionHtml}
   `
@@ -178,12 +180,12 @@ const deploymentHtml = (d, deployment) => {
     [ 'Recorder Type', `${orNa(props.instrument_type)}` ],
     [ 'Recorder Depth', props.recorder_depth_meters ? `${(+props.recorder_depth_meters).toFixed(0)} m` : 'N/A' ],
     [ 'Water Depth', props.water_depth_meters ? `${(+props.water_depth_meters).toFixed(0)} m` : 'N/A' ],
-    [ 'Deployed', `${orNa(monitoring.start)} to ${orNa(monitoring.end)}` ],
+    [ 'Deployed', `${orNa(monitoring.start)} to ${monitoring.end || 'present'}` ],
     [ 'Duration', `${monitoring.duration ? monitoring.duration + ' days' : 'N/A'} ` ]
   ])
 
   return `
-    Monitoring Station Deployment<br><br>
+  Stationary Platform Metadata<br><br>
 
     ${metaHtml}
   `
@@ -207,8 +209,10 @@ export function tipHtml (d, deployment, nNearby, type) {
     html = stationHtml(d, deployment)
   }
 
-  if (nNearby > 0) {
-    html += `<br><br><hr><br>Warning: There are ${nNearby} station(s) near this location.<br>Zoom in to view other stations.`
+  if (nNearby > 1) {
+    html += `<br><br><hr><br>Warning: There are ${nNearby} other deployments near this location.<br>Zoom in to better distinguish them, or click to select these deployments and view their metadata and daily detection history.`
+  } else if (nNearby === 1) {
+    html += `<br><br><hr><br>Warning: There is ${nNearby} other deployment near this location.<br>Zoom in to better distinguish the two, or click to select both deployments and view their metadata and daily detection history.`
   }
 
   return html

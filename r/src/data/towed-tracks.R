@@ -390,11 +390,11 @@ sf_tracks <- sf_points %>%
     end = max(end),
     do_union = TRUE,
     .groups = "drop"
-  )
+  ) %>% 
+  st_cast("MULTILINESTRING")
 
 mapview::mapview(sf_tracks, zcol = "id")
 
-plot(sf_tracks)
 
 # export ------------------------------------------------------------------
 

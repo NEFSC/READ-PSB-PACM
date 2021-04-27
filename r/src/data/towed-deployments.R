@@ -87,7 +87,6 @@ df <- df_raw %>%
     detection_method,
     protocol_reference
   ) %>%
-  left_join(analysis_dates, by = "id") %>% 
   left_join(cruise_dates, by = "id") %>% 
   group_by(theme, id) %>% 
   mutate(

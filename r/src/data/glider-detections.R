@@ -8,7 +8,7 @@ DATA_DIR <- config::get("data_dir")
 # load --------------------------------------------------------------------
 
 df_csv <- read_csv(
-  file.path(DATA_DIR, "glider", "20201223", "Glider_detection_data_2020-12-23.csv"),
+  file.path(DATA_DIR, "glider", "20210323", "Glider_detection_data_2021-03-23.csv"),
   col_types = cols(.default = col_character())
 ) %>% 
   clean_names()
@@ -47,7 +47,12 @@ df <- df_csv %>%
       "m" %in% locations$presence ~ "m",
       TRUE ~ "n"
     ),
-    locations = list(locations %>% filter(presence %in% c("y", "m")) %>% slice_head(n = 1)) # only show first location if m or y
+    locations = list(
+      locations %>%
+        filter(presence %in% c("y", "m")) %>%
+        mutate(date = as_date(analysis_period_start_datetime)) %>% 
+        slice_head(n = 1) # only show first location if m or y
+    )
   ) %>% 
   ungroup() %>% 
   relocate(locations, .after = last_col())
@@ -58,9 +63,15 @@ tabyl(df, species, theme)
 tabyl(df, presence, theme)
 
 df %>% 
+  filter(presence == "y") %>% 
+  slice_head(n = 1) %>% 
+  pull(locations)
+
+df %>% 
   mutate(n_locations = map_int(locations, nrow)) %>% 
   tabyl(n_locations, theme, presence)
 
+# only one detection per theme, id, species and date
 stopifnot(all(
   df %>%
     group_by(theme, id, species, date) %>% 

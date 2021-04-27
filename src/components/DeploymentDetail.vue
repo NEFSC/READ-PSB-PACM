@@ -1,76 +1,88 @@
 <template>
-  <div>
+  <v-card>
     <v-toolbar color="grey darken-2" dense dark>
-      <div class="subtitle-1 font-weight-bold" v-if="$vuetify.breakpoint.mobile">
-        Selected Deployment
-      </div>
-      <div class="subtitle-1 font-weight-bold" v-else>
-        Selected: {{ selectedDeployment.id }}
+      <div class="subtitle-1 font-weight-bold">
+        Selected Deployments
+        ({{ index + 1 }} of {{ selectedDeployments.length }})
+        <v-btn
+          icon
+          small
+          :disabled="index === 0"
+          @click="index -= 1"
+        >
+          <v-icon>mdi-menu-left</v-icon>
+        </v-btn>
+        <v-btn
+          icon
+          small
+          :disabled="index === (selectedDeployments.length - 1)"
+          @click="index += 1"
+        >
+          <v-icon>mdi-menu-right</v-icon>
+        </v-btn>
       </div>
       <v-spacer></v-spacer>
       <v-btn icon small @click="close">
         <v-icon small>mdi-close</v-icon>
       </v-btn>
     </v-toolbar>
-    <div style="max-height:420px;overflow-y:auto;overflow-x:hidden">
-      <v-row class="px-4">
+    <v-card-text
+      :style="{ 'max-height': Math.round($vuetify.breakpoint.height * 0.6) + 'px', 'overflow-y': 'auto' }"
+    >
+      <v-row>
         <v-col xs="12" md="12" lg="12" xl="4">
-          <div :style="{ 'max-height': $vuetify.breakpoint.lgAndUp ? '420px' : null, 'overflow-y': 'auto' }">
-            <v-simple-table dense>
-              <template>
-                <tbody>
-                  <tr>
-                    <td class="px-2 text-right" style="width:140px">Project:</td>
-                    <td class="px-2 font-weight-bold">{{ selectedDeployment.properties.project }}</td>
-                  </tr>
-                  <tr v-if="deploymentType === 'station' || deploymentType === 'glider'">
-                    <td class="px-2 text-right" style="width:140px">Site:</td>
-                    <td class="px-2 font-weight-bold">{{ selectedDeployment.properties.site_id ? selectedDeployment.properties.site_id : 'N/A' }}</td>
-                  </tr>
-                  <tr>
-                    <td class="px-2 text-right" style="width:140px">Platform Type:</td>
-                    <td class="px-2 font-weight-bold">{{ platformTypesMap.get(selectedDeployment.properties.platform_type).label }}</td>
-                  </tr>
-                  <tr>
-                    <td class="px-2 text-right">Recorder Type:</td>
-                    <td class="px-2 font-weight-bold">{{ selectedDeployment.properties.instrument_type ? selectedDeployment.properties.instrument_type : 'N/A' }}</td>
-                  </tr>
-                  <tr v-if="!theme.deploymentsOnly">
-                    <td class="px-2 text-right">Detection Method:</td>
-                    <td class="px-2 font-weight-bold">{{ selectedDeployment.properties.detection_method }}</td>
-                  </tr>
-                  <tr v-if="!theme.deploymentsOnly">
-                    <td class="px-2 text-right">QAQC:</td>
-                    <td class="px-2 font-weight-bold">{{ selectedDeployment.properties.qc_data ? selectedDeployment.properties.qc_data : 'N/A'}}</td>
-                  </tr>
-                  <tr v-if="deploymentType === 'station'">
-                    <td class="px-2 text-right">Recorder Depth:</td>
-                    <td class="px-2 font-weight-bold">{{ selectedDeployment.properties.recorder_depth_meters ? `${(+selectedDeployment.properties.recorder_depth_meters).toFixed(0)} m` : 'N/A' }}</td>
-                  </tr>
-                  <tr v-if="deploymentType === 'station'">
-                    <td class="px-2 text-right">Water Depth: </td>
-                    <td class="px-2 font-weight-bold">{{ selectedDeployment.properties.water_depth_meters ? `${(+selectedDeployment.properties.water_depth_meters).toFixed(0)} m` : 'N/A' }}</td>
-                  </tr>
-                  <tr>
-                    <td class="px-2 text-right">Deployed:</td>
-                    <td class="px-2 font-weight-bold">{{ monitoringPeriod.start }} to {{ monitoringPeriod.end }}</td>
-                  </tr>
-                  <tr>
-                    <td class="px-2 text-right">Duration:</td>
-                    <td class="px-2 font-weight-bold">{{ monitoringPeriod.duration.toLocaleString() }} days</td>
-                  </tr>
-                  <tr>
-                    <td class="px-2 text-right">Point of Contact:</td>
-                    <td class="px-2 font-weight-bold">{{ selectedDeployment.properties.data_poc_name }} ({{ selectedDeployment.properties.data_poc_email }}), {{ selectedDeployment.properties.data_poc_affiliation }} </td>
-                  </tr>
-                  <tr v-if="!theme.deploymentsOnly">
-                    <td class="px-2 text-right">Protocol:</td>
-                    <td class="px-2 font-weight-bold">{{ selectedDeployment.properties.protocol_reference }}</td>
-                  </tr>
-                </tbody>
-              </template>
-            </v-simple-table>
-          </div>
+          <v-simple-table dense>
+            <tbody>
+              <tr>
+                <td class="px-2 text-right" style="width:140px">Project:</td>
+                <td class="px-2 font-weight-bold">{{ selectedDeployment.properties.project }}</td>
+              </tr>
+              <tr v-if="deploymentType === 'station' || deploymentType === 'glider'">
+                <td class="px-2 text-right" style="width:140px">Site:</td>
+                <td class="px-2 font-weight-bold">{{ selectedDeployment.properties.site_id ? selectedDeployment.properties.site_id : 'N/A' }}</td>
+              </tr>
+              <tr>
+                <td class="px-2 text-right" style="width:140px">Platform Type:</td>
+                <td class="px-2 font-weight-bold">{{ platformTypesMap.get(selectedDeployment.properties.platform_type).label }}</td>
+              </tr>
+              <tr>
+                <td class="px-2 text-right">Recorder Type:</td>
+                <td class="px-2 font-weight-bold">{{ selectedDeployment.properties.instrument_type ? selectedDeployment.properties.instrument_type : 'N/A' }}</td>
+              </tr>
+              <tr v-if="!theme.deploymentsOnly">
+                <td class="px-2 text-right">Detection Method:</td>
+                <td class="px-2 font-weight-bold">{{ selectedDeployment.properties.detection_method }}</td>
+              </tr>
+              <tr v-if="!theme.deploymentsOnly">
+                <td class="px-2 text-right">QAQC:</td>
+                <td class="px-2 font-weight-bold">{{ selectedDeployment.properties.qc_data ? selectedDeployment.properties.qc_data : 'N/A'}}</td>
+              </tr>
+              <tr v-if="deploymentType === 'station'">
+                <td class="px-2 text-right">Recorder Depth:</td>
+                <td class="px-2 font-weight-bold">{{ selectedDeployment.properties.recorder_depth_meters ? `${(+selectedDeployment.properties.recorder_depth_meters).toFixed(0)} m` : 'N/A' }}</td>
+              </tr>
+              <tr v-if="deploymentType === 'station'">
+                <td class="px-2 text-right">Water Depth: </td>
+                <td class="px-2 font-weight-bold">{{ selectedDeployment.properties.water_depth_meters ? `${(+selectedDeployment.properties.water_depth_meters).toFixed(0)} m` : 'N/A' }}</td>
+              </tr>
+              <tr>
+                <td class="px-2 text-right">Deployed:</td>
+                <td class="px-2 font-weight-bold">{{ monitoringPeriod.start || 'N/A' }} to {{ monitoringPeriod.end || 'present' }}</td>
+              </tr>
+              <tr>
+                <td class="px-2 text-right">Duration:</td>
+                <td class="px-2 font-weight-bold">{{ isFinite(monitoringPeriod.duration) ? monitoringPeriod.duration.toLocaleString() + ' days' : 'N/A' }}</td>
+              </tr>
+              <tr>
+                <td class="px-2 text-right">Point of Contact:</td>
+                <td class="px-2 font-weight-bold">{{ selectedDeployment.properties.data_poc_name }} ({{ selectedDeployment.properties.data_poc_email }}), {{ selectedDeployment.properties.data_poc_affiliation }} </td>
+              </tr>
+              <tr v-if="!theme.deploymentsOnly">
+                <td class="px-2 text-right">Protocol:</td>
+                <td class="px-2 font-weight-bold">{{ selectedDeployment.properties.protocol_reference }}</td>
+              </tr>
+            </tbody>
+          </v-simple-table>
         </v-col>
 
         <v-col xs="12" md="12" lg="12" xl="8" v-if="!theme.deploymentsOnly">
@@ -79,8 +91,8 @@
           <highcharts class="chart" :options="chart"></highcharts>
         </v-col>
       </v-row>
-    </div>
-  </div>
+    </v-card-text>
+  </v-card>
 </template>
 
 <script>
@@ -99,6 +111,7 @@ export default {
     return {
       platformTypesMap,
       detectionTypesMap,
+      index: 0,
       chart: {
         chart: {
           type: 'scatter',
@@ -141,10 +154,10 @@ export default {
             text: undefined
           },
           type: 'category',
-          categories: detectionTypes.map(d => d.label),
+          categories: detectionTypes.filter(d => d.id !== 'rd').map(d => d.label),
           reversed: true,
           min: 0,
-          max: detectionTypes.length - 1,
+          max: detectionTypes.length - 2,
           labels: {
             step: 1
           }
@@ -154,7 +167,12 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['selectedDeployment', 'theme']),
+    ...mapGetters(['selectedDeployments', 'theme']),
+    selectedDeployment () {
+      return this.selectedDeployments.length > 0
+        ? this.selectedDeployments[this.index]
+        : null
+    },
     deploymentType () {
       if (this.selectedDeployment.properties.platform_type === 'mooring' || this.selectedDeployment.properties.platform_type === 'buoy') {
         return 'station'
@@ -170,6 +188,9 @@ export default {
     }
   },
   watch: {
+    selectedDeployments () {
+      this.index = 0
+    },
     selectedDeployment () {
       this.updateChart()
     }
@@ -178,9 +199,9 @@ export default {
     this.updateChart()
   },
   methods: {
-    ...mapActions(['selectDeployment']),
+    ...mapActions(['selectDeployments']),
     close () {
-      this.selectDeployment()
+      this.selectDeployments()
     },
     updateChart () {
       if (this.theme && this.theme.deploymentsOnly) return

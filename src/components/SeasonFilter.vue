@@ -1,9 +1,8 @@
 <template>
-  <div class="season-filter">
+  <div class="pacm-season-filter">
     <v-btn icon x-small class="mt-1 float-right" color="grey" @click="reset"><v-icon>mdi-sync</v-icon></v-btn>
     <div class="subtitle-1 mb-2 font-weight-medium">
       Season:
-
       <v-menu
         v-model="start.show"
         :close-on-content-click="false"
@@ -12,7 +11,7 @@
         offset-y
         min-width="290px">
         <template v-slot:activator="{ on }">
-          <span class="filter-value" v-on="on">{{ start.jday | dayLabel }}</span>
+          <span class="pacm-filter-value" v-on="on">{{ start.jday | dayLabel }}</span>
         </template>
         <v-date-picker
           v-model="start.date"
@@ -24,9 +23,7 @@
           </template>
         </v-date-picker>
       </v-menu>
-
       to
-
       <v-menu
         v-model="end.show"
         :close-on-content-click="false"
@@ -35,7 +32,7 @@
         offset-y
         min-width="290px">
         <template v-slot:activator="{ on }">
-          <span class="filter-value" v-on="on">{{ end.jday | dayLabel }}</span>
+          <span class="pacm-filter-value" v-on="on">{{ end.jday | dayLabel }}</span>
         </template>
         <v-date-picker
           v-model="end.date"
@@ -48,11 +45,8 @@
         </v-date-picker>
       </v-menu>
     </div>
-    <!-- <div>
-      <pre>{{ start.date }} ({{ start.jday }}) - {{ end.date }} ({{ end.jday }})</pre>
-    </div> -->
     <SeasonChart :y-axis-label="yAxisLabel"></SeasonChart>
-    <svg class="season-filter-container"></svg>
+    <svg class="pacm-season-slider"></svg>
   </div>
 </template>
 
@@ -142,27 +136,16 @@ export default {
 
     // const width = this.$el.clientWidth - margins.left - margins.right
     const width = 358
-    const height = 60
+    const height = 35
 
     this.x.range([0, width])
 
-    this.svg = d3.select(this.$el).select('svg.season-filter-container')
+    this.svg = d3.select(this.$el).select('svg.pacm-season-slider')
       .attr('width', width + margins.left + margins.right)
       .attr('height', height)
 
-    const axisScale = d3.scaleTime()
-      .domain([new Date(2001, 0, 1), new Date(2001, 11, 31)])
-      .range([0, width])
-    const axis = d3.axisBottom(axisScale)
-      .ticks(d3.timeMonth)
-      .tickFormat(d3.timeFormat('%b'))
-
     const container = this.svg.append('g')
-      .attr('transform', `translate(${margins.left}, 30)`)
-    container.append('g')
-      .attr('class', 'axis')
-      .attr('transform', `translate(0, 2)`)
-      .call(axis)
+      .attr('transform', `translate(${margins.left}, 10)`)
 
     const slider = container.append('g')
       .attr('class', 'slider')
@@ -234,7 +217,7 @@ export default {
       .append('text')
       .text('start')
       .attr('x', this.x(this.start.jday))
-      .attr('y', -15)
+      .attr('y', 22)
 
     const handleEnd = slider
       .append('g')
@@ -254,12 +237,15 @@ export default {
       .append('text')
       .text('end')
       .attr('x', this.x(this.end.jday))
-      .attr('y', -15)
+      .attr('y', 22)
 
     evt.$on('reset:filters', this.reset)
   },
   beforeDestroy () {
-    this.dim && this.dim.dispose()
+    if (this.dim) {
+      this.dim.filterAll()
+      this.dim.dispose()
+    }
     evt.$off('reset:filters', this.reset)
   },
   methods: {
@@ -317,48 +303,48 @@ export default {
 </script>
 
 <style>
-.season-filter .ticks {
+.pacm-season-filter .ticks {
   font: 10px sans-serif;
 }
 
-.season-filter .track,
-.season-filter .track-inset,
-.season-filter .track-overlay {
+.pacm-season-filter .track,
+.pacm-season-filter .track-inset,
+.pacm-season-filter .track-overlay {
   stroke-linecap: round;
 }
 
-.season-filter .track {
+.pacm-season-filter .track {
   stroke: #000;
   stroke-opacity: 0.3;
   stroke-width: 10px;
 }
 
-.season-filter .track-inset {
+.pacm-season-filter .track-inset {
   stroke: #455A64;
   stroke-width: 8px;
 }
 
-.season-filter .track-overlay {
+.pacm-season-filter .track-overlay {
   pointer-events: stroke;
   stroke-width: 20px;
   stroke: transparent;
   cursor: move;
 }
 
-.season-filter .track-highlight {
+.pacm-season-filter .track-highlight {
   stroke: #CFD8DC;
   stroke-width: 4px;
   stroke-linecap: round;
 }
 
-.season-filter .handle circle {
-  fill: #FFF;
+.pacm-season-filter .handle circle {
+  fill: #eee;
   stroke: #FFF;
   stroke-opacity: 0.5;
-  stroke-width: 1.25px;
+  stroke-width: 2.5px;
 }
 
-.season-filter .handle text {
+.pacm-season-filter .handle text {
   text-anchor: middle;
   font-variant: small-caps;
   font-size: 12pt;
@@ -366,7 +352,7 @@ export default {
   font-weight: 500;
 }
 
-.season-filter svg.season-filter-container .axis .tick text {
+svg.pacm-season-slider .axis .tick text {
   font-weight: 400;
   font-size: 10pt;
   fill: hsl(0, 0%, 90%);

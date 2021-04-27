@@ -18,57 +18,55 @@ analysis_periods <- detections %>%
   )
 
 # varying analysis periods by species
-# detections %>%
-#   group_by(theme, id) %>%
-#   summarise(
-#     analysis_start_date = min(date),
-#     analysis_end_date = max(date),
-#     .groups = "drop"
-#   ) %>%
-#   group_by(id, analysis_start_date, analysis_end_date) %>%
-#   summarise(
-#     species = str_c(theme, collapse = ",")
-#   ) %>%
-#   add_count(id) %>%
-#   filter(n > 1) %>%
-#   arrange(id, analysis_start_date) %>%
-#   select(-n) %>%
-#   write_csv("~/moored-varying-analysis-periods.csv")
+detections %>%
+  group_by(theme, id) %>%
+  summarise(
+    analysis_start_date = min(date),
+    analysis_end_date = max(date),
+    .groups = "drop"
+  ) %>%
+  group_by(id, analysis_start_date, analysis_end_date) %>%
+  summarise(
+    species = str_c(theme, collapse = ","),
+    .groups = "drop"
+  ) %>%
+  add_count(id) %>%
+  filter(n > 1) %>%
+  arrange(id, analysis_start_date) %>%
+  select(-n) %>%
+  write_csv("data/qaqc/moored-varying-analysis-periods.csv")
 
 deployments <- deployments %>% 
   left_join(analysis_periods, by = "id") %>% 
   mutate(analyzed = TRUE)
 
-# generate analysis periods table for Gen
+# analysis periods
+# same_start/end=TRUE indicates where analysis period (based on detections)
+# does not match start or end of monitoring period
 analysis_periods %>%
   full_join(
     deployments %>%
-      distinct(id, monitoring_start_datetime, monitoring_end_datetime),
+      distinct(id, platform_type, monitoring_start_datetime, monitoring_end_datetime),
     by = "id"
   ) %>%
   mutate(
     same_start = analysis_start_date == as_date(monitoring_start_datetime),
     same_end = analysis_end_date == as_date(monitoring_end_datetime),
+    difference_start_days = as.numeric(difftime(analysis_start_date, as_date(monitoring_start_datetime), units = "day")),
+    difference_end_days = as.numeric(difftime(as_date(monitoring_end_datetime), analysis_end_date, units = "day")),
     monitoring_start_datetime = format(monitoring_start_datetime, "%Y-%m-%d %H:%M"),
     monitoring_end_datetime = format(monitoring_end_datetime, "%Y-%m-%d %H:%M")
   ) %>%
-  select(id, starts_with("monitoring"), starts_with("analysis"), starts_with("same")) %>%
+  select(id, platform_type, starts_with("monitoring"), starts_with("analysis"), starts_with("difference"), starts_with("same")) %>%
   arrange(id) %>%
-  write_csv("~/moored-analysis-periods.csv")
+  # filter(!same_start | !same_end) %>% view
+  write_csv("data/qaqc/moored-analysis-periods.csv")
 
 
 # fill missing lat/lon ----------------------------------------------------
 
-# TODO: fix BERCHOK_SAMANA_200901_CH* missing lat/lon
-deployments_BERCHOK_SAMANA_200901 <- deployments %>%
-  filter(str_starts(id, "BERCHOK_SAMANA_200901_CH"), theme == "narw", !is.na(latitude)) %>% 
-  select(id, project, site_id, latitude, longitude)
-
-deployments <- deployments %>% 
-  mutate(
-    latitude = if_else(id == "BERCHOK_SAMANA_200901_CH1_1", median(deployments_BERCHOK_SAMANA_200901$latitude), latitude),
-    longitude = if_else(id == "BERCHOK_SAMANA_200901_CH1_1", median(deployments_BERCHOK_SAMANA_200901$longitude), longitude)
-  )
+stopifnot(all(!is.na(deployments$latitude)))
+stopifnot(all(!is.na(deployments$longitude)))
 
 
 # fill missing detection days ---------------------------------------------
@@ -90,8 +88,10 @@ deployments_dates <- deployments %>%
   unnest(date)
 
 # detections that are outside the deployment analysis period
-detections %>%
-  anti_join(deployments_dates, by = c("theme", "id", "date"))
+stopifnot(detections %>%
+  anti_join(deployments_dates, by = c("theme", "id", "date")) %>% 
+  nrow() == 0
+)
 
 # deployment monitoring days with no detection data (add rows with presence="na")
 deployments_dates %>% 
@@ -99,11 +99,8 @@ deployments_dates %>%
   distinct(theme, id, start, end, date) %>% 
   select(theme, id = id, analysis_start_date = start, analysis_end_date = end, date) %>%
   arrange(theme, id, analysis_start_date, date) %>%
-  write_csv("~/moored-missing-dates.csv")
-  tabyl(id, theme)
-
-# deployments %>%
-#   filter(id == "NEFSC_NE_OFFSHORE_201604_WAT_OC_02_WAT_OC")
+  write_csv("data/qaqc/moored-missing-dates.csv")
+  # tabyl(id, theme)
 
 detections %>% 
   janitor::tabyl(id, theme)
@@ -123,11 +120,16 @@ janitor::tabyl(detections_fill, theme, presence)
 janitor::tabyl(detections, id, theme)
 janitor::tabyl(detections_fill, id, theme)
 
-detections_fill %>% 
-  count(theme, id, presence) %>% 
-  pivot_wider(names_from = "presence", values_from = "n", values_fill = 0) %>% 
-  mutate(total = n + na + y + m) %>% 
-  filter(na == total)
+# none of the deployments are all NA
+stopifnot(
+  detections_fill %>% 
+    count(theme, id, presence) %>% 
+    pivot_wider(names_from = "presence", values_from = "n", values_fill = 0) %>% 
+    mutate(total = n + na + y + m) %>% 
+    filter(na == total) %>% 
+    nrow() == 0
+)
+
 
 # stations ----------------------------------------------------------------
 
@@ -146,8 +148,9 @@ mapview::mapview(sf_stations, legend = FALSE)
 
 deployments_geom <- sf_stations %>% 
   left_join(deployments, by = "id") %>% 
-  mutate(deployment_type = "fixed") %>% 
+  mutate(deployment_type = "stationary") %>% 
   relocate(deployment_type, geometry, .after = last_col())
+
 
 # export ------------------------------------------------------------------
 

@@ -12,6 +12,9 @@ import './plugins/leaflet'
 import './plugins/moment'
 import './plugins/vue-tour'
 
+import '@/assets/css/app.css'
+import '@/assets/css/dc.css'
+
 Vue.config.productionTip = false
 
 new Vue({
