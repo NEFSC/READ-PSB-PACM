@@ -99,7 +99,7 @@ export default {
       this.render()
     },
     'start.jday' (val) {
-      let m = moment('2000-12-31').add(val, 'days')
+      const m = moment('2000-12-31').add(val, 'days')
       this.start.date = moment([this.start.date.substr(0, 4), m.month(), m.date()]).format('YYYY-MM-DD')
     },
     'end.date' (val) {
@@ -115,7 +115,7 @@ export default {
       this.render()
     },
     'end.jday' (val) {
-      let m = moment('2000-12-31').add(val, 'days')
+      const m = moment('2000-12-31').add(val, 'days')
       this.end.date = moment([this.end.date.substr(0, 4), m.month(), m.date()]).format('YYYY-MM-DD')
     }
   },

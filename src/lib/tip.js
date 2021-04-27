@@ -76,15 +76,15 @@ const trackHtml = (d, deployment) => {
   const monitoring = monitoringPeriodLabels(props)
 
   const trackHtml = htmlTable([
-    [ 'Project', `${props.project}` ],
-    [ 'Site', `${orNa(props.site_id)}` ],
-    [ 'Platform Type', `${platformTypesMap.get(props.platform_type).label}` ],
-    [ 'Recorder Type', `${orNa(props.instrument_type)}` ],
-    [ 'Detection Method', `${orNa(props.detection_method)}` ],
-    [ 'Call Type', `${orNa(props.call_type)}` ],
-    [ 'QAQC', `${orNa(props.qc_data)}` ],
-    [ 'Deployed', `${orNa(monitoring.start)} to ${orNa(monitoring.end)}` ],
-    [ 'Duration', `${monitoring.duration ? monitoring.duration + ' days' : 'N/A'} ` ]
+    ['Project', `${props.project}`],
+    ['Site', `${orNa(props.site_id)}`],
+    ['Platform Type', `${platformTypesMap.get(props.platform_type).label}`],
+    ['Recorder Type', `${orNa(props.instrument_type)}`],
+    ['Detection Method', `${orNa(props.detection_method)}`],
+    ['Call Type', `${orNa(props.call_type)}`],
+    ['QAQC', `${orNa(props.qc_data)}`],
+    ['Deployed', `${orNa(monitoring.start)} to ${orNa(monitoring.end)}`],
+    ['Duration', `${monitoring.duration ? monitoring.duration + ' days' : 'N/A'} `]
   ])
 
   const detectionHtml = detectionTableHtml(deployment)
@@ -104,11 +104,11 @@ const trackHtml = (d, deployment) => {
 
 const towedPointHtml = (d, deployment) => {
   const detectionHtml = htmlTable([
-    [ 'Detection Start', `${moment.utc(d.analysis_period_start_datetime).format('ll LTS')}` ],
-    [ 'Detection End', `${d.analysis_period_end_datetime ? moment.utc(d.analysis_period_end_datetime).format('ll LTS') : 'N/A'}` ],
-    [ 'Duration', `${isFinite(d.analysis_period_effort_seconds) ? d.analysis_period_effort_seconds.toFixed(1) + ' sec' : 'N/A'}` ],
-    [ 'Position', `${d.latitude.toFixed(4)}, ${d.longitude.toFixed(4)}` ],
-    [ 'Detection', `${detectionTypesMap.get(d.presence).label}` ]
+    ['Detection Start', `${moment.utc(d.analysis_period_start_datetime).format('ll LTS')}`],
+    ['Detection End', `${d.analysis_period_end_datetime ? moment.utc(d.analysis_period_end_datetime).format('ll LTS') : 'N/A'}`],
+    ['Duration', `${isFinite(d.analysis_period_effort_seconds) ? d.analysis_period_effort_seconds.toFixed(1) + ' sec' : 'N/A'}`],
+    ['Position', `${d.latitude.toFixed(4)}, ${d.longitude.toFixed(4)}`],
+    ['Detection', `${detectionTypesMap.get(d.presence).label}`]
   ])
   return `
     ${trackHtml(d, deployment)}<br><br>
@@ -122,9 +122,9 @@ const towedPointHtml = (d, deployment) => {
 
 const gliderPointHtml = (d, deployment) => {
   const detectionHtml = htmlTable([
-    [ 'Date', `${moment.utc(d.date).format('ll')}` ],
-    [ 'Position', `${d.latitude.toFixed(4)}, ${d.longitude.toFixed(4)}` ],
-    [ 'Detection', `${detectionTypesMap.get(d.presence).label}` ]
+    ['Date', `${moment.utc(d.date).format('ll')}`],
+    ['Position', `${d.latitude.toFixed(4)}, ${d.longitude.toFixed(4)}`],
+    ['Detection', `${detectionTypesMap.get(d.presence).label}`]
     // [ 'Species', `${speciesTypesMap.get(deployment.species).label}` ]
   ])
   return `
@@ -142,17 +142,17 @@ const stationHtml = (d, deployment) => {
   const monitoring = monitoringPeriodLabels(props)
 
   const metaHtml = htmlTable([
-    [ 'Project', `${props.project}` ],
-    [ 'Site', `${orNa(props.site_id)}` ],
-    [ 'Platform Type', `${platformTypesMap.get(props.platform_type).label}` ],
-    [ 'Recorder Type', `${orNa(props.instrument_type)}` ],
-    [ 'Detection Method', `${orNa(props.detection_method)}` ],
-    [ 'Call Type', `${orNa(props.call_type)}` ],
-    [ 'QAQC', `${orNa(props.qc_data)}` ],
-    [ 'Recorder Depth', props.recorder_depth_meters ? `${(+props.recorder_depth_meters).toFixed(0)} m` : 'N/A' ],
-    [ 'Water Depth', props.water_depth_meters ? `${(+props.water_depth_meters).toFixed(0)} m` : 'N/A' ],
-    [ 'Deployed', `${orNa(monitoring.start)} to ${orNa(monitoring.end)}` ],
-    [ 'Duration', `${monitoring.duration ? monitoring.duration + ' days' : 'N/A'} ` ]
+    ['Project', `${props.project}`],
+    ['Site', `${orNa(props.site_id)}`],
+    ['Platform Type', `${platformTypesMap.get(props.platform_type).label}`],
+    ['Recorder Type', `${orNa(props.instrument_type)}`],
+    ['Detection Method', `${orNa(props.detection_method)}`],
+    ['Call Type', `${orNa(props.call_type)}`],
+    ['QAQC', `${orNa(props.qc_data)}`],
+    ['Recorder Depth', props.recorder_depth_meters ? `${(+props.recorder_depth_meters).toFixed(0)} m` : 'N/A'],
+    ['Water Depth', props.water_depth_meters ? `${(+props.water_depth_meters).toFixed(0)} m` : 'N/A'],
+    ['Deployed', `${orNa(monitoring.start)} to ${orNa(monitoring.end)}`],
+    ['Duration', `${monitoring.duration ? monitoring.duration + ' days' : 'N/A'} `]
   ])
   const detectionHtml = detectionTableHtml(deployment)
 
@@ -174,14 +174,14 @@ const deploymentHtml = (d, deployment) => {
   const monitoring = monitoringPeriodLabels(props)
 
   const metaHtml = htmlTable([
-    [ 'Project', `${props.project}` ],
-    [ 'Site', `${orNa(props.site_id)}` ],
-    [ 'Platform Type', `${platformTypesMap.get(props.platform_type).label}` ],
-    [ 'Recorder Type', `${orNa(props.instrument_type)}` ],
-    [ 'Recorder Depth', props.recorder_depth_meters ? `${(+props.recorder_depth_meters).toFixed(0)} m` : 'N/A' ],
-    [ 'Water Depth', props.water_depth_meters ? `${(+props.water_depth_meters).toFixed(0)} m` : 'N/A' ],
-    [ 'Deployed', `${orNa(monitoring.start)} to ${monitoring.end || 'present'}` ],
-    [ 'Duration', `${monitoring.duration ? monitoring.duration + ' days' : 'N/A'} ` ]
+    ['Project', `${props.project}`],
+    ['Site', `${orNa(props.site_id)}`],
+    ['Platform Type', `${platformTypesMap.get(props.platform_type).label}`],
+    ['Recorder Type', `${orNa(props.instrument_type)}`],
+    ['Recorder Depth', props.recorder_depth_meters ? `${(+props.recorder_depth_meters).toFixed(0)} m` : 'N/A'],
+    ['Water Depth', props.water_depth_meters ? `${(+props.water_depth_meters).toFixed(0)} m` : 'N/A'],
+    ['Deployed', `${orNa(monitoring.start)} to ${monitoring.end || 'present'}`],
+    ['Duration', `${monitoring.duration ? monitoring.duration + ' days' : 'N/A'} `]
   ])
 
   return `

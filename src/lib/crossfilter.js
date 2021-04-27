@@ -32,7 +32,7 @@ export const deploymentGroup = deploymentDim.group().reduce(
   })
 )
 
-export let deploymentMap = new Map()
+export const deploymentMap = new Map()
 
 export function setData (data) {
   xf.remove(() => true)

@@ -283,7 +283,7 @@ export default {
     showTip (d, type) {
       const el = d3.select('.d3-tip.map')
 
-      let deployment = this.$store.getters.deploymentById(d.id)
+      const deployment = this.$store.getters.deploymentById(d.id)
       const nearbyDeployments = this.findNearbyDeployments(d)
 
       let nNearby = 0

@@ -350,7 +350,7 @@ export default {
       this.counts.deployments.filtered = deploymentGroup.all().filter(d => d.value.total > 0).length
     },
     startTour () {
-      this.$tours['tour'].start()
+      this.$tours.tour.start()
     },
     login () {
       if (this.auth.password === 'narw123') {

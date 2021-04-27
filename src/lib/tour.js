@@ -141,7 +141,7 @@ export default [
     header: {
       title: 'Open the About Window'
     },
-    content: `<i>Click here to read more about this project.</i>`,
+    content: '<i>Click here to read more about this project.</i>',
     params: {
       highlight: true,
       placement: 'bottom'
@@ -170,7 +170,7 @@ export default [
     header: {
       title: 'Start Tour'
     },
-    content: `<i>Click here to start the tour again.</i>`,
+    content: '<i>Click here to start the tour again.</i>',
     params: {
       highlight: true,
       placement: 'bottom'
