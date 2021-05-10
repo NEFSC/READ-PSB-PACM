@@ -270,10 +270,14 @@ export default {
       const distanceFrom = (x, y) => Math.sqrt(Math.pow(d.$x - x, 2) + Math.pow(d.$y - y, 2))
       const maxDistance = 10
       const stations = this.svg.select('g.stations').selectAll('circle.station')
-        .filter((d, i) => distanceFrom(d.$x, d.$y) < maxDistance)
+        .filter((d, i) => {
+          return distanceFrom(d.$x, d.$y) < maxDistance && deploymentMap.has(d.id) && deploymentMap.get(d.id).total > 0
+        })
         .data()
       const points = this.svg.select('g.points').selectAll('path.point')
-        .filter((d, i) => distanceFrom(d.$x, d.$y) < maxDistance)
+        .filter((d, i) => {
+          return distanceFrom(d.$x, d.$y) < maxDistance && deploymentMap.has(d.id) && deploymentMap.get(d.id).total > 0
+        })
         .data()
       return {
         stations,
