@@ -49,7 +49,7 @@
         Acoustic detections were recorded using stationary (bottom-mounted moorings, surface buoys) and mobile (autonomous gliders and towed arrays) platforms. Stationary platforms are represented using circles with varying sizes that represent the number of days with definite or possible acoustic detections at a fixed location. Mobile platforms are represented using track lines with squares indicating the specific locations where each detection was observed (for gliders, only the first detection of each day is shown). See the User Guide for more information about the map symbology and descriptions of different types of PAM platforms.
       </p>
       <p>
-        These acoustic detections only represent times when animals are calling; they do not capture time periods when animals are present but silent.
+        These acoustic detections only represent times when animals are calling; they do not capture time periods when animals are present but silent. Detections are from archival acoustic recorders and do not show recorders currently in the water (this is not a real-time tool). Differences in recorder detection ranges for each species are not accounted for; they can vary based on differences in instrumentation (i.e. recording hardware), environmental conditions (i.e. weather, bottom type, ambient sound levels), and anthropogenic sound levels.
       </p>
       <p>
         The dataset was compiled by the NOAA NEFSC Passive Acoustic Research Program using detection data collected by many collaborators. Information on data ownership can be found in the metadata of each station or platform.

@@ -355,6 +355,15 @@
 
                   <v-expansion-panel>
                     <v-expansion-panel-header class="text-subtitle-1 font-weight-bold">
+                      What is a call type?
+                    </v-expansion-panel-header>
+                    <v-expansion-panel-content class="text-body-2">
+                      Most species produce more than one type of call which can be attributed to that species (for example, North Atlantic right whales produce upcalls, gunshots, and additional call types; many odontoceti species produce both whistles and echolocation clicks). These call types can be similar to one another, or vary greatly, often resulting with detectors built specifically for one call type. Sometimes, only one call type is analyzed for a species; other times, multiple call types are analyzed for a species. The metadata table shows you which call types have been analyzed and are marked as "Detected" for that species and specific recorder. Species use call types for different behaviours (i.e. blue whale arch/D calls are a feeding call, while AB calls denote song). The presence of different call types may show different seasonal presence depending on what call type was analyzed.
+                    </v-expansion-panel-content>
+                  </v-expansion-panel>
+
+                  <v-expansion-panel>
+                    <v-expansion-panel-header class="text-subtitle-1 font-weight-bold">
                       Where did this dataset come from?
                     </v-expansion-panel-header>
                     <v-expansion-panel-content class="text-body-2">
