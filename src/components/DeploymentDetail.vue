@@ -51,7 +51,11 @@
               </tr>
               <tr v-if="!theme.deploymentsOnly">
                 <td class="px-2 text-right">Detection Method:</td>
-                <td class="px-2 font-weight-bold">{{ selectedDeployment.properties.detection_method }}</td>
+                <td class="px-2 font-weight-bold">{{ selectedDeployment.properties.detection_method ? selectedDeployment.properties.detection_method : 'N/A' }}</td>
+              </tr>
+              <tr v-if="!theme.deploymentsOnly">
+                <td class="px-2 text-right">Sampling Rate:</td>
+                <td class="px-2 font-weight-bold">{{ selectedDeployment.properties.sampling_rate_hz ? (selectedDeployment.properties.sampling_rate_hz / 1000).toLocaleString() + ' kHz' : 'N/A' }}</td>
               </tr>
               <tr v-if="!theme.deploymentsOnly">
                 <td class="px-2 text-right">QAQC:</td>
