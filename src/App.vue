@@ -317,13 +317,13 @@ export default {
         this.dialogs.guide = true
       } else if (evt && evt.tour) {
         if (!this.theme) {
-          this.setTheme(this.themes[0])
+          this.setTheme(this.themes[1])
             .then(() => this.startTour())
         } else {
           this.startTour()
         }
       } else if (!this.theme) {
-        this.setTheme(this.themes[0])
+        this.setTheme(this.themes[1])
       }
     },
     closeGuide () {

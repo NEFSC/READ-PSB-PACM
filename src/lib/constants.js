@@ -1,5 +1,8 @@
 export const themes = [
   {
+    header: 'Baleen Whales (Mysticeti)'
+  },
+  {
     id: 'narw',
     label: 'North Atlantic Right Whale'
   },
@@ -18,6 +21,12 @@ export const themes = [
   {
     id: 'sei',
     label: 'Sei Whale'
+  },
+  {
+    divider: true
+  },
+  {
+    header: 'Toothed Whales (Odontoceti)'
   },
   {
     id: 'beaked',
