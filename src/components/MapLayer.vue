@@ -39,6 +39,7 @@ export default {
   watch: {
     theme () {
       this.draw()
+      this.setBounds()
     },
     selectedDeployments () {
       this.updateSelected()
@@ -51,20 +52,6 @@ export default {
     }
   },
   mounted () {
-    // console.log('mounted', this.container)
-    // this.container
-    //   .append('circle')
-    //   .attr('class', 'test')
-    //   .attr('r', 100)
-    //   .attr('cx', 500)
-    //   .attr('cy', 500)
-    //   .style('fill', 'red')
-    //   .on('click', function () {
-    //     console.log('CLICKED')
-    //     console.log(arguments)
-    //     console.log(d3.event._simulated)
-    //   })
-    // console.log(d3.selectAll('circle.test'))
     this.container.append('g').classed('tracks', true)
     this.container.append('g').classed('points', true)
     this.container.append('g').classed('stations', true)
@@ -73,6 +60,7 @@ export default {
       .attr('class', 'd3-tip map')
     this.container.call(this.tip)
 
+    this.setBounds()
     this.draw()
 
     evt.$on('map:zoom', this.draw)
@@ -100,6 +88,12 @@ export default {
       this.container.select('g.tracks')
         .selectAll('path.track-overlay')
         .classed('selected', this.isSelected)
+    },
+    setBounds () {
+      if (this.loading) return
+      if (!this.deployments) return
+      const bounds = d3.geoBounds({ type: 'FeatureCollection', features: this.deployments })
+      evt.$emit('map:setBounds', bounds)
     },
     draw () {
       if (this.loading) return

@@ -66,7 +66,8 @@ export default {
   mounted () {
     this.map = this.$refs.map.mapObject
 
-    this.map.addControl(new ZoomMin({ minBounds: this.map.getBounds() }))
+    this.zoomMinControl = new ZoomMin({ minBounds: this.map.getBounds() })
+    this.map.addControl(this.zoomMinControl)
 
     const svgLayer = L.svg()
     this.map.addLayer(svgLayer)
@@ -79,8 +80,21 @@ export default {
       .style('z-index', 500)
     this.container = this.svg.select('g')
     this.ready = true
+
+    evt.$on('map:setBounds', this.setBounds)
+  },
+  beforeDestroy () {
+    evt.$off('map:setBounds', this.setBounds)
   },
   methods: {
+    setBounds (bounds) {
+      const latLngBounds = new L.latLngBounds([ // eslint-disable-line
+        [bounds[0][1], bounds[0][0]],
+        [bounds[1][1], bounds[1][0]]
+      ])
+      this.zoomMinControl.options.minBounds = latLngBounds
+      this.map.fitBounds(latLngBounds)
+    },
     onZoom () {
       evt.$emit('map:zoom', this.map.getZoom())
     }
