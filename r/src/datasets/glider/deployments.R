@@ -1,17 +1,19 @@
 library(tidyverse)
 library(lubridate)
-library(readxl)
+library(janitor)
 
-DATA_DIR <- config::get("data_dir")
-
+files <- config::get("files")
 
 # load --------------------------------------------------------------------
 
 df_csv <- read_csv(
-  file.path(DATA_DIR, "glider", "20210323", "Glider_metadata_2021-03-23.csv"),
+  file.path(files$root, files$glider$metadata),
   col_types = cols(.default = col_character())
 ) %>% 
   janitor::clean_names()
+
+
+# transform ---------------------------------------------------------------
 
 df <- df_csv %>% 
   rename_with(
@@ -64,17 +66,19 @@ df <- df_csv %>%
     call_type
   )
 
+
+# summary -----------------------------------------------------------------
+
 summary(df)
-janitor::tabyl(df, id, theme)
-janitor::tabyl(df, platform_type, theme)
-janitor::tabyl(df, call_type, theme)
-janitor::tabyl(df, detection_method, theme)
-janitor::tabyl(df, protocol_reference, theme)
-janitor::tabyl(df, instrument_type, theme)
+tabyl(df, theme)
+tabyl(df, platform_type, theme)
+tabyl(df, call_type, theme)
+tabyl(df, detection_method, theme)
+tabyl(df, protocol_reference, theme)
+tabyl(df, instrument_type, theme)
 
 
 # export ------------------------------------------------------------------
 
-df %>% 
-  saveRDS("data/datasets/glider/deployments.rds")
+write_rds(df, "data/datasets/glider/deployments.rds")
 

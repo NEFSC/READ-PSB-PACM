@@ -1,59 +1,59 @@
 library(tidyverse)
 library(lubridate)
+library(janitor)
 library(glue)
 library(sf)
 
-detections <- read_rds("data/datasets/glider/detections.rds")$daily
-deployments <- read_rds("data/datasets/glider/deployments.rds")
-tracks <- read_rds("data/datasets/glider/tracks.rds")$sf
-# 
-# 
-# # remove wave -------------------------------------------------------------
-# 
-# deployments <- deployments
-# 
-# detections <- detections %>% 
-#   filter(id %in% unique(deployments$id))
+source("src/functions.R")
+
+detections_rds <- read_rds("data/datasets/glider/detections.rds")$daily
+deployments_rds <- read_rds("data/datasets/glider/deployments.rds")
+tracks_rds <- read_rds("data/datasets/glider/tracks.rds")$sf
 
 
-# export analysis period based on detection data --------------------------
+# analysis period ---------------------------------------------------------
+# TODO: add analysis_start_date, analysis_end_date, analyzed to deployments metadata table
 
-# TODO: add analysis start/end date to deployments metadata
-analysis_periods <- detections %>%
-  group_by(id) %>%
+analysis_periods <- detections_rds %>% 
+  group_by(id) %>% 
   summarise(
     analysis_start_date = min(date),
     analysis_end_date = max(date),
     .groups = "drop"
+  ) %>% 
+  mutate(
+    analyzed = TRUE
   )
 
-deployments <- deployments %>% 
-  left_join(analysis_periods, by = "id") %>% 
-  mutate(analyzed = TRUE)
+deployments_analysis <- deployments_rds %>% 
+  left_join(analysis_periods, by = "id")
+
+
+# qaqc: analysis period ---------------------------------------------------
 
 # analysis periods are the same for each species
-stopifnot(detections %>%
-  group_by(theme, id) %>%
-  summarise(
-    analysis_start_date = min(date),
-    analysis_end_date = max(date),
-    .groups = "drop"
-  ) %>%
-  group_by(id, analysis_start_date, analysis_end_date) %>%
-  summarise(
-    species = str_c(theme, collapse = ","),
-    .groups = "drop"
-  ) %>%
-  add_count(id) %>%
-  filter(n > 1) %>% 
-  nrow() == 0)
+stopifnot(
+  detections_rds %>%
+    group_by(theme, id) %>%
+    summarise(
+      analysis_start_date = min(date),
+      analysis_end_date = max(date),
+      .groups = "drop"
+    ) %>%
+    group_by(id, analysis_start_date, analysis_end_date) %>%
+    summarise(
+      species = str_c(theme, collapse = ","),
+      .groups = "drop"
+    ) %>%
+    add_count(id) %>%
+    filter(n > 1) %>% 
+    nrow() == 0
+)
 
-# analysis periods
-# same_start/end=TRUE indicates where analysis period (based on detections)
-# does not match start or end of monitoring period
+# analysis period does not match monitoring period
 analysis_periods %>%
   full_join(
-    deployments %>%
+    deployments_analysis %>%
       distinct(id, monitoring_start_datetime, monitoring_end_datetime),
     by = "id"
   ) %>%
@@ -67,37 +67,40 @@ analysis_periods %>%
   ) %>%
   select(id, starts_with("monitoring"), starts_with("analysis"), starts_with("difference"), starts_with("same")) %>%
   arrange(id) %>% 
-  # filter(!same_start | !same_end) %>% View
+  # filter(!same_start | !same_end) %>% view
   write_csv("data/qaqc/glider-analysis-periods.csv")
 
 
-# exclude deployments with no detections per species ----------------------
+# qaqc: deployments -------------------------------------------------------
 
 # deployments with no detections by species
-deployments %>% 
+# (all are for theme=blue)
+deployments_analysis %>% 
   anti_join(
-    detections %>% 
+    detections_rds %>% 
       distinct(id, theme),
     by = c("id", "theme")
   ) %>%
   # tabyl(theme)
   write_csv("data/qaqc/glider-deployments-without-detections.csv")
-# all blue
 
-# exclude deployments with no data for each species (unable to tell from metadata table)
-deployments <- deployments %>% 
+
+# exclude deployments withou detections -----------------------------------
+
+# exclude deployments with no detection data for each theme
+deployments_analysis2 <- deployments_analysis %>% 
   semi_join(
-    detections %>% 
+    detections_rds %>% 
       distinct(id, theme),
     by = c("id", "theme")
   )
-tabyl(deployments, id, theme)
+tabyl(deployments_analysis2, id, theme)
 
 
 # fill missing detection days ---------------------------------------------
 # since only include detected or possibly, do not fill with NA
 
-deployments_dates <- deployments %>%
+deployments_dates <- deployments_analysis2 %>%
   transmute(
     theme,
     id,
@@ -113,38 +116,42 @@ deployments_dates <- deployments %>%
 
 # detections that are outside the deployment analysis period (none)
 stopifnot(
-  detections %>%
+  detections_rds %>%
     anti_join(deployments_dates, by = c("theme", "id", "date")) %>% 
     nrow() == 0
 )
 
 # deployment monitoring days with no detection data (add rows with presence="na")
 deployments_dates %>% 
-  anti_join(detections, by = c("id", "date")) %>% 
+  anti_join(detections_rds, by = c("id", "date")) %>% 
   distinct(theme, id, start, end, date) %>% 
   select(theme, id = id, analysis_start_date = start, analysis_end_date = end, date) %>%
   arrange(theme, id, analysis_start_date, date) %>%
-  write_csv("data/qaqc/glider-missing-dates.csv")
   # tabyl(id, theme)
+  write_csv("data/qaqc/glider-missing-dates.csv")
 
-detections_fill <- deployments_dates %>%
+detections <- deployments_dates %>%
   select(theme, id, date) %>%
   full_join(
-    detections,
+    detections_rds,
     by = c("theme", "id", "date")
   ) %>%
   mutate(
     presence = ordered(coalesce(presence, "na"), levels = c("y", "m", "n", "na"))
   )
-janitor::tabyl(detections, theme, presence)
-janitor::tabyl(detections_fill, theme, presence)
 
-janitor::tabyl(detections, id, theme)
-janitor::tabyl(detections_fill, id, theme)
+
+# summary -----------------------------------------------------------------
+
+tabyl(detections_rds, theme, presence)
+tabyl(detections, theme, presence)
+
+
+# qaqc: detections --------------------------------------------------------
 
 # none of the deployments are all NA
 stopifnot(
-  detections_fill %>% 
+  detections %>% 
     count(theme, id, presence) %>% 
     pivot_wider(names_from = "presence", values_from = "n", values_fill = 0) %>% 
     mutate(total = n + na + y + m) %>% 
@@ -153,20 +160,28 @@ stopifnot(
 )
 
 
-# deployments ----------------------------------------------------------------
+# add tracks ----------------------------------------------------------------
 
-deployments_geom <- tracks %>% 
+# no missing tracks or tracks without metadata
+stopifnot(identical(sort(tracks_rds$id), sort(unique(deployments_rds$id))))
+
+deployments <- tracks_rds %>% 
   select(-start, -end) %>% 
-  inner_join(deployments, by = c("id")) %>% 
+  inner_join(deployments_analysis2, by = c("id")) %>% 
   mutate(deployment_type = "mobile") %>% 
   relocate(deployment_type, geometry, .after = last_col()) %>% 
   relocate(theme)
 
 
+# qaqc --------------------------------------------------------------------
+
+qaqc_dataset(deployments, detections)
+
+
 # export ------------------------------------------------------------------
 
 list(
-  deployments = deployments_geom,
-  detections = detections_fill
+  deployments = deployments,
+  detections = detections
 ) %>% 
   write_rds("data/datasets/glider.rds")

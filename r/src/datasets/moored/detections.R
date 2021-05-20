@@ -2,16 +2,19 @@ library(tidyverse)
 library(lubridate)
 library(janitor)
 
-DATA_DIR <- config::get("data_dir")
+files <- config::get("files")
 
 
 # load --------------------------------------------------------------------
 
 df_csv <- read_csv(
-  file.path(DATA_DIR, "moored", "20210407", "Moored_detection_data_2021-04-07.csv"),
+  file.path(files$root, files$moored$detection),
   col_types = cols(.default = col_character())
 ) %>% 
   clean_names()
+
+
+# transform -------------------------------------------------------------------
 
 df <- df_csv %>%
   rename_with(
@@ -33,21 +36,14 @@ df <- df_csv %>%
     presence = fct_recode(presence, y = "Detected", n = "Not Detected", m = "Possibly Detected")
   )
 
-summary(df)
-tabyl(df, id, theme)
-tabyl(df, presence, theme)
-tabyl(df, species, theme)
 
-# one value per theme, id, species, date
-stopifnot(all(
-  df %>%
-    group_by(theme, id, species, date) %>% 
-    count() %>% 
-    pull(n) == 1
-))
+# summary -----------------------------------------------------------------
+
+tabyl(df, theme)
+tabyl(df, species, theme)
+tabyl(df, presence, theme)
+
 
 # export ------------------------------------------------------------------
-
-df %>% 
-  saveRDS("data/datasets/moored/detections.rds")
-
+ 
+write_rds(df, "data/datasets/moored/detections.rds")

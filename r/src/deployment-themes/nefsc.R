@@ -4,16 +4,18 @@ library(tidyverse)
 library(lubridate)
 library(sf)
 
-DATA_DIR <- config::get("data_dir")
+files <- config::get("files")
+
+source("src/functions.R")
 
 # only used for analysis period
 moored <- read_rds("data/datasets/moored.rds")
 
 
-# load: deployments -------------------------------------------------------
+# load -----------------------------------------------------------
 
 df_csv <- read_csv(
-  file.path(DATA_DIR, "moored", "20210407", "Moored_metadata_2021-04-07.csv"),
+  file.path(files$root, files$moored$metadata),
   col_types = cols(.default = col_character())
 ) %>% 
   janitor::clean_names()
@@ -68,27 +70,18 @@ stations <- df_deployments %>%
   select(id, latitude, longitude) %>% 
   distinct()
 
-stopifnot(all(!duplicated(stations$id)))
-stopifnot(all(!is.na(stations$latitude)))
-stopifnot(all(!is.na(stations$longitude)))
-
 sf_stations <- stations %>% 
   st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
 
-mapview::mapview(sf_stations, legend = FALSE)
-
-sf_deployments <- sf_stations %>% 
+deployments <- sf_stations %>% 
   full_join(df_deployments, by = "id") %>% 
   mutate(deployment_type = "stationary") %>% 
   relocate(deployment_type, geometry, .after = last_col())
 
-stopifnot(all(!duplicated(sf_deployments$id)))
-stopifnot(identical(df_deployments$id, sf_deployments$id))
-
 
 # detections --------------------------------------------------------------
 
-df_detections <- df_deployments %>% 
+detections <- df_deployments %>% 
   distinct(theme, id, monitoring_start_datetime, monitoring_end_datetime) %>% 
   left_join(
     moored$deployments %>% 
@@ -109,13 +102,31 @@ df_detections <- df_deployments %>%
   ) %>% 
   unnest(date) %>% 
   select(-start, -end) %>% 
-  mutate(species = NA_character_, presence = "d")
+  mutate(
+    species = NA_character_,
+    presence = "d",
+    locations = map(id, ~ NULL)
+  )
+
+
+# qaqc --------------------------------------------------------------------
+
+qaqc_dataset(deployments, detections)
+
+stopifnot(all(!duplicated(stations$id)))
+stopifnot(all(!is.na(stations$latitude)))
+stopifnot(all(!is.na(stations$longitude)))
+
+mapview::mapview(sf_stations, legend = FALSE)
+
+stopifnot(all(!duplicated(deployments$id)))
+stopifnot(identical(df_deployments$id, deployments$id))
 
 
 # export ------------------------------------------------------------------
 
 list(
-  deployments = sf_deployments,
-  detections = df_detections
+  deployments = deployments,
+  detections = detections
 ) %>% 
   write_rds("data/deployment-themes/nefsc.rds")

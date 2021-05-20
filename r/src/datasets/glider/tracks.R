@@ -1,19 +1,22 @@
 library(tidyverse)
 library(lubridate)
-library(sf)
 library(janitor)
+library(sf)
 library(mapview)
 
-DATA_DIR <- config::get("data_dir")
+files <- config::get("files")
 
 
 # load --------------------------------------------------------------------
 
 df_csv <- read_csv(
-  file.path(DATA_DIR, "glider", "20210323", "Glider_detection_data_2021-03-23.csv"),
+  file.path(files$root, files$glider$detection),
   col_types = cols(.default = col_character())
 ) %>% 
   clean_names()
+
+
+# transform ---------------------------------------------------------------
 
 df <- df_csv %>%
   rename_with(

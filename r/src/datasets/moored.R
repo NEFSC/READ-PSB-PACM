@@ -1,24 +1,37 @@
 library(tidyverse)
 library(lubridate)
+library(janitor)
+library(glue)
 library(sf)
 
-detections <- read_rds("data/datasets/moored/detections.rds")
-deployments <- read_rds("data/datasets/moored/deployments.rds")
+source("src/functions.R")
+
+detections_rds <- read_rds("data/datasets/moored/detections.rds")
+deployments_rds <- read_rds("data/datasets/moored/deployments.rds")
 
 
-# export analysis period based on detection data --------------------------
+# analysis period ---------------------------------------------------------
+# TODO: add analysis_start_date, analysis_end_date, analyzed to deployments metadata table
 
-# TODO: add analysis_start/end_date, analyzed to deployments metadata
-analysis_periods <- detections %>% 
+analysis_periods <- detections_rds %>% 
   group_by(id) %>% 
   summarise(
     analysis_start_date = min(date),
     analysis_end_date = max(date),
     .groups = "drop"
+  ) %>% 
+  mutate(
+    analyzed = TRUE
   )
 
-# varying analysis periods by species
-detections %>%
+deployments_analysis <- deployments_rds %>% 
+  left_join(analysis_periods, by = "id")
+
+
+# qaqc: analysis period ---------------------------------------------------
+
+# analysis periods vary by species
+detections_rds %>%
   group_by(theme, id) %>%
   summarise(
     analysis_start_date = min(date),
@@ -36,16 +49,10 @@ detections %>%
   select(-n) %>%
   write_csv("data/qaqc/moored-varying-analysis-periods.csv")
 
-deployments <- deployments %>% 
-  left_join(analysis_periods, by = "id") %>% 
-  mutate(analyzed = TRUE)
-
-# analysis periods
-# same_start/end=TRUE indicates where analysis period (based on detections)
-# does not match start or end of monitoring period
+# analysis period does not match monitoring period
 analysis_periods %>%
   full_join(
-    deployments %>%
+    deployments_analysis %>%
       distinct(id, platform_type, monitoring_start_datetime, monitoring_end_datetime),
     by = "id"
   ) %>%
@@ -63,17 +70,11 @@ analysis_periods %>%
   write_csv("data/qaqc/moored-analysis-periods.csv")
 
 
-# fill missing lat/lon ----------------------------------------------------
+# fill: missing detections ------------------------------------------------
+# presence = na for any date missing within the analysis period
 
-stopifnot(all(!is.na(deployments$latitude)))
-stopifnot(all(!is.na(deployments$longitude)))
-
-
-# fill missing detection days ---------------------------------------------
-# for any date within the analysis period (analysis_start/end_date)
-# if no value in detection, then set presence=na
-
-deployments_dates <- deployments %>% 
+# dates over analysis period of each deployment
+deployments_dates <- deployments_analysis %>% 
   transmute(
     theme,
     id,
@@ -87,42 +88,41 @@ deployments_dates <- deployments %>%
   ) %>% 
   unnest(date)
 
-# detections that are outside the deployment analysis period
-stopifnot(detections %>%
-  anti_join(deployments_dates, by = c("theme", "id", "date")) %>% 
-  nrow() == 0
+# fill missing detection days with presence = na
+# and add empty locations
+detections <- deployments_dates %>%  
+  select(theme, id, date) %>% 
+  full_join(
+    detections_rds,
+    by = c("theme", "id", "date")
+  ) %>% 
+  mutate(
+    presence = ordered(coalesce(presence, "na"), levels = c(levels(presence), "na")),
+    locations = map(theme, ~ NULL)
+  )
+
+
+# qaqc: detections --------------------------------------------------------
+
+# no detections are outside the deployment analysis period
+stopifnot(
+  detections_rds %>%
+    anti_join(deployments_dates, by = c("theme", "id", "date")) %>% 
+    nrow() == 0
 )
 
-# deployment monitoring days with no detection data (add rows with presence="na")
+# deployment monitoring days with no detection data (filled with presence = na)
 deployments_dates %>% 
-  anti_join(detections, by = c("id", "date")) %>% 
+  anti_join(detections_rds, by = c("id", "date")) %>% 
   distinct(theme, id, start, end, date) %>% 
   select(theme, id = id, analysis_start_date = start, analysis_end_date = end, date) %>%
   arrange(theme, id, analysis_start_date, date) %>%
   write_csv("data/qaqc/moored-missing-dates.csv")
   # tabyl(id, theme)
 
-detections %>% 
-  janitor::tabyl(id, theme)
-
-detections_fill <- deployments_dates %>%  
-  select(theme, id, date) %>% 
-  full_join(
-    detections,
-    by = c("theme", "id", "date")
-  ) %>% 
-  mutate(
-    presence = ordered(coalesce(presence, "na"), levels = c(levels(presence), "na"))
-  )
-janitor::tabyl(detections, theme, presence)
-janitor::tabyl(detections_fill, theme, presence)
-
-janitor::tabyl(detections, id, theme)
-janitor::tabyl(detections_fill, id, theme)
-
 # none of the deployments are all NA
 stopifnot(
-  detections_fill %>% 
+  detections %>% 
     count(theme, id, presence) %>% 
     pivot_wider(names_from = "presence", values_from = "n", values_fill = 0) %>% 
     mutate(total = n + na + y + m) %>% 
@@ -131,32 +131,45 @@ stopifnot(
 )
 
 
-# stations ----------------------------------------------------------------
+# summary -----------------------------------------------------------------
 
-stations <- deployments %>% 
-  select(id, latitude, longitude) %>% 
-  distinct()
+tabyl(detections_rds, theme, presence) # before fill
+tabyl(detections, theme, presence)     # after fill
 
-stopifnot(all(!duplicated(stations$id)))
-stopifnot(all(!is.na(stations$latitude)))
-stopifnot(all(!is.na(stations$longitude)))
 
-sf_stations <- stations %>% 
+# deployments geom --------------------------------------------------------
+
+# no missing id, latitude, longitude
+stopifnot(
+  all(
+    deployments_analysis %>% 
+      distinct(id, latitude, longitude) %>% 
+      complete.cases()
+  )
+)
+
+deployments_sf <- deployments_analysis %>% 
+  distinct(id, latitude, longitude) %>% 
   st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
 
-mapview::mapview(sf_stations, legend = FALSE)
+mapview::mapview(deployments_sf, legend = FALSE)
 
-deployments_geom <- sf_stations %>% 
-  left_join(deployments, by = "id") %>% 
+deployments <- deployments_sf %>% 
+  left_join(deployments_analysis, by = "id") %>% 
   mutate(deployment_type = "stationary") %>% 
   relocate(deployment_type, geometry, .after = last_col())
+
+
+# qaqc --------------------------------------------------------------------
+
+qaqc_dataset(deployments, detections)
 
 
 # export ------------------------------------------------------------------
 
 list(
-  deployments = deployments_geom,
-  detections = detections_fill
+  deployments = deployments,
+  detections = detections
 ) %>% 
   write_rds("data/datasets/moored.rds")
 

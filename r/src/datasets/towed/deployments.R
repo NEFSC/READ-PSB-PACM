@@ -3,19 +3,18 @@ library(lubridate)
 library(readxl)
 library(janitor)
 
-DATA_DIR <- config::get("data_dir")
+files <- config::get("files")
 
 # load --------------------------------------------------------------------
 
 df_raw <- read_excel(
-  file.path(DATA_DIR, "towed", "Towed_Array_effort_Walker_Website_Daily_Resolution.xlsx"),
+  file.path(files$root, files$towed$metadata),
   sheet = "Towed_array_metadata"
 ) %>% 
   janitor::clean_names()
 
-
 cruise_dates <- read_xlsx(
-  file.path(DATA_DIR, "towed", "Towed_Array_effort_Walker_Website_Daily_Resolution.xlsx"),
+  file.path(files$root, files$towed$metadata),
   sheet = "Cruise_dates"
 ) %>% 
   clean_names() %>% 
@@ -42,7 +41,7 @@ cruise_dates <- read_xlsx(
   nest(cruise_dates = c(leg, date))
 
 
-# clean -------------------------------------------------------------------
+# transform -------------------------------------------------------------------
 
 df <- df_raw %>% 
   transmute(
@@ -93,33 +92,29 @@ df <- df_raw %>%
     analysis_start_date = if_else(analyzed, ymd(map(cruise_dates, ~ as.character(min(.x$date)))), NA_Date_),
     analysis_end_date = if_else(analyzed, ymd(map(cruise_dates, ~ as.character(max(.x$date)))), NA_Date_)
   )
-  
 
-janitor::tabyl(df, id, theme)
-janitor::tabyl(df, analyzed, theme)
-janitor::tabyl(df, platform_type, theme)
-janitor::tabyl(df, detection_method, theme)
-janitor::tabyl(df, instrument_type, theme)
-janitor::tabyl(df, analyzed, analysis_start_date)
 
-df %>% 
-  filter(analyzed) %>% 
-  janitor::tabyl(id, theme)
-df %>% 
-  filter(analyzed) %>% 
-  janitor::tabyl(analyzed, theme)
-df %>% 
-  filter(analyzed) %>% 
-  janitor::tabyl(platform_type, theme)
-df %>% 
-  filter(analyzed) %>% 
-  janitor::tabyl(detection_method, theme)
-df %>% 
-  filter(analyzed) %>% 
-  janitor::tabyl(instrument_type, theme)
+# summary -----------------------------------------------------------------
+
+tabyl(df, theme)
+tabyl(df, platform_type, theme)
+tabyl(df, call_type, theme)
+tabyl(df, detection_method, theme)
+tabyl(df, protocol_reference, theme)
+tabyl(df, instrument_type, theme)
+tabyl(df, analyzed, theme)
+
+df_analyzed <- filter(df, analyzed)
+tabyl(df_analyzed, theme)
+tabyl(df_analyzed, platform_type, theme)
+tabyl(df_analyzed, call_type, theme)
+tabyl(df_analyzed, detection_method, theme)
+tabyl(df_analyzed, protocol_reference, theme)
+tabyl(df_analyzed, instrument_type, theme)
+tabyl(df_analyzed, analyzed, theme)
+
 
 # export ------------------------------------------------------------------
 
-df %>% 
-  saveRDS("data/datasets/towed/deployments.rds")
+write_rds(df, "data/datasets/towed/deployments.rds")
 

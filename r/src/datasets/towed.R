@@ -1,16 +1,19 @@
 library(tidyverse)
 library(lubridate)
-library(glue)
 library(janitor)
+library(glue)
 library(sf)
 
-detections <- read_rds("data/datasets/towed/detections.rds")$daily
-deployments <- read_rds("data/datasets/towed/deployments.rds")
-tracks <- read_rds("data/datasets/towed/tracks.rds")$sf
+source("src/functions.R")
+
+detections_rds <- read_rds("data/datasets/towed/detections.rds")$daily
+deployments_rds <- read_rds("data/datasets/towed/deployments.rds")
+tracks_rds <- read_rds("data/datasets/towed/tracks.rds")$sf
+
 
 # fill missing detection days ---------------------------------------------
 
-deployments_dates <- deployments %>% 
+deployments_dates <- deployments_rds %>% 
   as_tibble() %>% 
   transmute(
     theme,
@@ -21,82 +24,78 @@ deployments_dates <- deployments %>%
   unnest(cruise_dates) %>% 
   select(-leg)
 
-# detections that are outside the deployment cruise dates
+# no detections outside deployment cruise dates
 stopifnot(
-  detections %>%
+  detections_rds %>%
     anti_join(deployments_dates, by = c("theme", "id", "date")) %>% 
     nrow() == 0
 )
 
-# analyzed deployment monitoring days with no detection data (add rows with presence="n")
+# deployment monitoring days with no detection data (fill with presence = n)
 deployments_dates %>% 
   filter(analyzed) %>% 
-  anti_join(detections, by = c("id", "date")) %>%
+  anti_join(detections_rds, by = c("id", "date")) %>%
   tabyl(id, theme)
 
-deployments_dates %>% 
-  janitor::tabyl(id, theme, analyzed)
-
-detections_fill <- deployments_dates %>%  
+detections <- deployments_dates %>%  
   left_join(
-    detections,
+    detections_rds,
     by = c("theme", "id", "date")
   ) %>% 
   mutate(
     presence = if_else(analyzed, coalesce(presence, "n"), "na"),
     presence = as.character(presence)
-    # species = if_else(theme == "beaked", coalesce(species, "N/A"), coalesce(species, theme))
   ) %>% 
   select(-analyzed)
 
-janitor::tabyl(detections, theme, species)
-janitor::tabyl(detections_fill, theme, species)
-janitor::tabyl(detections, theme, presence)
-janitor::tabyl(detections_fill, theme, presence)
 
-janitor::tabyl(detections_fill, id, presence, theme)
+# summary -----------------------------------------------------------------
 
-detections_fill %>% 
+tabyl(detections_rds, theme, presence)
+tabyl(detections, theme, presence)
+
+tabyl(deployments_rds, id, theme, analyzed)
+
+detections %>% 
   distinct(theme, id, date, presence) %>% 
   left_join(
-    deployments %>%
+    deployments_rds %>%
       select(theme, id, analyzed),
     by = c("theme", "id")
   ) %>%
-  # filter(analyzed) %>% 
-  janitor::tabyl(id, presence, theme) %>% 
-  janitor::adorn_totals(where = c("row", "col"))
+  filter(analyzed) %>% 
+  tabyl(id, presence, theme) %>% 
+  adorn_totals(where = c("row", "col"))
 
-deployments_dates %>% 
-  count(id)
-
-janitor::tabyl(deployments, id, analyzed, theme)
-
-detections_fill %>% 
+# number of days with presence = n
+detections %>% 
   filter(presence == "n") %>% 
-  janitor::tabyl(id, theme)
-
-# detections_fill %>% 
-#   filter(id == "NEFSC_HB1603", theme == "beaked") %>% 
-#   mutate(n_locations = map_int(locations, ~ if_else(is_null(.x), 0L, nrow(.x)))) %>% 
-#   select(-locations) %>% 
-#   View
+  tabyl(id, theme)
 
 
 # deployments ----------------------------------------------------------------
 
-deployments_geom <- tracks %>% 
+# no missing tracks or tracks without metadata
+stopifnot(identical(sort(tracks_rds$id), sort(unique(deployments_rds$id))))
+
+deployments <- tracks_rds %>% 
   select(-start, -end) %>% 
-  left_join(deployments, by = c("id")) %>% 
+  left_join(deployments_rds, by = c("id")) %>% 
   select(-cruise_dates) %>% 
   mutate(deployment_type = "mobile") %>% 
   relocate(deployment_type, geometry, .after = last_col()) %>% 
   relocate(theme)
 
+
+# qaqc --------------------------------------------------------------------
+
+qaqc_dataset(deployments, detections)
+
+
 # export ------------------------------------------------------------------
 
 list(
-  deployments = deployments_geom,
-  detections = detections_fill
+  deployments = deployments,
+  detections = detections
 ) %>% 
   write_rds("data/datasets/towed.rds")

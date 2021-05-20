@@ -2,18 +2,20 @@ library(tidyverse)
 library(lubridate)
 library(janitor)
 
-DATA_DIR <- config::get("data_dir")
-
+files <- config::get("files")
 
 # load --------------------------------------------------------------------
 
 df_csv <- read_csv(
-  file.path(DATA_DIR, "glider", "20210323", "Glider_detection_data_2021-03-23.csv"),
+  file.path(files$root, files$glider$detection),
   col_types = cols(.default = col_character())
 ) %>% 
   clean_names()
 
-df <- df_csv %>%
+
+# transform ---------------------------------------------------------------
+
+df_inst <- df_csv %>%
   rename_with(
     ~ str_replace(., "_", ":"),
     starts_with(c("narw_", "humpback_", "sei_", "fin_", "blue_"))
@@ -31,7 +33,7 @@ df <- df_csv %>%
     species = NA_character_,
     date = as_date(ymd_hms(analysis_period_start_datetime)),
     presence = fct_recode(presence, y = "Detected", n = "Not Detected", m = "Possibly Detected"),
-    presence = ordered(presence, levels = c("y", "m", "n")), # need to make ordered for filtering first location of each day
+    presence = ordered(presence, levels = c("y", "m", "n")), # need to order for filtering first location of each day
     analysis_period_start_datetime = ymd_hms(analysis_period_start_datetime),
     analysis_period_end_datetime = ymd_hms(analysis_period_end_datetime),
     analysis_period_effort_seconds = parse_number(analysis_period_effort_seconds),
@@ -40,7 +42,8 @@ df <- df_csv %>%
   ) %>% 
   arrange(theme, id, species, date, presence, analysis_period_start_datetime)
 
-df_day <- df %>% 
+# aggregate to daily
+df_day <- df_inst %>% 
   nest(locations = c(analysis_period_start_datetime, analysis_period_end_datetime, analysis_period_effort_seconds, latitude, longitude, presence)) %>% 
   rowwise() %>% 
   mutate(
@@ -59,42 +62,23 @@ df_day <- df %>%
   ungroup() %>% 
   relocate(locations, .after = last_col())
 
-summary(df)
-summary(select(df_day, -locations))
-tabyl(df_day, id, theme)
+
+# summary -----------------------------------------------------------------
+
+tabyl(df_day, theme)
 tabyl(df_day, species, theme)
 tabyl(df_day, presence, theme)
 
-df_day %>% 
-  filter(presence == "y") %>% 
-  slice_head(n = 1) %>% 
-  pull(locations)
-
+# zero locations for presence = n, exactly one location for presence = y or m
 df_day %>% 
   mutate(n_locations = map_int(locations, nrow)) %>% 
-  tabyl(n_locations, theme, presence)
-
-# only one detection per theme, id, species and date
-stopifnot(all(
-  df_day %>%
-    group_by(theme, id, species, date) %>% 
-    count() %>% 
-    pull(n) == 1
-))
-
-# zero or one location per row
-stopifnot(all(
-  df_day %>%
-    pull(locations) %>% 
-    map_int(nrow) <= 1
-))
+  tabyl(n_locations, presence)
 
 
 # export ------------------------------------------------------------------
 
 list(
-  data = df,
+  data = df_inst,
   daily = df_day
 ) %>% 
   write_rds("data/datasets/glider/detections.rds")
-

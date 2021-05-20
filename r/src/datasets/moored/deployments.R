@@ -1,16 +1,19 @@
 library(tidyverse)
 library(lubridate)
+library(janitor)
 
-DATA_DIR <- config::get("data_dir")
-
+files <- config::get("files")
 
 # load --------------------------------------------------------------------
 
 df_csv <- read_csv(
-  file.path(DATA_DIR, "moored", "20210407", "Moored_metadata_2021-04-07.csv"),
+  file.path(files$root, files$moored$metadata),
   col_types = cols(.default = col_character())
 ) %>% 
   janitor::clean_names()
+
+
+# transform ---------------------------------------------------------------
 
 df <- df_csv %>% 
   rename_with(
@@ -63,16 +66,17 @@ df <- df_csv %>%
     call_type
   )
 
-janitor::tabyl(df, id, theme)
-janitor::tabyl(df, platform_type, theme)
-janitor::tabyl(df, call_type, theme)
-janitor::tabyl(df, detection_method, theme)
-janitor::tabyl(df, protocol_reference, theme)
-janitor::tabyl(df, instrument_type, theme)
+
+# summary -----------------------------------------------------------------
+
+tabyl(df, theme)
+tabyl(df, platform_type, theme)
+tabyl(df, call_type, theme)
+tabyl(df, detection_method, theme)
+tabyl(df, protocol_reference, theme)
+tabyl(df, instrument_type, theme)
 
 
 # export ------------------------------------------------------------------
 
-df %>% 
-  saveRDS("data/datasets/moored/deployments.rds")
-
+write_rds(df, "data/datasets/moored/deployments.rds")
