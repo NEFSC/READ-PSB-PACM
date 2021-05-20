@@ -49,5 +49,5 @@ stopifnot(all(
 # export ------------------------------------------------------------------
 
 df %>% 
-  saveRDS("data/moored/detections.rds")
+  saveRDS("data/datasets/moored/detections.rds")
 

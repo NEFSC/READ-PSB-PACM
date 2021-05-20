@@ -1,18 +1,31 @@
 
-source("src/data/moored-deployments.R")
-source("src/data/moored-detections.R")
-source("src/moored.R")
+# datasets ----------------------------------------------------------------
 
-source("src/data/glider-deployments.R")
-source("src/data/glider-detections.R")
-source("src/data/glider-tracks.R")
-source("src/glider.R")
+source("src/datasets/moored/deployments.R")
+source("src/datasets/moored/detections.R")
+source("src/datasets/moored.R")
 
-source("src/data/towed-deployments.R")
-source("src/data/towed-detections.R")
-source("src/data/towed-tracks.R")
-source("src/towed.R")
+source("src/datasets/glider/deployments.R")
+source("src/datasets/glider/detections.R")
+source("src/datasets/glider/tracks.R")
+source("src/datasets/glider.R")
 
-source("src/nefsc-deployments.R")
+source("src/datasets/towed/deployments.R")
+source("src/datasets/towed/detections.R")
+source("src/datasets/towed/tracks.R")
+source("src/datasets/towed.R")
 
-source("src/export.R")
+
+# deployment themes --------------------------------------------------------
+
+source("src/deployment-themes/nefsc.R")
+
+
+# merge themes ------------------------------------------------------------
+
+source("src/themes.R")
+
+
+# export ------------------------------------------------------------------
+
+source("src/export/themes.R")

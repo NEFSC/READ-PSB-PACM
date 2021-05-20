@@ -48,7 +48,7 @@ export const themes = [
     header: 'Deployments Only (No Detection Data)'
   },
   {
-    id: 'nefsc-deployments',
+    id: 'deployments-nefsc',
     label: 'NEFSC Deployments',
     deploymentsOnly: true
   }
@@ -101,7 +101,7 @@ export const detectionTypes = [
     color: '#666666'
   },
   {
-    id: 'rd',
+    id: 'd',
     label: 'Total Days',
     color: 'orange'
   }

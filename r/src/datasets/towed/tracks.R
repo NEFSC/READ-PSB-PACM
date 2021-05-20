@@ -399,9 +399,11 @@ mapview::mapview(sf_tracks, zcol = "id")
 # export ------------------------------------------------------------------
 
 list(
+  cruise_dates = cruise_dates,
+  legs = df_legs,
   raw = df_raw,
   data = df,
   sf = sf_tracks
 ) %>% 
-  write_rds("data/towed/tracks.rds")
+  write_rds("data/datasets/towed/tracks.rds")
 

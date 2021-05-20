@@ -29,8 +29,8 @@ df <- df_csv %>%
   transmute(
     id = unique_id, 
     datetime = ymd_hms(analysis_period_start_datetime), 
-    latitude, 
-    longitude
+    latitude = parse_number(latitude),
+    longitude = parse_number(longitude)
   ) %>% 
   distinct() %>% 
   arrange(id, datetime)
@@ -60,5 +60,5 @@ list(
   data = df,
   sf = sf_tracks
 ) %>% 
-  write_rds("data/glider/tracks.rds")
+  write_rds("data/datasets/glider/tracks.rds")
 

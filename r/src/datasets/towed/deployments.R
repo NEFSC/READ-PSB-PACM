@@ -121,5 +121,5 @@ df %>%
 # export ------------------------------------------------------------------
 
 df %>% 
-  saveRDS("data/towed/deployments.rds")
+  saveRDS("data/datasets/towed/deployments.rds")
 

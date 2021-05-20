@@ -1,4 +1,4 @@
-# nefsc-deployments theme (no detections)
+# deployments/nefsc theme
 
 library(tidyverse)
 library(lubridate)
@@ -6,9 +6,11 @@ library(sf)
 
 DATA_DIR <- config::get("data_dir")
 
-moored <- read_rds("data/moored.rds")
+# only used for analysis period
+moored <- read_rds("data/datasets/moored.rds")
 
-# load --------------------------------------------------------------------
+
+# load: deployments -------------------------------------------------------
 
 df_csv <- read_csv(
   file.path(DATA_DIR, "moored", "20210407", "Moored_metadata_2021-04-07.csv"),
@@ -16,13 +18,10 @@ df_csv <- read_csv(
 ) %>% 
   janitor::clean_names()
 
-
-# deployments -------------------------------------------------------------
-
 df_deployments <- df_csv %>% 
   filter(data_poc_affiliation == "NOAA NEFSC") %>% 
   transmute(
-    theme = "nefsc-deployments",
+    theme = "deployments-nefsc",
     id = unique_id,
     project,
     site_id,
@@ -60,7 +59,10 @@ df_deployments <- df_csv %>%
     protocol_reference = NA_character_,
     call_type = NA_character_
   ) %>% 
-  filter(!is.na(monitoring_end_datetime)) # exclude active deployments
+  filter(!is.na(monitoring_end_datetime)) # exclude active deployments because they have no end date to generate rd detections
+
+
+# add geom ----------------------------------------------------------------
 
 stations <- df_deployments %>% 
   select(id, latitude, longitude) %>% 
@@ -107,7 +109,7 @@ df_detections <- df_deployments %>%
   ) %>% 
   unnest(date) %>% 
   select(-start, -end) %>% 
-  mutate(species = NA_character_, presence = "rd")
+  mutate(species = NA_character_, presence = "d")
 
 
 # export ------------------------------------------------------------------
@@ -116,4 +118,4 @@ list(
   deployments = sf_deployments,
   detections = df_detections
 ) %>% 
-  write_rds("data/nefsc-deployments.rds")
+  write_rds("data/deployment-themes/nefsc.rds")

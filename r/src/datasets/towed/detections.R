@@ -379,7 +379,9 @@ df <- df_csv %>%
     latitude,
     longitude
   ) %>% 
-  arrange(theme, id, species, date, analysis_period_start_datetime) %>% 
+  arrange(theme, id, species, date, analysis_period_start_datetime)
+
+df_day <- df %>% 
   nest(locations = c(analysis_period_start_datetime, analysis_period_end_datetime, analysis_period_effort_seconds, latitude, longitude, presence)) %>% 
   rowwise() %>% 
   mutate(
@@ -391,12 +393,12 @@ df <- df_csv %>%
   ) %>% 
   ungroup()
 
-summary(select(df, -locations))
-tabyl(df, id, theme)
-tabyl(df, presence, theme)
+summary(select(df_day, -locations))
+tabyl(df_day, id, theme)
+tabyl(df_day, presence, theme)
 
 stopifnot(all(
-  df %>%
+  df_day %>%
     group_by(theme, id, species, date) %>% 
     count() %>% 
     pull(n) == 1
@@ -404,13 +406,16 @@ stopifnot(all(
 
 # at least one location per row
 stopifnot(all(
-  df %>%
+  df_day %>%
     pull(locations) %>% 
     map_int(nrow) >= 1
 ))
 
 # export ------------------------------------------------------------------
 
-df %>% 
-  saveRDS("data/towed/detections.rds")
+list(
+  data = df,
+  daily = df_day
+) %>% 
+  write_rds("data/datasets/towed/detections.rds")
 

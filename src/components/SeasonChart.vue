@@ -59,7 +59,7 @@ export default {
         let body
         if (this.theme.deploymentsOnly) {
           body = `
-            ${pad(12, detectionTypesMap.get('rd').label, '&nbsp;')}: ${pad(6, d.data.value.rd.toLocaleString(), '&nbsp;')}<br>
+            ${pad(12, detectionTypesMap.get('d').label, '&nbsp;')}: ${pad(6, d.data.value.d.toLocaleString(), '&nbsp;')}<br>
           `
         } else {
           body = `
@@ -102,7 +102,7 @@ export default {
     this.chart.stack(group, 'm', d => d.value.m)
     this.chart.stack(group, 'n', d => d.value.n)
     this.chart.stack(group, 'na', d => d.value.na)
-    this.chart.stack(group, 'rd', d => d.value.rd)
+    this.chart.stack(group, 'd', d => d.value.d)
     this.chart.xAxis().tickFormat(d3.timeFormat('%b'))
     this.chart.yAxis().ticks(4)
     this.chart.render()

@@ -27,7 +27,7 @@ export const deploymentGroup = deploymentDim.group().reduce(
     n: 0,
     m: 0,
     na: 0,
-    rd: 0,
+    d: 0,
     total: 0
   })
 )
