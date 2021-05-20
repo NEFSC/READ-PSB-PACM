@@ -29,8 +29,8 @@ df <- df_csv %>%
   transmute(
     id = unique_id, 
     datetime = ymd_hms(analysis_period_start_datetime), 
-    latitude, 
-    longitude
+    latitude = parse_number(latitude),
+    longitude = parse_number(longitude)
   ) %>% 
   distinct() %>% 
   arrange(id, datetime)

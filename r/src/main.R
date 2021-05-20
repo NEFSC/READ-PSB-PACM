@@ -13,6 +13,6 @@ source("src/data/towed-detections.R")
 source("src/data/towed-tracks.R")
 source("src/towed.R")
 
-source("src/nefsc-deployments.R")
+source("src/deployments/nefsc.R")
 
 source("src/export.R")

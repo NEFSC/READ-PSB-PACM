@@ -38,7 +38,9 @@ df <- df_csv %>%
     latitude = parse_number(latitude),
     longitude = parse_number(longitude)
   ) %>% 
-  arrange(theme, id, species, date, presence, analysis_period_start_datetime) %>% 
+  arrange(theme, id, species, date, presence, analysis_period_start_datetime)
+
+df_day <- df %>% 
   nest(locations = c(analysis_period_start_datetime, analysis_period_end_datetime, analysis_period_effort_seconds, latitude, longitude, presence)) %>% 
   rowwise() %>% 
   mutate(
@@ -57,23 +59,24 @@ df <- df_csv %>%
   ungroup() %>% 
   relocate(locations, .after = last_col())
 
-summary(select(df, -locations))
-tabyl(df, id, theme)
-tabyl(df, species, theme)
-tabyl(df, presence, theme)
+summary(df)
+summary(select(df_day, -locations))
+tabyl(df_day, id, theme)
+tabyl(df_day, species, theme)
+tabyl(df_day, presence, theme)
 
-df %>% 
+df_day %>% 
   filter(presence == "y") %>% 
   slice_head(n = 1) %>% 
   pull(locations)
 
-df %>% 
+df_day %>% 
   mutate(n_locations = map_int(locations, nrow)) %>% 
   tabyl(n_locations, theme, presence)
 
 # only one detection per theme, id, species and date
 stopifnot(all(
-  df %>%
+  df_day %>%
     group_by(theme, id, species, date) %>% 
     count() %>% 
     pull(n) == 1
@@ -81,7 +84,7 @@ stopifnot(all(
 
 # zero or one location per row
 stopifnot(all(
-  df %>%
+  df_day %>%
     pull(locations) %>% 
     map_int(nrow) <= 1
 ))
@@ -89,6 +92,9 @@ stopifnot(all(
 
 # export ------------------------------------------------------------------
 
-df %>% 
-  saveRDS("data/glider/detections.rds")
+list(
+  data = df,
+  daily = df_day
+) %>% 
+  write_rds("data/glider/detections.rds")
 

@@ -10,20 +10,20 @@ library(jsonlite)
 towed <- readRDS("data/towed.rds")
 moored <- readRDS("data/moored.rds")
 glider <- readRDS("data/glider.rds")
-nefsc_deployments <- read_rds("data/nefsc-deployments.rds")
+deployments_nefsc <- read_rds("data/deployments/nefsc.rds")
 
 df_deployments <- bind_rows(
   towed$deployments,
   glider$deployments,
   moored$deployments,
-  nefsc_deployments$deployments
+  deployments_nefsc$deployments
 )
 
 df_detections <- bind_rows(
   towed$detections,
   glider$detections,
   moored$detections,
-  nefsc_deployments$detections
+  deployments_nefsc$detections
 ) %>% 
   left_join(
     df_deployments %>% 
@@ -153,7 +153,7 @@ export_theme("sei")
 export_theme("beaked")
 export_theme("kogia")
 export_theme("sperm")
-export_theme("nefsc-deployments")
+export_theme("deployments/nefsc")
 
 
 # demo theme --------------------------------------------------------------

@@ -3,7 +3,7 @@ library(lubridate)
 library(glue)
 library(sf)
 
-detections <- read_rds("data/glider/detections.rds")
+detections <- read_rds("data/glider/detections.rds")$daily
 deployments <- read_rds("data/glider/deployments.rds")
 tracks <- read_rds("data/glider/tracks.rds")$sf
 

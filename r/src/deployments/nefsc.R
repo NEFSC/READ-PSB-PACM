@@ -1,4 +1,4 @@
-# nefsc-deployments theme (no detections)
+# deployments/nefsc theme (no detections)
 
 library(tidyverse)
 library(lubridate)
@@ -22,7 +22,7 @@ df_csv <- read_csv(
 df_deployments <- df_csv %>% 
   filter(data_poc_affiliation == "NOAA NEFSC") %>% 
   transmute(
-    theme = "nefsc-deployments",
+    theme = "deployments/nefsc",
     id = unique_id,
     project,
     site_id,
@@ -116,4 +116,4 @@ list(
   deployments = sf_deployments,
   detections = df_detections
 ) %>% 
-  write_rds("data/nefsc-deployments.rds")
+  write_rds("data/deployments/nefsc.rds")

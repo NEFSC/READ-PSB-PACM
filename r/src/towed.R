@@ -4,7 +4,7 @@ library(glue)
 library(janitor)
 library(sf)
 
-detections <- read_rds("data/towed/detections.rds")
+detections <- read_rds("data/towed/detections.rds")$daily
 deployments <- read_rds("data/towed/deployments.rds")
 tracks <- read_rds("data/towed/tracks.rds")$sf
 
