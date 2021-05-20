@@ -96,5 +96,5 @@ list(
   data = df,
   daily = df_day
 ) %>% 
-  write_rds("data/glider/detections.rds")
+  write_rds("data/datasets/glider/detections.rds")
 

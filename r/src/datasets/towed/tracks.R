@@ -405,5 +405,5 @@ list(
   data = df,
   sf = sf_tracks
 ) %>% 
-  write_rds("data/towed/tracks.rds")
+  write_rds("data/datasets/towed/tracks.rds")
 

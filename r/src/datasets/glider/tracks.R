@@ -60,5 +60,5 @@ list(
   data = df,
   sf = sf_tracks
 ) %>% 
-  write_rds("data/glider/tracks.rds")
+  write_rds("data/datasets/glider/tracks.rds")
 

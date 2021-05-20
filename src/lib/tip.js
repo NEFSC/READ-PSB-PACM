@@ -59,7 +59,7 @@ const detectionTableHtml = (deployment) => {
     .object(allDetections)
   allDetectionsSummary.total = allDetections.length
 
-  const detectionTypesIds = [...detectionTypes.filter(d => d.id !== 'rd').map(d => d.id), 'total']
+  const detectionTypesIds = [...detectionTypes.filter(d => d.id !== 'd').map(d => d.id), 'total']
 
   const rows = detectionTypesIds.map(id => {
     return [

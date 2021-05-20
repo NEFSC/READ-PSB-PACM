@@ -3,18 +3,17 @@ library(lubridate)
 library(glue)
 library(sf)
 
-detections <- read_rds("data/glider/detections.rds")$daily
-deployments <- read_rds("data/glider/deployments.rds")
-tracks <- read_rds("data/glider/tracks.rds")$sf
-
-
-# remove wave -------------------------------------------------------------
-
-deployments <- deployments %>% 
-  filter(platform_type != "wave")
-
-detections <- detections %>% 
-  filter(id %in% unique(deployments$id))
+detections <- read_rds("data/datasets/glider/detections.rds")$daily
+deployments <- read_rds("data/datasets/glider/deployments.rds")
+tracks <- read_rds("data/datasets/glider/tracks.rds")$sf
+# 
+# 
+# # remove wave -------------------------------------------------------------
+# 
+# deployments <- deployments
+# 
+# detections <- detections %>% 
+#   filter(id %in% unique(deployments$id))
 
 
 # export analysis period based on detection data --------------------------
@@ -158,7 +157,7 @@ stopifnot(
 
 deployments_geom <- tracks %>% 
   select(-start, -end) %>% 
-  left_join(deployments, by = c("id")) %>% 
+  inner_join(deployments, by = c("id")) %>% 
   mutate(deployment_type = "mobile") %>% 
   relocate(deployment_type, geometry, .after = last_col()) %>% 
   relocate(theme)
@@ -170,4 +169,4 @@ list(
   deployments = deployments_geom,
   detections = detections_fill
 ) %>% 
-  write_rds("data/glider.rds")
+  write_rds("data/datasets/glider.rds")

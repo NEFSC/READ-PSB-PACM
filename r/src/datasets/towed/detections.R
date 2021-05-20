@@ -417,5 +417,5 @@ list(
   data = df,
   daily = df_day
 ) %>% 
-  write_rds("data/towed/detections.rds")
+  write_rds("data/datasets/towed/detections.rds")
 

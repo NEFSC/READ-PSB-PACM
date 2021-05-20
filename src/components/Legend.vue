@@ -112,7 +112,7 @@
         <div v-if="theme.deploymentsOnly">
           <v-divider class="mb-2"></v-divider>
           <v-checkbox class="ml-4 my-0 d-inline-block" hide-details dense label="" v-model="useSizeScale" style="height:30px;vertical-align:middle"></v-checkbox>
-          <span class="body-2 pl-1 grey--text text--darken-3" style="display:inline;vertical-align:middle;height:20px">Size Scale</span>
+          <span class="body-2 pl-1 grey--text text--darken-3" style="display:inline;vertical-align:middle;height:20px">Scale by # Days</span>
         </div>
       </div>
 

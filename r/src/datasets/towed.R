@@ -4,9 +4,9 @@ library(glue)
 library(janitor)
 library(sf)
 
-detections <- read_rds("data/towed/detections.rds")$daily
-deployments <- read_rds("data/towed/deployments.rds")
-tracks <- read_rds("data/towed/tracks.rds")$sf
+detections <- read_rds("data/datasets/towed/detections.rds")$daily
+deployments <- read_rds("data/datasets/towed/deployments.rds")
+tracks <- read_rds("data/datasets/towed/tracks.rds")$sf
 
 # fill missing detection days ---------------------------------------------
 
@@ -99,4 +99,4 @@ list(
   deployments = deployments_geom,
   detections = detections_fill
 ) %>% 
-  write_rds("data/towed.rds")
+  write_rds("data/datasets/towed.rds")

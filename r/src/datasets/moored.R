@@ -2,8 +2,8 @@ library(tidyverse)
 library(lubridate)
 library(sf)
 
-detections <- read_rds("data/moored/detections.rds")
-deployments <- read_rds("data/moored/deployments.rds")
+detections <- read_rds("data/datasets/moored/detections.rds")
+deployments <- read_rds("data/datasets/moored/deployments.rds")
 
 
 # export analysis period based on detection data --------------------------
@@ -158,5 +158,5 @@ list(
   deployments = deployments_geom,
   detections = detections_fill
 ) %>% 
-  write_rds("data/moored.rds")
+  write_rds("data/datasets/moored.rds")
 
