@@ -16,8 +16,7 @@
         v-model="dialogs.about"
         max-width="1000"
         scrollable
-        :fullscreen="$vuetify.breakpoint.mobile"
-        v-if="auth.isAuth">
+        :fullscreen="$vuetify.breakpoint.mobile">
         <template v-slot:activator="{ on }">
           <v-btn color="default" dark text v-on="on" data-v-step="about-button">
             <v-icon :left="!$vuetify.breakpoint.mobile">mdi-information-outline</v-icon>
@@ -31,8 +30,7 @@
         v-model="dialogs.guide"
         max-width="1200"
         scrollable
-        :fullscreen="$vuetify.breakpoint.mobile"
-        v-if="auth.isAuth">
+        :fullscreen="$vuetify.breakpoint.mobile">
         <template v-slot:activator="{ on }">
           <v-btn color="default" dark text v-on="on" data-v-step="user-guide-button">
             <v-icon :left="!$vuetify.breakpoint.mobile">mdi-book-open-variant</v-icon>
@@ -42,7 +40,7 @@
         <UserGuideDialog @close="closeGuide"></UserGuideDialog>
       </v-dialog>
 
-      <v-btn color="default" dark text @click="startTour" data-v-step="tour-button" v-if="auth.isAuth && !$vuetify.breakpoint.mobile">
+      <v-btn color="default" dark text @click="startTour" data-v-step="tour-button" v-if="!$vuetify.breakpoint.mobile">
         <v-icon :left="!$vuetify.breakpoint.mobile">mdi-cursor-default-click</v-icon>
         <span v-if="!$vuetify.breakpoint.mobile"> Tour</span>
       </v-btn>
@@ -59,8 +57,7 @@
       :permanent="!$vuetify.breakpoint.mobile"
       color="blue-grey darken-4"
       width="500"
-      v-model="drawer"
-      v-if="auth.isAuth">
+      v-model="drawer">
       <v-list class="mt-4 py-0">
         <v-list-item v-if="$vuetify.breakpoint.mobile">
           <v-list-item-content class="pb-0" >
@@ -137,40 +134,11 @@
     </v-navigation-drawer>
 
     <v-main data-v-step="map" style="z-index:0">
-      <div v-if="auth.isAuth" style="height:100%;position:relative">
+      <div style="height:100%;position:relative">
         <Map :counts="counts"></Map>
         <div style="position:absolute;bottom:0;left:0;width:100%;z-index:1000;background:white;max-height:600px" v-if="selectedDeployments.length > 0">
           <DeploymentDetail></DeploymentDetail>
         </div>
-      </div>
-      <div v-else>
-        <v-card class="mx-auto mt-8" max-width="600px" elevation="12">
-          <v-toolbar
-            color="light-blue darken-3"
-            dark
-            flat>
-            <v-toolbar-title>Login Required</v-toolbar-title>
-          </v-toolbar>
-          <v-form @submit.prevent="login">
-            <v-card-text>
-              <v-text-field
-                id="password"
-                label="Password"
-                name="password"
-                v-model="auth.password"
-                prepend-icon="mdi-lock"
-                type="password"
-                required />
-            </v-card-text>
-            <v-card-actions>
-              <v-spacer />
-              <v-btn color="light-blue darken-3" dark @click="login">Login</v-btn>
-            </v-card-actions>
-          </v-form>
-          <v-alert type="error" :value="auth.error">
-            Password is incorrect
-          </v-alert>
-        </v-card>
       </div>
     </v-main>
 
@@ -234,11 +202,6 @@ export default {
     return {
       themes,
       drawer: null,
-      auth: {
-        isAuth: false,
-        password: null,
-        error: null
-      },
       counts: {
         detections: {
           filtered: 0,
@@ -278,9 +241,6 @@ export default {
     }
   },
   mounted () {
-    if (process.env.NODE_ENV === 'development') {
-      this.auth.isAuth = true
-    }
     this.init()
 
     evt.$on('xf:filtered', this.onFiltered)
@@ -301,7 +261,6 @@ export default {
   methods: {
     ...mapActions(['setTheme', 'selectDeployments']),
     init () {
-      if (!this.auth.isAuth) return
       if (this.$route.params.id) {
         this.dialogs.about = false
         const theme = themes.find(d => d.id === this.$route.params.id)
@@ -351,15 +310,6 @@ export default {
     },
     startTour () {
       this.$tours.tour.start()
-    },
-    login () {
-      if (this.auth.password === 'narw123') {
-        this.auth.isAuth = true
-        this.auth.error = false
-        this.$nextTick(() => this.init())
-      } else {
-        this.auth.error = true
-      }
     }
   }
 }
