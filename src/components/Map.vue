@@ -9,7 +9,7 @@
     <l-map
       ref="map"
       style="width:100%;height:100%"
-      :center="[50, -50]"
+      :center="[50, -20]"
       :zoom="$vuetify.breakpoint.mobile ? 2 : 3"
       :options="{ zoomControl: false }"
       @zoomend="onZoom">
