@@ -1,5 +1,5 @@
 <template>
-  <div style="height:100%;">
+  <div style="height:100%">
     <v-overlay :value="loading" style="z-index:10000">
       <v-progress-circular
         indeterminate
@@ -9,7 +9,7 @@
     <l-map
       ref="map"
       style="width:100%;height:100%"
-      :center="[50, -40]"
+      :center="[50, -50]"
       :zoom="$vuetify.breakpoint.mobile ? 2 : 3"
       :options="{ zoomControl: false }"
       @zoomend="onZoom">
@@ -88,6 +88,7 @@ export default {
   },
   methods: {
     setBounds (bounds) {
+      this.map.invalidateSize()
       const latLngBounds = new L.latLngBounds([ // eslint-disable-line
         [bounds[0][1], bounds[0][0]],
         [bounds[1][1], bounds[1][0]]
