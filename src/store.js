@@ -92,8 +92,7 @@ export default new Vuex.Store({
           commit('SET_LOADING', false)
           return theme
         })
-        .catch((err) => {
-          console.error(err)
+        .catch(() => {
           commit('SET_LOADING_FAILED', true)
           commit('SET_LOADING', false)
         })
