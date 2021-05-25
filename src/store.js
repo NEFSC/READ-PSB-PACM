@@ -10,6 +10,7 @@ Vue.use(Vuex)
 export default new Vuex.Store({
   state: {
     loading: false,
+    loadingFailed: false,
     theme: null,
     deployments: null,
     selectedDeployments: [],
@@ -18,6 +19,7 @@ export default new Vuex.Store({
   },
   getters: {
     loading: state => state.loading,
+    loadingFailed: state => state.loadingFailed,
     theme: state => state.theme,
     themeId: state => state.theme ? state.theme.id : null,
     deployments: state => state.deployments,
@@ -29,6 +31,9 @@ export default new Vuex.Store({
   mutations: {
     SET_LOADING (state, loading) {
       state.loading = loading
+    },
+    SET_LOADING_FAILED (state, loadingFailed) {
+      state.loadingFailed = loadingFailed
     },
     SET_THEME (state, theme) {
       state.theme = theme
@@ -51,6 +56,7 @@ export default new Vuex.Store({
       if (state.theme && state.theme.id === theme.id) {
         return Promise.resolve(state.theme)
       }
+      commit('SET_LOADING_FAILED', false)
       commit('SET_LOADING', true)
       commit('SET_SELECTED_DEPLOYMENTS', [])
       return fetchData(theme)
@@ -85,6 +91,11 @@ export default new Vuex.Store({
           commit('SET_THEME', theme)
           commit('SET_LOADING', false)
           return theme
+        })
+        .catch((err) => {
+          console.error(err)
+          commit('SET_LOADING_FAILED', true)
+          commit('SET_LOADING', false)
         })
     },
     selectDeployments ({ commit, getters, state }, ids) {

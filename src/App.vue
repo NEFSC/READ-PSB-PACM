@@ -142,6 +142,21 @@
       </div>
     </v-main>
 
+    <v-dialog
+      v-model="loadingFailed"
+      max-width="600"
+      scrollable
+      persistent>
+      <v-alert type="error" :value="true" prominent class="mb-0">
+        <div class="text-h6">Failed to Load Dataset</div>
+        <p class="body-1">
+          An error occurred fetching the dataset from the server.
+          Please refresh and try again.
+          If the problem continues, please contact us at <a href="mailto:nmfs.pacmdata@noaa.gov">nmfs.pacmdata@noaa.gov</a>.
+        </p>
+      </v-alert>
+    </v-dialog>
+
     <v-tour name="tour" :steps="tour.steps" :options="tour.options">
       <template slot-scope="tour">
         <transition name="fade">
@@ -232,7 +247,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['theme', 'loading', 'selectedDeployments']),
+    ...mapGetters(['theme', 'loading', 'loadingFailed', 'selectedDeployments']),
     showDialog () {
       return !!this.deployments.selected
     },
