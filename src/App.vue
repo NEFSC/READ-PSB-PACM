@@ -279,7 +279,7 @@ export default {
       if (this.$route.params.id) {
         this.dialogs.about = false
         const theme = themes.find(d => d.id === this.$route.params.id)
-        if (!theme) return alert(`Invalid URL, theme ${theme} not found`)
+        if (!theme) return this.$store.commit('SET_LOADING_FAILED', true)
         this.setTheme(theme)
       } else {
         this.dialogs.about = true
