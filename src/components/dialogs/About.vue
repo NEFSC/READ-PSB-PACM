@@ -1,7 +1,14 @@
 <template>
   <v-card>
     <div>
-      <v-img src="@/assets/img/noaa-logo.gif" height="54px" width="54px" style="float:right" class="ma-2"></v-img>
+      <v-img
+        src="@/assets/img/noaa-logo.gif"
+        height="54px"
+        width="54px"
+        style="float:right"
+        class="ma-2"
+        alt="NOAA Logo">
+      </v-img>
       <v-list-item>
         <v-list-item-content>
           <v-list-item-title class="headline"><span v-if="!$vuetify.breakpoint.mobile">Welcome to the </span>Passive Acoustic Cetacean Map</v-list-item-title>
@@ -10,7 +17,8 @@
       </v-list-item>
       <v-img
         src="@/assets/img/whale.jpg"
-        height="200px">
+        height="200px"
+        alt="Whale Photo">
       </v-img>
     </div>
     <v-card-text class="mt-8 body-2 grey--text text--darken-4">

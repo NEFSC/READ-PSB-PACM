@@ -46,7 +46,7 @@
       </v-btn>
 
       <div>
-        <v-img src="./assets/img/noaa-logo.gif" height="40px" width="40px" class="ma-2"></v-img>
+        <v-img src="./assets/img/noaa-logo.gif" height="40px" width="40px" class="ma-2" alt="NOAA Logo"></v-img>
       </div>
     </v-app-bar>
 

@@ -63,7 +63,7 @@
                     <v-img
                       class="mt-2"
                       src="@/assets/img/guide/key/circle-red.png"
-                      alt="Definite detection"
+                      alt="Definite detection icon for stationary platforms (red circle)"
                       max-height="100px"
                       contain
                     ></v-img>
@@ -78,7 +78,7 @@
                     <v-img
                       class="mt-2"
                       src="@/assets/img/guide/key/circle-green.png"
-                      alt="Possible detection"
+                      alt="Possible detection icon for stationary platforms (green circle)"
                       max-height="100px"
                       contain
                     ></v-img>
@@ -93,7 +93,7 @@
                     <v-img
                       class="mt-2"
                       src="@/assets/img/guide/key/circle-blue.png"
-                      alt="No detection"
+                      alt="No detection icon for stationary platforms (blue circle)"
                       max-height="100px"
                       contain
                     ></v-img>
@@ -108,7 +108,7 @@
                     <v-img
                       class="mt-2"
                       src="@/assets/img/guide/key/circle-gray.png"
-                      alt="Not Analyzed"
+                      alt="Not analyzed icon for stationary platforms (gray circle)"
                       max-height="100px"
                       contain
                     ></v-img>
@@ -123,7 +123,7 @@
                     <v-img
                       class="mt-2"
                       src="@/assets/img/guide/key/checkbox.png"
-                      alt="Not Analyzed"
+                      alt="Checkbox icon"
                       max-height="100px"
                       contain
                     ></v-img>
@@ -146,7 +146,7 @@
                     <v-img
                       class="mt-2"
                       src="@/assets/img/guide/key/square-red.png"
-                      alt="Definite detection (mobile)"
+                      alt="Definite detection icon for mobile platforms (red square)"
                       max-height="100px"
                       contain
                     ></v-img>
@@ -169,7 +169,7 @@
                     <v-img
                       class="mt-2"
                       src="@/assets/img/guide/key/square-green.png"
-                      alt="Possible detection (mobile)"
+                      alt="Possible detection icon for mobile platforms (green square)"
                       max-height="100px"
                       contain
                     ></v-img>
@@ -186,7 +186,7 @@
                     <v-img
                       class="mt-2"
                       src="@/assets/img/guide/key/line-solid.png"
-                      alt="Glider/Ship Track"
+                      alt="Glider/Ship track symbol for mobile platforms (solid gray line)"
                       max-height="100px"
                       contain
                     ></v-img>
@@ -203,7 +203,7 @@
                     <v-img
                       class="mt-2"
                       src="@/assets/img/guide/key/line-dashed.png"
-                      alt="Unanalyzed Glider/Ship Track"
+                      alt="Unanalyzed glider/ship track for mobile platforms (dashed gray line)"
                       max-height="100px"
                       contain
                     ></v-img>
@@ -226,7 +226,7 @@
                     <v-img
                       class="mt-1"
                       src="@/assets/img/guide/key/tooltip.png"
-                      alt="Metadata"
+                      alt="Metadata tooltip box"
                       max-height="400px"
                       contain
                     ></v-img>
@@ -258,7 +258,7 @@
                   <v-col cols="3" class="text-center">
                     <v-img
                       src="@/assets/img/guide/platforms/SOUNDTRAP.png"
-                      alt="Bottom mooring"
+                      alt="Bottom-mounted mooring diagram"
                       max-height="300px"
                       contain
                     ></v-img>
@@ -272,7 +272,7 @@
                   <v-col cols="3" class="text-center">
                     <v-img
                       src="@/assets/img/guide/platforms/MOORED-BUOY.png"
-                      alt="Surface buoy"
+                      alt="Surface buoy diagram"
                       max-height="300px"
                       contain
                     ></v-img>
@@ -292,7 +292,7 @@
                   <v-col cols="3" class="text-center">
                     <v-img
                       src="@/assets/img/guide/platforms/SLOCUM-GLIDER.png"
-                      alt="Slocum glider"
+                      alt="Slocum glider diagram"
                       max-height="300px"
                       contain
                     ></v-img>
@@ -306,7 +306,7 @@
                   <v-col cols="3" class="text-center">
                     <v-img
                       src="@/assets/img/guide/platforms/SHIP-TOWED-ARRAY.png"
-                      alt="Towed array"
+                      alt="Towed array diagram"
                       max-height="300px"
                       contain
                     ></v-img>
