@@ -19,7 +19,8 @@ body.v-tour--active {
 
 .v-step {
   /* background: #50596c; */
-  background: #db5f0c;
+  /* background: #db5f0c; */
+  background: #6d3815;
   color: #fff;
   /* max-width: 320px; */
   max-width: 450px;
@@ -52,12 +53,12 @@ body.v-tour--active {
   position: absolute;
   margin: .5rem;
   /* border-color: #50596c; */
-  border-color: #db5f0c;
+  border-color: #6d3815;
 }
 
 .v-step .v-step__arrow--dark {
   /* border-color: #454d5d; */
-  border-color: #db5f0c;
+  border-color: #6d3815;
 }
 
 .v-step[x-placement^=top] {
@@ -124,7 +125,7 @@ body.v-tour--active {
   margin: -1rem -1rem .5rem;
   padding: 1rem;
   /* background-color: #454d5d; */
-  background-color: #c95000;
+  background-color: #9e3f00;
   border-top-left-radius: 3px;
   border-top-right-radius: 3px;
   /* font-size: 1.2rem; */

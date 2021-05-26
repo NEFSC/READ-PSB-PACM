@@ -2,7 +2,7 @@
   <v-app>
     <v-app-bar
       app
-      color="light-blue darken-3"
+      color="light-blue darken-4"
       clipped-left
       dark>
       <v-app-bar-nav-icon v-if="$vuetify.breakpoint.mobile" @click="drawer = !drawer"></v-app-bar-nav-icon>
