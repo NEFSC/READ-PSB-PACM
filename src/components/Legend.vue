@@ -7,15 +7,22 @@
     >
       Legend
       <v-spacer></v-spacer>
-      <v-btn
-        icon
-        x-small
-        @click="collapse = !collapse"
-        class="mr-n2"
-      >
-        <v-icon v-if="!collapse">mdi-arrow-up-drop-circle</v-icon>
-        <v-icon v-else>mdi-arrow-down-drop-circle</v-icon>
-      </v-btn>
+      <v-tooltip open-delay="500" bottom>
+        <template v-slot:activator="{ on }">
+          <v-btn
+            icon
+            x-small
+            @click="collapse = !collapse"
+            class="mr-n2"
+            v-on="on"
+          >
+            <v-icon v-if="!collapse">mdi-arrow-up-drop-circle</v-icon>
+            <v-icon v-else>mdi-arrow-down-drop-circle</v-icon>
+          </v-btn>
+        </template>
+        <span v-if="!collapse">Collapse</span>
+        <span v-else>Expand</span>
+      </v-tooltip>
     </v-toolbar>
 
     <v-card-text

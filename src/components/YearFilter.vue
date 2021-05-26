@@ -1,6 +1,21 @@
 <template>
   <div class="pacm-year-filter">
-    <v-btn icon x-small class="mt-1 float-right" color="grey" @click="reset"><v-icon>mdi-sync</v-icon></v-btn>
+    <v-tooltip open-delay="500" right>
+      <template v-slot:activator="{ on }">
+        <v-btn
+          icon
+          x-small
+          class="mt-1 float-right"
+          color="grey"
+          @click="reset"
+          v-on="on"
+        >
+          <v-icon>mdi-sync</v-icon>
+        </v-btn>
+      </template>
+      <span>Reset</span>
+    </v-tooltip>
+
     <div class="subtitle-1 mb-2 font-weight-medium">
       Years:
       <v-menu

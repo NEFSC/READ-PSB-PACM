@@ -4,27 +4,44 @@
       <div class="subtitle-1 font-weight-bold">
         Selected Deployments
         ({{ index + 1 }} of {{ selectedDeployments.length }})
-        <v-btn
-          icon
-          small
-          :disabled="index === 0"
-          @click="index -= 1"
-        >
-          <v-icon>mdi-menu-left</v-icon>
-        </v-btn>
-        <v-btn
-          icon
-          small
-          :disabled="index === (selectedDeployments.length - 1)"
-          @click="index += 1"
-        >
-          <v-icon>mdi-menu-right</v-icon>
-        </v-btn>
+        <v-tooltip open-delay="500" bottom>
+          <template v-slot:activator="{ on }">
+            <v-btn
+              icon
+              small
+              :disabled="index === 0"
+              @click="index -= 1"
+              v-on="on"
+            >
+              <v-icon>mdi-menu-left</v-icon>
+            </v-btn>
+          </template>
+          <span>Previous</span>
+        </v-tooltip>
+        <v-tooltip open-delay="500" bottom>
+          <template v-slot:activator="{ on }">
+            <v-btn
+              icon
+              small
+              :disabled="index === (selectedDeployments.length - 1)"
+              @click="index += 1"
+              v-on="on"
+            >
+              <v-icon>mdi-menu-right</v-icon>
+            </v-btn>
+          </template>
+          <span>Next</span>
+        </v-tooltip>
       </div>
       <v-spacer></v-spacer>
-      <v-btn icon small @click="close">
-        <v-icon small>mdi-close</v-icon>
-      </v-btn>
+      <v-tooltip open-delay="500" bottom>
+        <template v-slot:activator="{ on }">
+          <v-btn icon small @click="close" v-on="on">
+            <v-icon small>mdi-close</v-icon>
+          </v-btn>
+        </template>
+        <span>Close</span>
+      </v-tooltip>
     </v-toolbar>
     <v-card-text
       :style="{ 'max-height': Math.round($vuetify.breakpoint.height * 0.6) + 'px', 'overflow-y': 'auto' }"

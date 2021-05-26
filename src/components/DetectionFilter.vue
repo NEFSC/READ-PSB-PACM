@@ -1,11 +1,23 @@
 <template>
   <div class="detection-filter">
-    <v-btn icon x-small class="mt-1 float-right" color="grey" @click="reset"><v-icon>mdi-sync</v-icon></v-btn>
+    <v-tooltip open-delay="500" right>
+      <template v-slot:activator="{ on }">
+        <v-btn
+          icon
+          x-small
+          class="mt-1 float-right"
+          color="grey"
+          @click="reset"
+          v-on="on"
+        >
+          <v-icon>mdi-sync</v-icon>
+        </v-btn>
+      </template>
+      <span>Reset</span>
+    </v-tooltip>
+
     <div class="subtitle-1 font-weight-medium">Detection Results</div>
     <div ref="chart"></div>
-    <div>
-      <!-- <v-checkbox :v-for="type in types" :key="type.id" :label="type.id" v-model="type.checked" dense></v-checkbox> -->
-    </div>
   </div>
 </template>
 

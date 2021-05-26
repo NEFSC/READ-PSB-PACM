@@ -3,7 +3,12 @@
     <v-card-title primary-title>
       User Guide
       <v-spacer></v-spacer>
-      <v-btn icon small @click.native="$emit('close')"><v-icon>mdi-close</v-icon></v-btn>
+      <v-tooltip open-delay="500" bottom>
+        <template v-slot:activator="{ on }">
+          <v-btn icon small @click.native="$emit('close')" v-on="on"><v-icon>mdi-close</v-icon></v-btn>
+        </template>
+        <span>Close</span>
+      </v-tooltip>
     </v-card-title>
 
     <v-card-text class="mt-8">
