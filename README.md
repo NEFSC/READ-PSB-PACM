@@ -5,6 +5,10 @@ Passive Acoustic Cetacean Map
 
 This repo contains the source code for the Passive Acoustic Cetacean Map (PACM) web application. The PACM application is an interactive data visualization tool for exploring historical observations of whales and other cetaceans based on passive acoustic montoring (PAM) data.
 
+Development URL: https://nova.nefsc.noaa.gov/pacm_dev/
+
+Production URL: https://apps-nefsc.fisheries.noaa.gov/pacm/
+
 ## Project Summary
 
 **Who is involved in this project?** This application was developed by Jeffrey D Walker, PhD ([Walker Environmental Research LLC](https://walkerenvres.com)) for Sofie Van Parijs, Genevieve Davis, and Annamaria DeAngelis of the [NEFSC Passive Acoustic Research group](https://www.fisheries.noaa.gov/new-england-mid-atlantic/endangered-species-conservation/passive-acoustic-research-atlantic-ocean).
@@ -17,7 +21,7 @@ This repo contains the source code for the Passive Acoustic Cetacean Map (PACM) 
 
 **How do I use this code?**: This repo contains the source code for both the web application itself, as well as the data processing scripts used to generate the datasets shown on the application. To use this code, follow the instructions provided below in this README file.
 
-**Where do I get help?**: For help running or understanding the code in this repo, contact Jeff Walker (jeff@walkerenvres.com). For questions about contributing data or other general questions about the project, contact Sofie Van Parijs (sofie.vanparijs@noaa.gov).
+**Where do I get help?**: For help running or understanding the code in this repo, contact Jeff Walker (jeffrey.walker@noaa.gov). For questions about contributing data or other general questions about the project, contact Sofie Van Parijs (sofie.vanparijs@noaa.gov).
 
 **Who maintains this code?**: Ongoing maintenance of this code will be performed by Jeffrey D Walker, PhD ([Walker Environmental Research LLC](https://walkerenvres.com)) with approval from NEFSC.
 
@@ -61,11 +65,11 @@ npm run serve
 
 Then navigate to http://127.0.0.1:8080 in your browser to view the application.
 
-### Production
+### Build
 
-To deploy this application to a production web server, first verify that the public path to this application is correctly set using the `publicPath` option in the `vue.config.js` file. For example, if the production application will be hosted using the URL `https://noaa.gov/apps/pacm`, then `publicPath` must be set to `/apps/pacm`.
+To deploy this application to a production web server, first verify that the public path to this application is correctly set using the `publicPath` option in the `vue.config.js` file. For example, if the production application will be hosted using the URL `https://noaa.gov/apps/pacm`, then `publicPath` must be set to `/apps/pacm`. The `publicPath` option is currently set to an empty string (`''`), which means that relative paths will be used in `index.html` for fetching the stylesheets and javascript files. Relative paths are being used so that the code can be deployed to both the development and production environments, which have different base URLs (`/pacm_dev` vs `/pacm`).
 
-Once the public path is set, build the application by running:
+Build the application by running:
 
 ```
 npm run build
@@ -76,12 +80,6 @@ After the application is built, the output files will be available in the `dist/
 ### Deployment
 
 To deploy the application, copy the files in the `dist/` folder to the remote web server.
-
-One method for doing this is to use `rsync`:
-
-```
-rsync -av --delete dist/* user@mydomain.com:/path/to/pacm
-```
 
 ## Disclaimer
 
