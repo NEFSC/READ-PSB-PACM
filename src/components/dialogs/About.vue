@@ -76,7 +76,7 @@
         Further information about Passive Acoustic Monitoring can be found at the <a href="https://www.fisheries.noaa.gov/new-england-mid-atlantic/endangered-species-conservation/passive-acoustic-research-atlantic-ocean" target="_blank">NOAA NEFSC Passive Acoustic Research Website</a>
       </p>
       <p>
-        PACM was designed and built by <a href="https://walkerenvres.com" target="_blank">Walker Environmental Research LLC</a> based on a map-based interface for PAM acoustic detection data developed by Hansen Johnson (Dalhousie University).
+        PACM was designed and built by Walker Environmental Research LLC based on a map-based interface for PAM acoustic detection data developed by Hansen Johnson (Dalhousie University).
       </p>
     </v-card-text>
     <v-card-actions>
