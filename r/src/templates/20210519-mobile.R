@@ -109,13 +109,13 @@ tabyl(detections, species, species_group)
 # export ------------------------------------------------------------------
 
 # create template dirs
-if (!dir.exists("data/templates/mobile/data")) {
-  dir.create("data/templates/mobile/data", recursive = TRUE)
+if (!dir.exists("data/templates/20210519-mobile/data")) {
+  dir.create("data/templates/20210519-mobile/data", recursive = TRUE)
 }
 
 # delete existing files
-if (length(list.files("data/templates/mobile/data")) > 0) {
-  walk(list.files("data/templates/mobile/data", full.names = TRUE), unlink)
+if (length(list.files("data/templates/20210519-mobile/data")) > 0) {
+  walk(list.files("data/templates/20210519-mobile/data", full.names = TRUE), unlink)
 }
 
 export_recorders <- bind_rows(
@@ -126,7 +126,7 @@ export_recorders <- bind_rows(
     filter(id %in% c("NEFSC_GU1803", "NEFSC_HB1303", "NEFSC_HB1503"))
 )
 
-write_xlsx(list(recorders = export_recorders), path = "data/templates/mobile/recorders.xlsx")
+write_xlsx(list(recorders = export_recorders), path = "data/templates/20210519-mobile/recorders.xlsx")
 for (recorder_id in export_recorders$id) {
   cat(recorder_id, "\n")
   write_xlsx(
@@ -145,7 +145,7 @@ for (recorder_id in export_recorders$id) {
         filter(recorder_id == !!recorder_id) %>% 
         mutate(datetime = format(datetime, "%m/%d/%Y %H:%M:%S"))
     ),
-    path = glue("data/templates/mobile/data/{recorder_id}.xlsx")
+    path = glue("data/templates/20210519-mobile/data/{recorder_id}.xlsx")
   )
 }
 

@@ -27,6 +27,7 @@ yarn-error.log*
 r/rmd/*.html
 r/data/qaqc/*.csv
 r/data/templates/**/*.xlsx
+r/data/templates/**/*.csv
 
 # datasets
 public/data/**/*.csv
