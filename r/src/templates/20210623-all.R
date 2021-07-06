@@ -55,12 +55,14 @@ df_detections_raw <- read_excel(file.path(root_dir, "PACM_TEMPLATE_DETECTION_DAT
 
 # analyses ----------------------------------------------------------------
 
+# create analysis dataset from detections by {theme,id}
+# start/end dates based on start/end of detection data
 df_analyses <- df_detections_raw %>% 
   transmute(
     id = unique_id, 
     theme = case_when(
-      species == "fin" ~ "Fin",
-      species %in% beaked_species ~ "Beaked",
+      species == "fin" ~ "Fin", # fix Fin/fin
+      species %in% beaked_species ~ "Beaked", # group beaked whales into theme=beaked
       TRUE ~ species
     ),
     theme = tolower(theme),
@@ -82,6 +84,7 @@ df_analyses <- df_detections_raw %>%
     .groups = "drop"
   )
 
+df_analyses
 tabyl(df_analyses, theme)
 
 stopifnot(
@@ -91,13 +94,14 @@ stopifnot(
     nrow() == 0
 )
 
+# daily timseries (just dates) for each {theme,id}
 df_analyses_dates <- df_analyses %>% 
   select(theme, id, analysis_start_date, analysis_end_date) %>% 
   rowwise() %>% 
   mutate(date = list(seq.Date(analysis_start_date, analysis_end_date, by = "day"))) %>% 
   unnest(date) %>% 
   select(theme, id, date)
-
+df_analyses_dates
 
 # metadata ----------------------------------------------------------------
 
@@ -217,6 +221,7 @@ mapview::mapview(sf_stationary, legend = FALSE)
 
 
 # recorders -------------------------------------------------------------
+# recorder = metadata + geometry
 
 sf_recorders_stationary <- sf_stationary %>% 
   left_join(df_metadata_stationary, by = "id")
@@ -232,7 +237,10 @@ sf_recorders <- bind_rows(
 
 
 # deployments -------------------------------------------------------------
-# merge: recorders + analyses
+# deployment = recorder + analyses metadata
+
+names(sf_recorders)
+names(df_analyses)
 
 sf_deployments <- sf_recorders %>% 
   full_join(df_analyses, by = "id") %>% 
