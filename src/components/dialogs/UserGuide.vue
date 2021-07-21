@@ -52,7 +52,13 @@
         <v-tab-item>
           <v-card flat>
             <v-card-text class="body-1 black--text text-center">
-              <iframe width="800" height="450" src="https://www.youtube.com/embed/Bxw7q4tdi14" title="Tutorial Video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+              <p>
+                To learn more about how to use PACM, please watch the following videos.<br>
+                <span class="body-2 font-italic">(scroll down for Part 2 - Interactive Filtering)</span>
+              </p>
+              <!-- <iframe width="800" height="450" src="https://www.youtube.com/embed/Bxw7q4tdi14" title="Tutorial Video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe> -->
+              <iframe src='//players.brightcove.net/659677166001/4b3c8a9e-7bf7-43dd-b693-2614cc1ed6b7_default/index.html?videoId=6263997740001' allowfullscreen frameborder=0 width="800" height="450"></iframe>
+              <iframe src='//players.brightcove.net/659677166001/4b3c8a9e-7bf7-43dd-b693-2614cc1ed6b7_default/index.html?videoId=6263997873001' allowfullscreen frameborder=0 width="800" height="450" class="mt-4"></iframe>
             </v-card-text>
           </v-card>
         </v-tab-item>
@@ -403,7 +409,7 @@
                         When using or referencing this data, please cite as:
                       </p>
                       <p class="font-weight-bold grey--text text--darken-2">
-                        Passive Acoustic Cetacean Map. 2021. Woods Hole (MA): NOAA Northeast Fisheries Science Center [accessed date]. https://apps-nefsc.fisheries.noaa.gov/pacm
+                        <Citation></Citation>
                       </p>
                     </v-expansion-panel-content>
                   </v-expansion-panel>
@@ -423,7 +429,7 @@
                 When using or referencing this dataset or website, please cite as:
               </p>
               <p class="font-weight-bold grey--text text--darken-2">
-                Passive Acoustic Cetacean Map. 2021. Woods Hole (MA): NOAA Northeast Fisheries Science Center [accessed date]. https://apps-nefsc.fisheries.noaa.gov/pacm
+                <Citation></Citation>
               </p>
               <!-- TODO: UPDATE URL -->
             </v-card-text>
@@ -439,11 +445,11 @@
 </template>
 
 <script>
+import Citation from '@/components/Citation'
 export default {
-  name: 'Guide'
+  name: 'Guide',
+  components: {
+    Citation
+  }
 }
 </script>
-
-<style>
-
-</style>

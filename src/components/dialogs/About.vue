@@ -66,7 +66,7 @@
         When using or referencing this data, please cite as:
       </p>
       <p class="font-weight-bold ml-4 grey--text text--darken-2">
-        Passive Acoustic Cetacean Map. 2021. Woods Hole (MA): NOAA Northeast Fisheries Science Center [accessed date]. https://apps-nefsc.fisheries.noaa.gov/pacm
+        <Citation></Citation>
       </p>
       <!-- TODO: UPDATE URL -->
       <p>
@@ -75,7 +75,7 @@
       <p>
         Further information about Passive Acoustic Monitoring can be found at the <a href="https://www.fisheries.noaa.gov/new-england-mid-atlantic/endangered-species-conservation/passive-acoustic-research-atlantic-ocean" target="_blank">NOAA NEFSC Passive Acoustic Research Website</a>
       </p>
-      <p>
+      <p class="mb-0">
         PACM was designed and built by Walker Environmental Research LLC based on a map-based interface for PAM acoustic detection data developed by Hansen Johnson (Dalhousie University).
       </p>
     </v-card-text>
@@ -87,7 +87,11 @@
 </template>
 
 <script>
+import Citation from '@/components/Citation'
 export default {
-  name: 'About'
+  name: 'About',
+  components: {
+    Citation
+  }
 }
 </script>
