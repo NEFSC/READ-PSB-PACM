@@ -58,7 +58,8 @@
       :permanent="!$vuetify.breakpoint.mobile"
       color="blue-grey darken-4"
       width="500"
-      v-model="drawer">
+      v-model="drawer"
+      role="complementary">
       <v-list class="mt-4 py-0">
         <v-list-item v-if="$vuetify.breakpoint.mobile">
           <v-list-item-content class="pb-0" >

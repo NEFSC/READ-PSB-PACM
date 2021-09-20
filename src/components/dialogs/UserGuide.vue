@@ -1,7 +1,7 @@
 <template>
   <v-card role="main">
     <v-card-title primary-title>
-      User Guide
+      <h1 class="headline">User Guide</h1>
       <v-spacer></v-spacer>
       <v-tooltip open-delay="500" bottom>
         <template v-slot:activator="{ on }">

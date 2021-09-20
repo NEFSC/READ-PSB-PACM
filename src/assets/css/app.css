@@ -12,6 +12,10 @@ a {
   overflow: visible !important;
 }
 
+.v-chip__content {
+  overflow: visible !important;
+}
+
 .body-2 {
   line-height: 1.5 !important;
 }
