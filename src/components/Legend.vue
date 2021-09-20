@@ -15,6 +15,7 @@
             @click="collapse = !collapse"
             class="mr-n2"
             v-on="on"
+            aria-label="collapse"
           >
             <v-icon v-if="!collapse">mdi-arrow-up-drop-circle</v-icon>
             <v-icon v-else>mdi-arrow-down-drop-circle</v-icon>

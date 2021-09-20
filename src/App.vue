@@ -18,7 +18,7 @@
         scrollable
         :fullscreen="$vuetify.breakpoint.mobile">
         <template v-slot:activator="{ on }">
-          <v-btn color="default" dark text v-on="on" data-v-step="about-button">
+          <v-btn color="default" dark text v-on="on" data-v-step="about-button" aria-label="about page">
             <v-icon :left="!$vuetify.breakpoint.mobile">mdi-information-outline</v-icon>
             <span v-if="!$vuetify.breakpoint.mobile"> About</span>
           </v-btn>
@@ -32,7 +32,7 @@
         scrollable
         :fullscreen="$vuetify.breakpoint.mobile">
         <template v-slot:activator="{ on }">
-          <v-btn color="default" dark text v-on="on" data-v-step="user-guide-button">
+          <v-btn color="default" dark text v-on="on" data-v-step="user-guide-button" aria-label="user guide">
             <v-icon :left="!$vuetify.breakpoint.mobile">mdi-book-open-variant</v-icon>
             <span v-if="!$vuetify.breakpoint.mobile"> User Guide</span>
           </v-btn>
@@ -40,7 +40,7 @@
         <UserGuideDialog @close="closeGuide"></UserGuideDialog>
       </v-dialog>
 
-      <v-btn color="default" dark text @click="startTour" data-v-step="tour-button" v-if="!$vuetify.breakpoint.mobile">
+      <v-btn color="default" dark text @click="startTour" data-v-step="tour-button" v-if="!$vuetify.breakpoint.mobile" aria-label="start tour">
         <v-icon :left="!$vuetify.breakpoint.mobile">mdi-cursor-default-click</v-icon>
         <span v-if="!$vuetify.breakpoint.mobile"> Tour</span>
       </v-btn>
@@ -63,7 +63,7 @@
           <v-list-item-content class="pb-0" >
             <div class="d-flex">
               <v-spacer></v-spacer>
-              <v-btn icon small class="float-right" color="grey" @click="drawer = !drawer"><v-icon>mdi-close</v-icon></v-btn>
+              <v-btn icon small class="float-right" color="grey" @click="drawer = !drawer" aria-label="close"><v-icon>mdi-close</v-icon></v-btn>
             </div>
           </v-list-item-content>
         </v-list-item>

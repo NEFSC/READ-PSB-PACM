@@ -9,6 +9,7 @@
           color="grey"
           @click="reset"
           v-on="on"
+          aria-label="reset"
         >
           <v-icon>mdi-sync</v-icon>
         </v-btn>

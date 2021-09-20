@@ -5,7 +5,7 @@
       <v-spacer></v-spacer>
       <v-tooltip open-delay="500" bottom>
         <template v-slot:activator="{ on }">
-          <v-btn icon small @click.native="$emit('close')" v-on="on"><v-icon>mdi-close</v-icon></v-btn>
+          <v-btn icon small @click.native="$emit('close')" v-on="on" aria-label="close"><v-icon>mdi-close</v-icon></v-btn>
         </template>
         <span>Close</span>
       </v-tooltip>
@@ -438,7 +438,7 @@
     </v-card-text>
     <v-card-actions>
       <v-spacer></v-spacer>
-      <v-btn color="primary" text @click.native="$emit('close')">Close</v-btn>
+      <v-btn color="primary" text @click.native="$emit('close')" aria-label="close">Close</v-btn>
     </v-card-actions>
   </v-card>
 </template>

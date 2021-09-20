@@ -28,19 +28,19 @@
       <v-container class="mb-6">
         <v-row justify="space-around">
           <v-col cols="12" md="4" class="text-center" v-if="!$vuetify.breakpoint.mobile">
-            <v-btn color="success darken-2" class="px-8 mx-0" x-large @click="$emit('close', { tour: true })">
+            <v-btn color="success darken-2" class="px-8 mx-0" x-large @click="$emit('close', { tour: true })" aria-label="start tour">
               <v-icon left>mdi-cursor-default-click</v-icon>
               Take A Tour
             </v-btn>
           </v-col>
           <v-col cols="12" md="4" class="text-center">
-            <v-btn color="success darken-2" class="px-8 mx-0" x-large @click="$emit('close', { guide: true })">
+            <v-btn color="success darken-2" class="px-8 mx-0" x-large @click="$emit('close', { guide: true })" aria-label="user guide">
               <v-icon left>mdi-book-open-variant</v-icon>
               User Guide
             </v-btn>
           </v-col>
           <v-col cols="12" md="4" class="text-center">
-            <v-btn color="success darken-2" class="px-8 mx-0" x-large @click="$emit('close')">
+            <v-btn color="success darken-2" class="px-8 mx-0" x-large @click="$emit('close')" aria-label="get started">
               <v-icon left>mdi-play-circle</v-icon>
               Get Started
             </v-btn>
@@ -74,7 +74,6 @@
       <p class="font-weight-bold ml-4 grey--text text--darken-2">
         <Citation></Citation>
       </p>
-      <!-- TODO: UPDATE URL -->
       <p>
         For questions about contributing data to this project or any other inquiries, please contact <a class="text-decoration-underline" href="mailto:nmfs.pacmdata@noaa.gov">nmfs.pacmdata@noaa.gov</a>.
       </p>
@@ -87,7 +86,7 @@
     </v-card-text>
     <v-card-actions>
       <v-spacer></v-spacer>
-      <v-btn color="primary" text @click.native="$emit('close')">Close</v-btn>
+      <v-btn color="primary" text @click.native="$emit('close')" aria-label="close">Close</v-btn>
     </v-card-actions>
   </v-card>
 </template>

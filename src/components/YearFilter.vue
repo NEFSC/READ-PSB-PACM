@@ -9,6 +9,7 @@
           color="grey"
           @click="reset"
           v-on="on"
+          aria-label="reset"
         >
           <v-icon>mdi-sync</v-icon>
         </v-btn>
@@ -41,7 +42,7 @@
           </v-card-text>
           <v-card-actions class="pr-4">
             <v-spacer></v-spacer>
-            <v-btn color="primary" outlined @click="setStart">Done</v-btn>
+            <v-btn color="primary" outlined @click="setStart" aria-label="done">Done</v-btn>
           </v-card-actions>
         </v-card>
       </v-menu>
@@ -69,7 +70,7 @@
           </v-card-text>
           <v-card-actions class="pr-4">
             <v-spacer></v-spacer>
-            <v-btn color="primary" outlined @click="setEnd">Done</v-btn>
+            <v-btn color="primary" outlined @click="setEnd" aria-label="done">Done</v-btn>
           </v-card-actions>
         </v-card>
       </v-menu>

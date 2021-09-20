@@ -12,6 +12,7 @@
               :disabled="index === 0"
               @click="index -= 1"
               v-on="on"
+              aria-label="previous"
             >
               <v-icon>mdi-menu-left</v-icon>
             </v-btn>
@@ -26,6 +27,7 @@
               :disabled="index === (selectedDeployments.length - 1)"
               @click="index += 1"
               v-on="on"
+              aria-label="next"
             >
               <v-icon>mdi-menu-right</v-icon>
             </v-btn>
@@ -36,7 +38,7 @@
       <v-spacer></v-spacer>
       <v-tooltip open-delay="500" bottom>
         <template v-slot:activator="{ on }">
-          <v-btn icon small @click="close" v-on="on">
+          <v-btn icon small @click="close" v-on="on" aria-label="close">
             <v-icon small>mdi-close</v-icon>
           </v-btn>
         </template>
