@@ -11,7 +11,7 @@
       </v-img>
       <v-list-item>
         <v-list-item-content>
-          <v-list-item-title class="headline"><span v-if="!$vuetify.breakpoint.mobile">Welcome to the </span>Passive Acoustic Cetacean Map</v-list-item-title>
+          <v-list-item-title><h1 class="headline"><span v-if="!$vuetify.breakpoint.mobile">Welcome to the </span>Passive Acoustic Cetacean Map</h1></v-list-item-title>
           <v-list-item-subtitle>by the <a href="https://www.nefsc.noaa.gov/psb/acoustics/index.html">NOAA Northeast Fisheries Science Center</a></v-list-item-subtitle>
         </v-list-item-content>
       </v-list-item>
@@ -47,9 +47,13 @@
           </v-col>
         </v-row>
       </v-container>
+
+      <h2 class="text-h5">About PACM</h2>
       <p>
         PACM was designed for exploring the spatial and temporal patterns of PAM-based acoustic detection data of cetacean species. A series of interactive data visualization tools can be used to view detections over different seasons, years, and areas. Click the Tour button for a walk-through of how to use this site or see the User Guide for a video tutorial.
       </p>
+
+      <h2 class="text-h5">Acoustic Recorders and Detections</h2>
       <p>
         Species that are currently represented include the North Atlantic right whale, fin whale, humpback whale, sei whale, blue whale, sperm whale, beaked whale species, and Kogia species (dwarf/pygmy sperm whales). The specific call types used for each species along with other metadata related to the recording and detection analysis can be found by hovering over or clicking on each platform.
       </p>
@@ -59,6 +63,8 @@
       <p>
         These acoustic detections only represent times when animals are calling; they do not capture time periods when animals are present but silent. Detections are from archival acoustic recorders and do not show recorders currently in the water (this is not a real-time tool). Differences in recorder detection ranges for each species are not accounted for; they can vary based on differences in instrumentation (i.e. recording hardware), environmental conditions (i.e. weather, bottom type, ambient sound levels), and anthropogenic sound levels.
       </p>
+
+      <h2 class="text-h5">Data Permissions and Contributions</h2>
       <p>
         The dataset was compiled by the NOAA NEFSC Passive Acoustic Research Program using detection data collected by many collaborators. Information on data ownership can be found in the metadata of each station or platform.
       </p>
