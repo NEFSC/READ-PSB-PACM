@@ -11,3 +11,7 @@ a {
 .leaflet-control-scale-line {
   overflow: visible !important;
 }
+
+.body-2 {
+  line-height: 1.5 !important;
+}
