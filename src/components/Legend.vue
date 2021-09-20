@@ -31,7 +31,7 @@
       :style="{ 'max-height': ($vuetify.breakpoint.height - 145) + 'px', 'overflow-y': 'auto' }"
       data-v-step="legend"
     >
-      <div class="mb-2">
+      <div class="mb-2 black--text">
         <div>
           <div class="font-weight-medium">Recorded Days:</div>
           <div class="ml-2">
@@ -50,7 +50,7 @@
 
       <v-divider></v-divider>
 
-      <div class="mt-2" v-if="hasStation">
+      <div class="mt-2 black--text" v-if="hasStation">
         <div class="subtitle-1 font-weight-medium">Stationary Platforms</div>
 
         <!-- DEPLOYMENTS ONLY (# DAYS RECORDED) -->
@@ -114,17 +114,15 @@
 
         <!-- OPTIONS -->
         <div v-if="!theme.deploymentsOnly">
-          <v-checkbox class="ml-4 my-0 d-inline-block" hide-details dense label="" v-model="normalizeEffort"></v-checkbox>
-          <span class="body-2 pl-1 grey--text text--darken-3">Normalize by effort</span>
+          <v-checkbox class="ml-4 my-0 d-inline-block" hide-details dense label="Normalize by Effort" v-model="normalizeEffort"></v-checkbox>
         </div>
         <div v-if="theme.deploymentsOnly">
           <v-divider class="mb-2"></v-divider>
-          <v-checkbox class="ml-4 my-0 d-inline-block" hide-details dense label="" v-model="useSizeScale" style="height:30px;vertical-align:middle"></v-checkbox>
-          <span class="body-2 pl-1 grey--text text--darken-3" style="display:inline;vertical-align:middle;height:20px">Scale by # Days</span>
+          <v-checkbox class="ml-4 my-0 d-inline-block" hide-details dense label="Scale by # Days" v-model="useSizeScale" style="height:30px;vertical-align:middle"></v-checkbox>
         </div>
       </div>
 
-      <div class="mt-2" v-if="hasGlider">
+      <div class="mt-2 black--text" v-if="hasGlider">
         <div class="subtitle-1 font-weight-medium">Gliders</div>
         <svg width="200" height="85">
           <g transform="translate(27,10)">
@@ -146,7 +144,7 @@
         </svg>
       </div>
 
-      <div class="mt-2" v-if="hasTowed">
+      <div class="mt-2 black--text" v-if="hasTowed">
         <div class="subtitle-1 font-weight-medium">Towed Array</div>
         <svg width="200" height="65">
           <g transform="translate(27,10)">

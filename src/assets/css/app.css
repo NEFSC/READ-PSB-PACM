@@ -15,3 +15,9 @@ a {
 .body-2 {
   line-height: 1.5 !important;
 }
+
+label.v-label.theme--light {
+  color: #424242 !important;
+  font-size: 0.875rem !important;
+  margin-left: 6px !important;
+}
