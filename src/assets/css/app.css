@@ -7,3 +7,7 @@ a {
   border-bottom-style: dashed;
   cursor: pointer;
 }
+
+.leaflet-control-scale-line {
+  overflow: visible !important;
+}
