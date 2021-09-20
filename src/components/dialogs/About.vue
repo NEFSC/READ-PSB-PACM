@@ -1,5 +1,5 @@
 <template>
-  <v-card>
+  <v-card role="main" aria-label="about page">
     <div>
       <v-img
         src="@/assets/img/noaa-logo.gif"
