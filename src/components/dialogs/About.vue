@@ -76,10 +76,10 @@
       </p>
       <!-- TODO: UPDATE URL -->
       <p>
-        For questions about contributing data to this project or any other inquiries, please contact <a href="mailto:nmfs.pacmdata@noaa.gov">nmfs.pacmdata@noaa.gov</a>.
+        For questions about contributing data to this project or any other inquiries, please contact <a class="text-decoration-underline" href="mailto:nmfs.pacmdata@noaa.gov">nmfs.pacmdata@noaa.gov</a>.
       </p>
       <p>
-        Further information about Passive Acoustic Monitoring can be found at the <a href="https://www.fisheries.noaa.gov/new-england-mid-atlantic/endangered-species-conservation/passive-acoustic-research-atlantic-ocean" target="_blank">NOAA NEFSC Passive Acoustic Research Website</a>
+        Further information about Passive Acoustic Monitoring can be found at the <a class="text-decoration-underline" href="https://www.fisheries.noaa.gov/new-england-mid-atlantic/endangered-species-conservation/passive-acoustic-research-atlantic-ocean" target="_blank">NOAA NEFSC Passive Acoustic Research Website</a>
       </p>
       <p class="mb-0">
         PACM was designed and built by Walker Environmental Research LLC based on a map-based interface for PAM acoustic detection data developed by Hansen Johnson (Dalhousie University).
