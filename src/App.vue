@@ -158,7 +158,7 @@
       </v-alert>
     </v-dialog>
 
-    <v-tour name="tour" :steps="tour.steps" :options="tour.options">
+    <v-tour name="tour" :steps="tour.steps" :options="tour.options" role="main">
       <template slot-scope="tour">
         <transition name="fade">
           <v-step
