@@ -1,5 +1,5 @@
 <template>
-  <v-card>
+  <v-card role="main">
     <v-card-title primary-title>
       User Guide
       <v-spacer></v-spacer>
@@ -56,8 +56,8 @@
                 To learn more about how to use PACM, please watch the following videos.<br>
                 <span class="body-2 font-italic">(scroll down for Part 2 - Interactive Filtering)</span>
               </p>
-              <iframe src='//players.brightcove.net/659677166001/4b3c8a9e-7bf7-43dd-b693-2614cc1ed6b7_default/index.html?videoId=6263997740001' allowfullscreen frameborder=0 width="800" height="450"></iframe>
-              <iframe src='//players.brightcove.net/659677166001/4b3c8a9e-7bf7-43dd-b693-2614cc1ed6b7_default/index.html?videoId=6263997873001' allowfullscreen frameborder=0 width="800" height="450" class="mt-4"></iframe>
+              <iframe aria-label="tutorial video part 1" src='//players.brightcove.net/659677166001/4b3c8a9e-7bf7-43dd-b693-2614cc1ed6b7_default/index.html?videoId=6263997740001' allowfullscreen frameborder=0 width="800" height="450"></iframe>
+              <iframe aria-label="tutorial video part 2" src='//players.brightcove.net/659677166001/4b3c8a9e-7bf7-43dd-b693-2614cc1ed6b7_default/index.html?videoId=6263997873001' allowfullscreen frameborder=0 width="800" height="450" class="mt-4"></iframe>
             </v-card-text>
           </v-card>
         </v-tab-item>
