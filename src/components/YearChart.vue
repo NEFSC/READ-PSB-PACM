@@ -44,6 +44,7 @@ export default {
 
     this.tip = d3Tip()
       .attr('class', 'd3-tip year-chart')
+      .attr('role', 'complementary')
       .direction('e')
       .html((d) => {
         const header = `Year: ${d.data.key}<br><br>`

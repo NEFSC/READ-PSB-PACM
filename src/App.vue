@@ -8,8 +8,10 @@
       role="navigation">
       <v-app-bar-nav-icon v-if="$vuetify.breakpoint.mobile" @click="drawer = !drawer"></v-app-bar-nav-icon>
       <v-icon color="white" dark class="mr-4" v-if="!$vuetify.breakpoint.mobile">$whale</v-icon>
-      <v-toolbar-title v-if="!$vuetify.breakpoint.mobile">Passive Acoustic Cetacean Map</v-toolbar-title>
-      <v-toolbar-title v-else class="font-weight-bold">PACM</v-toolbar-title>
+      <h1>
+        <v-toolbar-title v-if="!$vuetify.breakpoint.mobile">Passive Acoustic Cetacean Map</v-toolbar-title>
+        <v-toolbar-title v-else class="font-weight-bold">PACM</v-toolbar-title>
+      </h1>
 
       <v-spacer></v-spacer>
 

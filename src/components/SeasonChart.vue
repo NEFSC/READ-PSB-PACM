@@ -49,6 +49,7 @@ export default {
 
     this.tip = d3Tip()
       .attr('class', 'd3-tip season-chart')
+      .attr('role', 'complementary')
       .direction('e')
       .html((d) => {
         const start = d.data.key

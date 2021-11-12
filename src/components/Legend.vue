@@ -5,7 +5,7 @@
       class="text-subtitle-1 font-weight-medium"
       color="grey lighten-2"
     >
-      Legend
+      <h2 class="text-subtitle-1 font-weight-medium">Legend</h2>
       <v-spacer></v-spacer>
       <v-tooltip open-delay="500" bottom>
         <template v-slot:activator="{ on }">
@@ -51,7 +51,7 @@
       <v-divider></v-divider>
 
       <div class="mt-2 black--text" v-if="hasStation">
-        <div class="subtitle-1 font-weight-medium">Stationary Platforms</div>
+        <h3 class="subtitle-1 font-weight-medium">Stationary Platforms</h3>
 
         <!-- DEPLOYMENTS ONLY (# DAYS RECORDED) -->
         <div v-if="theme.deploymentsOnly">
@@ -123,7 +123,7 @@
       </div>
 
       <div class="mt-2 black--text" v-if="hasGlider">
-        <div class="subtitle-1 font-weight-medium">Gliders</div>
+        <h3 class="subtitle-1 font-weight-medium">Gliders</h3>
         <svg width="200" height="85">
           <g transform="translate(27,10)">
             <rect y="-6" x="-6" width="12" height="12" stroke="white" stroke-opacity="0.5" :fill="detectionTypes[0].color" />
@@ -145,7 +145,7 @@
       </div>
 
       <div class="mt-2 black--text" v-if="hasTowed">
-        <div class="subtitle-1 font-weight-medium">Towed Array</div>
+        <h3 class="subtitle-1 font-weight-medium">Towed Array</h3>
         <svg width="200" height="65">
           <g transform="translate(27,10)">
             <rect y="-6" x="-6" width="12" height="12" stroke="white" stroke-opacity="0.5" :fill="detectionTypes[0].color" />

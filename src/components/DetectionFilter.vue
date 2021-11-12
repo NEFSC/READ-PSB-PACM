@@ -47,6 +47,7 @@ export default {
 
     this.tip = d3Tip()
       .attr('class', 'd3-tip detection-filter')
+      .attr('role', 'complementary')
       .direction('e')
       .html(d => d.value.toLocaleString())
 

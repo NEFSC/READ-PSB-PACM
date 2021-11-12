@@ -58,6 +58,7 @@ export default {
 
     this.tip = d3Tip()
       .attr('class', 'd3-tip map')
+      .attr('role', 'complementary')
     this.container.call(this.tip)
 
     this.setBounds()
