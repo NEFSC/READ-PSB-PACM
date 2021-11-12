@@ -16,17 +16,21 @@
       <v-spacer></v-spacer>
 
       <v-dialog
-        v-model="dialogs.about"
+        v-model="dialogs.filters"
         max-width="1000"
         scrollable
         :fullscreen="$vuetify.breakpoint.mobile">
         <template v-slot:activator="{ on }">
-          <v-btn color="default" dark text v-on="on" data-v-step="about-button" aria-label="about page">
-            <v-icon :left="!$vuetify.breakpoint.mobile">mdi-information-outline</v-icon>
-            <span v-if="!$vuetify.breakpoint.mobile"> About</span>
-          </v-btn>
+          <v-btn
+            color="default"
+            dark
+            text
+            v-on="on"
+            data-v-step="about-button"
+            aria-label="about page"
+          ></v-btn>
         </template>
-        <AboutDialog @close="closeAbout"></AboutDialog>
+        <AboutDialog @close="dialogs.filters = false"></AboutDialog>
       </v-dialog>
 
       <v-dialog
@@ -105,6 +109,19 @@
             <PlatformTypeFilter></PlatformTypeFilter>
           </v-list-item-content>
         </v-list-item>
+
+        <div class="text-right mx-4">
+          <v-dialog
+            v-model="dialogs.about"
+            max-width="600"
+            scrollable
+            :fullscreen="$vuetify.breakpoint.mobile">
+            <template v-slot:activator="{ on }">
+              <v-btn color="default" small text v-on="on" aria-label="advanced filters">Advanced Filters...</v-btn>
+            </template>
+            <FiltersDialog @close="closeAbout"></FiltersDialog>
+          </v-dialog>
+        </div>
 
         <v-divider class="my-4"></v-divider>
 
@@ -189,6 +206,7 @@ import { mapActions, mapGetters } from 'vuex'
 
 import Map from '@/components/Map'
 import AboutDialog from '@/components/dialogs/About'
+import FiltersDialog from '@/components/dialogs/Filters'
 import UserGuideDialog from '@/components/dialogs/UserGuide'
 import SelectTheme from '@/components/SelectTheme'
 import YearFilter from '@/components/YearFilter'
@@ -207,6 +225,7 @@ export default {
   name: 'App',
   components: {
     AboutDialog,
+    FiltersDialog,
     UserGuideDialog,
     Map,
     SelectTheme,
@@ -235,7 +254,8 @@ export default {
       },
       dialogs: {
         about: false,
-        guide: false
+        guide: false,
+        filters: false
       },
       tour: {
         options: {

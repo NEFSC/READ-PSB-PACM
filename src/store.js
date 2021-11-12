@@ -66,6 +66,7 @@ export default new Vuex.Store({
           detections.forEach((d, i) => {
             d.$index = i
             d.platform_type = deploymentsMap[d.id].properties.platform_type
+            d.data_poc_affiliation = deploymentsMap[d.id].properties.data_poc_affiliation || 'Unknown'
           })
           const trackDetections = detections.map(d => {
             return d.locations
