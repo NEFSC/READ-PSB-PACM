@@ -14,10 +14,6 @@
       :options="{ zoomControl: false }"
       @zoomend="onZoom">
       <l-control-scale position="bottomleft"></l-control-scale>
-      <l-tile-layer
-        url="//server.arcgisonline.com/ArcGIS/rest/services/Ocean_Basemap/MapServer/tile/{z}/{y}/{x}"
-        attribution="Tiles &copy; Esri &mdash; Sources: GEBCO, NOAA, CHS, OSU, UNH, CSUMB, National Geographic, DeLorme, NAVTEQ, and Esri'">
-      </l-tile-layer>
       <l-control position="topright">
         <Legend :counts="counts" v-if="theme && !loading"></Legend>
       </l-control>
@@ -28,7 +24,7 @@
 </template>
 
 <script>
-import { LMap, LTileLayer, LControlScale, LControl } from 'vue2-leaflet'
+import { LMap, LControlScale, LControl } from 'vue2-leaflet'
 import * as d3 from 'd3'
 import L from 'leaflet'
 
@@ -59,15 +55,29 @@ export default {
     MapSelector,
 
     LMap,
-    LTileLayer,
     LControlScale,
     LControl
   },
-  mounted () {
+  async mounted () {
     this.map = this.$refs.map.mapObject
 
     this.zoomMinControl = new ZoomMin({ minBounds: this.map.getBounds() })
     this.map.addControl(this.zoomMinControl)
+
+    const basemaps = {
+      'No Basemap': L.tileLayer(''),
+      'ESRI Ocean': L.tileLayer(
+        '//server.arcgisonline.com/ArcGIS/rest/services/Ocean_Basemap/MapServer/tile/{z}/{y}/{x}',
+        {
+          attribution: 'Tiles &copy; Esri &mdash; Sources: GEBCO, NOAA, CHS, OSU, UNH, CSUMB, National Geographic, DeLorme, NAVTEQ, and Esri'
+        }
+      ).addTo(this.map)
+    }
+    const overlays = {
+      'Lobster Management Areas': await this.createLobsterLayer()
+    }
+    L.control.layers(basemaps, overlays, { position: 'topleft' })
+      .addTo(this.map)
 
     const svgLayer = L.svg()
     this.map.addLayer(svgLayer)
@@ -87,6 +97,61 @@ export default {
     evt.$off('map:setBounds', this.setBounds)
   },
   methods: {
+    async createLobsterLayer () {
+      const layerGroup = L.layerGroup()
+      const response = await fetch('gis/lobster-management-areas.geojson')
+      const json = await response.json()
+      const styles = {
+        'EEZ Nearshore Outer Cape Lobster Management Area': {
+          color: '#f792f0'
+        },
+        'Nearshore Management Area 6': {
+          color: '#77e054'
+        },
+        'EEZ Nearshore Management Area 5': {
+          color: '#579ae8'
+        },
+        'EEZ Nearshore Management Area 4': {
+          color: '#d74a58'
+        },
+        'Area 2/3 Overlap': {
+          color: '#7f61f4'
+        },
+        'EEZ Offshore Management Area 3': {
+          color: '#ffaa00'
+        },
+        'EEZ Nearshore Management Area 2': {
+          color: '#785bf2'
+        },
+        'EEZ Nearshore Management Area 1': {
+          color: '#55e0dd'
+        }
+      }
+      L.geoJSON(json, {
+        onEachFeature (feature, layer) {
+          var tooltip = L.tooltip()
+          tooltip.setContent('text')
+          layer.bindTooltip(`
+            <strong>Lobster Management Area</strong><br>
+            ${feature.properties.AREANAME}
+          `)
+
+          layer.on('mouseover', (e) => {
+            layer.openTooltip(e.latlng)
+          })
+          layer.on('mousemove', (e) => {
+            layer.openTooltip(e.latlng)
+          })
+          layer.on('mouseout', (e) => {
+            layer.closePopup()
+          })
+
+          layer.setStyle(styles[feature.properties.AREANAME])
+          layerGroup.addLayer(layer)
+        }
+      })
+      return layerGroup
+    },
     setBounds (bounds) {
       this.map.invalidateSize()
       const latLngBounds = new L.latLngBounds([ // eslint-disable-line
@@ -102,3 +167,11 @@ export default {
   }
 }
 </script>
+
+<style>
+.leaflet-control-layers-toggle {
+  background-image: url('../assets/img/leaflet-control-layers.png') !important;
+  width: 30px !important;
+  height: 30px !important;
+}
+</style>
