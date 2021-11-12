@@ -67,6 +67,15 @@ export default new Vuex.Store({
             d.$index = i
             d.platform_type = deploymentsMap[d.id].properties.platform_type
             d.data_poc_affiliation = deploymentsMap[d.id].properties.data_poc_affiliation || 'Unknown'
+            d.instrument_type = deploymentsMap[d.id].properties.instrument_type || 'Unknown'
+            const hz = deploymentsMap[d.id].properties.sampling_rate_hz
+            d.sampling_rate = !hz
+              ? 'Unknown'
+              : hz <= 4000
+                ? 'Low (1-4 kHz)'
+                : hz < 96000
+                  ? 'Medium (5-96 kHz)'
+                  : 'High (97+ kHz)'
           })
           const trackDetections = detections.map(d => {
             return d.locations
