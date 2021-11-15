@@ -16,7 +16,7 @@
       <v-spacer></v-spacer>
 
       <v-dialog
-        v-model="dialogs.filters"
+        v-model="dialogs.about"
         max-width="1000"
         scrollable
         :fullscreen="$vuetify.breakpoint.mobile">
@@ -30,7 +30,7 @@
             aria-label="about page"
           ></v-btn>
         </template>
-        <AboutDialog @close="dialogs.filters = false"></AboutDialog>
+        <AboutDialog @close="closeAbout"></AboutDialog>
       </v-dialog>
 
       <v-dialog
@@ -112,14 +112,14 @@
 
         <div class="text-right mx-4">
           <v-dialog
-            v-model="dialogs.about"
+            v-model="dialogs.filters"
             max-width="600"
             scrollable
             :fullscreen="$vuetify.breakpoint.mobile">
             <template v-slot:activator="{ on }">
               <v-btn color="default" small text v-on="on" aria-label="advanced filters">Advanced Filters...</v-btn>
             </template>
-            <FiltersDialog @close="closeAbout"></FiltersDialog>
+            <FiltersDialog @close="dialogs.filters = false"></FiltersDialog>
           </v-dialog>
         </div>
 
