@@ -28,7 +28,10 @@
             v-on="on"
             data-v-step="about-button"
             aria-label="about page"
-          ></v-btn>
+          >
+            <v-icon :left="!$vuetify.breakpoint.mobile">mdi-information-outline</v-icon>
+            <span v-if="!$vuetify.breakpoint.mobile"> About</span>
+          </v-btn>
         </template>
         <AboutDialog @close="closeAbout"></AboutDialog>
       </v-dialog>
@@ -117,7 +120,14 @@
             scrollable
             :fullscreen="$vuetify.breakpoint.mobile">
             <template v-slot:activator="{ on }">
-              <v-btn color="default" small text v-on="on" aria-label="advanced filters">Advanced Filters...</v-btn>
+              <v-btn
+                color="default"
+                small
+                text
+                v-on="on"
+                aria-label="advanced filters"
+                data-v-step="advanced"
+              >Advanced Filters...</v-btn>
             </template>
             <FiltersDialog @close="dialogs.filters = false"></FiltersDialog>
           </v-dialog>

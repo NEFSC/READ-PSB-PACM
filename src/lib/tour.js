@@ -51,6 +51,20 @@ export default [
     }
   },
   {
+    target: '[data-v-step="advanced"]',
+    header: {
+      title: 'Open Advanced Filters'
+    },
+    content: `
+      <i>Click here to open advanced filtering options.</i><br><br>
+      Advanced filters can be used to focus on specific data affiliations, instrument types, and recorder sampling rates.
+    `,
+    params: {
+      highlight: true,
+      placement: 'top'
+    }
+  },
+  {
     target: '[data-v-step="season"]',
     header: {
       title: 'Filter by Season'
@@ -113,6 +127,19 @@ export default [
     },
     content: `
       <i>Use the +/- buttons to zoom in and out. Click the world button to reset the map to its original extent.</i>
+    `,
+    params: {
+      highlight: true,
+      placement: 'right'
+    }
+  },
+  {
+    target: '.leaflet-control-layers.leaflet-control',
+    header: {
+      title: 'Basemaps and Layers'
+    },
+    content: `
+      <i>Toggle basemaps and overlay layers (e.g. management areas).</i>
     `,
     params: {
       highlight: true,

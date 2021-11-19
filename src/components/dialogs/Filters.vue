@@ -33,7 +33,7 @@
         outlined
         :items="samplingRate.options"
         v-model="samplingRate.selected"
-        label="Select Sampling Rate"
+        label="Select Recorder Sampling Rate"
         hide-details
         clearable
         class="mt-4"
