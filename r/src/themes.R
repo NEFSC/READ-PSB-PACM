@@ -20,15 +20,17 @@ if (file.exists("data/themes.rds")) {
 
 # load --------------------------------------------------------------------
 
-towed <- readRDS("data/datasets/towed.rds")
-moored <- readRDS("data/datasets/moored.rds")
-glider <- readRDS("data/datasets/glider.rds")
-nefsc <- readRDS("data/deployment-themes/nefsc.rds")
+towed <- read_rds("data/datasets/towed.rds")
+moored <- read_rds("data/datasets/moored.rds")
+glider <- read_rds("data/datasets/glider.rds")
+dfo <- read_rds("data/datasets/dfo.rds")
+nefsc <- read_rds("data/deployment-themes/nefsc.rds")
 
 deployments_all <- bind_rows(
   towed$deployments,
   glider$deployments,
   moored$deployments,
+  dfo$deployments,
   nefsc$deployments
 )
 
@@ -36,6 +38,7 @@ detections_all <- bind_rows(
   towed$detections,
   glider$detections,
   moored$detections,
+  dfo$detections,
   nefsc$detections
 )
 
@@ -94,7 +97,6 @@ detections %>%
     n_locations = if_else(n_locations > 1, "2+", as.character(n_locations))
   ) %>% 
   tabyl(presence, n_locations, platform_type)
-
 
 # deployment_type vs platform_type
 deployments %>% 

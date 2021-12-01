@@ -11,3 +11,6 @@ default:
       metadata: "towed/Towed_Array_effort_Walker_Website_Daily_Resolution.xlsx"
       tracks: "towed/tracks"
       detections: "towed/detections"
+    dfo:
+      metadata: "dfo/DFOCA_METADATA_20211124.csv"
+      detections: "dfo/detections"
