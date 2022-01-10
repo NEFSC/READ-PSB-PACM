@@ -1,0 +1,9 @@
+.Rproj.user
+.Rhistory
+*.rds
+rmd/*.html
+data/qaqc/*.csv
+data/templates/**/*.xlsx
+data/templates/**/*.csv
+
+_targets

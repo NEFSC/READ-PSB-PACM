@@ -10,7 +10,22 @@ df_csv <- read_csv(
   file.path(files$root, files$glider$detection),
   col_types = cols(.default = col_character())
 ) %>% 
-  clean_names()
+  clean_names() %>% 
+  distinct()
+
+stopifnot(
+  df_csv %>% 
+    transmute(unique_id, analysis_period_start_datetime) %>% 
+    count(unique_id, analysis_period_start_datetime) %>% 
+    pull(n) == 1
+)
+
+# df_csv %>%
+#   transmute(unique_id, analysis_period_start_datetime) %>%
+#   count(unique_id, analysis_period_start_datetime) %>%
+#   filter(n > 1) %>%
+#   select(-n) %>%
+#   write_csv("data/qaqc/glider-duplicate-detection-datetimes.csv")
 
 
 # transform ---------------------------------------------------------------

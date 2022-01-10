@@ -11,8 +11,22 @@ df_csv <- read_csv(
   file.path(files$root, files$moored$detection),
   col_types = cols(.default = col_character())
 ) %>% 
-  clean_names()
+  clean_names() %>% 
+  distinct()
 
+stopifnot(
+  df_csv %>% 
+    transmute(unique_id, date = as_date(ymd_hms(analysis_period_start_datetime))) %>% 
+    count(unique_id, date) %>% 
+    pull(n) == 1
+)
+ 
+# df_csv %>%
+#   transmute(unique_id, date = as_date(ymd_hms(analysis_period_start_datetime))) %>%
+#   count(unique_id, date) %>%
+#   filter(n > 1) %>%
+#   select(-n) %>%
+#   write_csv("data/qaqc/moored-duplicate-detection-dates.csv")
 
 # transform -------------------------------------------------------------------
 
@@ -35,6 +49,12 @@ df <- df_csv %>%
     date = as_date(ymd_hms(analysis_period_start_datetime)),
     presence = fct_recode(presence, y = "Detected", n = "Not Detected", m = "Possibly Detected")
   )
+
+stopifnot(
+  df %>% 
+    count(theme, id, species, date) %>% 
+    pull(n) == 1
+)
 
 
 # summary -----------------------------------------------------------------

@@ -7,11 +7,7 @@ library(sf)
 source("src/functions.R")
 
 detections_rds <- read_rds("data/datasets/dfo/detections.rds")
-deployments_rds <- read_rds("data/datasets/dfo/deployments.rds") %>% 
-  mutate(
-    # ERROR: LOC_2017_11_LF was duplicated
-    id = if_else(id == "LOC_2017_11_LF" & sampling_rate_hz == "250000", "LOC_2017_11_HF", id)
-  )
+deployments_rds <- read_rds("data/datasets/dfo/deployments.rds")
 
 
 # analysis period ---------------------------------------------------------

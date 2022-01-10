@@ -20,15 +20,7 @@ yarn-error.log*
 *.sln
 *.sw?
 
-# R
-.Rproj.user
-.Rhistory
-*.rds
-r/rmd/*.html
-r/data/qaqc/*.csv
-r/data/templates/**/*.xlsx
-r/data/templates/**/*.csv
-
 # datasets
 public/data/**/*.csv
 public/data/**/*.json
+.Rproj.user

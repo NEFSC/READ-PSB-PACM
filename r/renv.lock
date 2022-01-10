@@ -1,6 +1,6 @@
 {
   "R": {
-    "Version": "4.0.5",
+    "Version": "4.1.0",
     "Repositories": [
       {
         "Name": "CRAN",
@@ -396,10 +396,10 @@
     },
     "knitr": {
       "Package": "knitr",
-      "Version": "1.31",
+      "Version": "1.37",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "c3994c036d19fc22c5e2a209c8298bfb"
+      "Hash": "a4ec675eb332a33fe7b7fe26f70e1f98"
     },
     "labeling": {
       "Package": "labeling",
@@ -648,10 +648,10 @@
     },
     "renv": {
       "Package": "renv",
-      "Version": "0.12.5",
+      "Version": "0.14.0",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "5c0cdb37f063c58cdab3c7e9fbb8bd2c"
+      "Hash": "30e5eba91b67f7f4d75d31de14bbfbdc"
     },
     "reprex": {
       "Package": "reprex",
@@ -879,10 +879,10 @@
     },
     "xfun": {
       "Package": "xfun",
-      "Version": "0.20",
+      "Version": "0.29",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "d7222684dc02327871e3b1da0aba7089"
+      "Hash": "e2e5fb1a74fbb68b27d6efc5372635dc"
     },
     "xml2": {
       "Package": "xml2",

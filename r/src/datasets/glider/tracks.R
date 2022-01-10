@@ -13,7 +13,8 @@ df_csv <- read_csv(
   file.path(files$root, files$glider$detection),
   col_types = cols(.default = col_character())
 ) %>% 
-  clean_names()
+  clean_names() %>% 
+  distinct()
 
 
 # transform ---------------------------------------------------------------
