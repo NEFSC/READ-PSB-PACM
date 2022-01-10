@@ -183,7 +183,7 @@ df_meta %>%
 ## Monitoring Period Timestamp Error
 
 <div class="alert alert-danger">
-  <strong>`r icon::fa("exclamation-triangle")`</strong> One of the gliders has an end timestamp before the start timestamp.
+  One of the gliders has an end timestamp before the start timestamp.
 </div>
 
 ```{r}
@@ -264,7 +264,7 @@ df_detect %>%
 ## Analysis and Monitoring Period Mismatch
 
 <div class="alert alert-danger">
-  <strong>`r icon::fa("exclamation-triangle")`</strong> One of the gliders has a mismatch between the full range of analysis periods and the monitoring period. This is the same glider that has a monitoring period end timestamp that is earlier than the start timestamp. Suspect the monitoring end timestamp needs to be fixed.
+  One of the gliders has a mismatch between the full range of analysis periods and the monitoring period. This is the same glider that has a monitoring period end timestamp that is earlier than the start timestamp. Suspect the monitoring end timestamp needs to be fixed.
 </div>
 
 ```{r}

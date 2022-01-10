@@ -329,7 +329,7 @@ stopifnot(
 ## Gaps Warning
 
 <div class="alert alert-warning">
-  <strong>`r icon::fa("exclamation-triangle")`</strong> A large number of deployments have gaps in the daily timeseries suggesting that not every day for a given monitoring period was analyzed.
+  A large number of deployments have gaps in the daily timeseries suggesting that not every day for a given monitoring period was analyzed.
 </div>
 
 Many of the deployments contain gaps in the daily timeseries.
@@ -359,7 +359,7 @@ df_detect_by_species %>%
 ## Time Zone Warning
 
 <div class="alert alert-warning">
-  <strong>`r icon::fa("exclamation-triangle")`</strong> A large number of rows have start/end timestamps that are not end at midnight suggesting timezone issues
+  A large number of rows have start/end timestamps that are not end at midnight suggesting timezone issues
 </div>
 
 Expected `analysis_period_start_datetime` and `analysis_period_end_datetime` to always be at midnight since this is a daily timeseries.
