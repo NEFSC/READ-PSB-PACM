@@ -18,6 +18,7 @@ export_themes <- c(
   "beaked",
   "kogia",
   "sperm",
+  "harbor",
   
   "deployments-nefsc"
 )

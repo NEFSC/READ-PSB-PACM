@@ -6,6 +6,7 @@ library(sf)
 library(glue)
 library(janitor)
 library(jsonlite)
+library(targets)
 
 source("src/functions.R")
 
@@ -23,23 +24,29 @@ if (file.exists("data/themes.rds")) {
 towed <- read_rds("data/datasets/towed.rds")
 moored <- read_rds("data/datasets/moored.rds")
 glider <- read_rds("data/datasets/glider.rds")
-dfo <- read_rds("data/datasets/dfo.rds")
+# dfo <- read_rds("data/datasets/dfo.rds")
 nefsc <- read_rds("data/deployment-themes/nefsc.rds")
 
-deployments_all <- bind_rows(
-  towed$deployments,
-  glider$deployments,
-  moored$deployments,
-  dfo$deployments,
-  nefsc$deployments
+nefsc_20211216 <- read_rds("data/datasets/nefsc_20211216.rds")
+nefsc_20220211 <- read_rds("data/datasets/nefsc_20220211.rds")
+dfo_20211124 <- read_rds("data/datasets/dfo_20211124.rds")
+nydec_20220202 <- read_rds("data/datasets/nydec_20220202.rds")
+
+
+# merge -------------------------------------------------------------------
+
+deployments_all <- map_df(
+  list(
+    towed, glider, moored, nefsc,
+    nefsc_20211216, nefsc_20220211, dfo_20211124, nydec_20220202
+  ), ~ .x$deployments
 )
 
-detections_all <- bind_rows(
-  towed$detections,
-  glider$detections,
-  moored$detections,
-  dfo$detections,
-  nefsc$detections
+detections_all <- map_df(
+  list(
+    towed, glider, moored, nefsc,
+    nefsc_20211216, nefsc_20220211, dfo_20211124, nydec_20220202
+  ), ~ .x$detections
 )
 
 
@@ -118,17 +125,19 @@ detections %>%
 
 qaqc_dataset(deployments, detections)
 
+deployments %>% 
+  st_drop_geometry() %>% 
+  tabyl(submitter_affiliation, theme)
 
 # diff --------------------------------------------------------------------
 
-current_deployments <- tibble(deployments) %>% 
-  select(-geometry)
-last_deployments <- tibble(last_rds$deployments) %>% 
-  select(-geometry)
+current_deployments <- st_drop_geometry(deployments)
+last_deployments <- st_drop_geometry(last_rds$deployments)
 
 # added deployments
 anti_join(current_deployments, last_deployments, by = c("theme", "id")) %>% 
-  distinct(id, platform_type)
+  distinct(id, platform_type, submitter_affiliation) %>% 
+  print(n = Inf)
 
 # removed deployments
 anti_join(last_deployments, current_deployments, by = c("theme", "id")) %>% 

@@ -91,7 +91,8 @@ df <- df_raw %>%
   mutate(
     analysis_start_date = if_else(analyzed, ymd(map(cruise_dates, ~ as.character(min(.x$date)))), NA_Date_),
     analysis_end_date = if_else(analyzed, ymd(map(cruise_dates, ~ as.character(max(.x$date)))), NA_Date_)
-  )
+  ) %>% 
+  filter(!(theme == "sperm" & id == "NEFSC_HB1603"))
 
 
 # summary -----------------------------------------------------------------

@@ -64,7 +64,7 @@ deployments_dates <- deployments_analysis %>%
 
 # fill missing detection days with presence = na
 # and add empty locations
-detections <- deployments_dates %>%  
+detections_all <- deployments_dates %>%  
   select(theme, id, date) %>% 
   full_join(
     detections_rds,
@@ -74,6 +74,17 @@ detections <- deployments_dates %>%
     locations = map(theme, ~ NULL)
   ) %>% 
   select(theme, id, date, species, presence, locations)
+
+# remove species when presence="n"
+detections <- detections_all %>% 
+  mutate(species = if_else(presence == "n", NA_character_, species)) %>% 
+  distinct() %>% 
+  group_by(theme, id, date) %>% 
+  mutate(n = n()) %>% 
+  ungroup() %>% 
+  filter(presence != "n" | n == 1) %>%  # only exclude all "n" rows except when only row for given date
+  select(-n)
+
 stopifnot(all(!is.na(detections$presence)))
 
 
@@ -128,6 +139,7 @@ deployments_sf <- deployments_analysis %>%
   distinct(id, latitude, longitude) %>% 
   st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
 
+library(mapview)
 mapview::mapview(deployments_sf, legend = FALSE)
 
 deployments <- deployments_sf %>% 
@@ -149,3 +161,20 @@ list(
 ) %>% 
   write_rds("data/datasets/dfo.rds")
 
+
+# compare: targets --------------------------------------------------------
+
+library(targets)
+tar_load(dfo_20211124)
+
+setdiff(names(deployments), names(dfo_20211124$recorders))
+setdiff(names(dfo_20211124$deployments), names(deployments))
+
+setdiff(names(detections), names(dfo_20211124$analyses))
+setdiff(names(dfo_20211124$analyses), names(detections))
+dfo_20211124$analyses %>% 
+  select(species_group, unique_id, detections) %>% 
+  unnest(detections) %>% 
+  tabyl(unique_id, acoustic_presence)
+detections %>% 
+  tabyl(id, presence)

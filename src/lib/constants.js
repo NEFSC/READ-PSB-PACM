@@ -42,6 +42,10 @@ export const themes = [
     label: 'Sperm Whale'
   },
   {
+    id: 'harbor',
+    label: 'Harbor Porpoise'
+  },
+  {
     divider: true
   },
   {
