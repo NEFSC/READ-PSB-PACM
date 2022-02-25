@@ -263,9 +263,8 @@ targets_datasets <- list(
     filename
   }, format = "file"),
   
-
   # NYDEC 20220202 Baleen Whales --------------------------------------------
-  tar_target(nydec_20220202_metadata_file, "data/nydec/20220202-baleen/NYDEC_METADATA_20220202.csv", format = "file"),
+  tar_target(nydec_20220202_metadata_file, "data/nydec/20220202-baleen/NYDEC_METADATA_20220215.csv", format = "file"),
   tar_target(nydec_20220202_detections_file, "data/nydec/20220202-baleen/NYDEC_DETECTIONDATA_20220202.csv", format = "file"),
   tar_target(nydec_20220202_dataset, read_dataset(
     list(metadata = nydec_20220202_metadata_file, detections = nydec_20220202_detections_file),
@@ -339,5 +338,81 @@ targets_datasets <- list(
     ) %>% 
       write_rds(filename)
     filename
+  }, format = "file"),
+  
+  # UCORN 20220214 Baleen Whales --------------------------------------------
+  tar_target(ucorn_20220214_metadata_file, "data/ucorn/20220214/UCORN_METADATA_20220214.csv", format = "file"),
+  tar_target(ucorn_20220214_detections_file, "data/ucorn/20220214/UCORN_DETECTIONDATA_20220217.csv", format = "file"),
+  tar_target(ucorn_20220214_dataset, read_dataset(
+    list(metadata = ucorn_20220214_metadata_file, detections = ucorn_20220214_detections_file),
+    list(),
+    refs
+  )),
+  tar_target(ucorn_20220214, process_dataset(ucorn_20220214_dataset, refs)),
+  tar_target(ucorn_20220214_plot, plot_analyses(ucorn_20220214$analyses)),
+  tar_target(ucorn_20220214_rds, {
+    moored <- read_rds("data/datasets/moored.rds")
+    
+    deployments <- ucorn_20220214$analyses %>% 
+      select(-detections) %>% 
+      left_join(ucorn_20220214$recorders, by = "unique_id") %>% 
+      rename(
+        theme = species_group,
+        id = unique_id,
+        platform_id = platform_no,
+        analysis_sampling_rate = analysis_sampling_rate_hz,
+        qc_data = qc_processing,
+        deployment_type = stationary_or_mobile
+      ) %>% 
+      mutate(
+        platform_type = case_when(
+          platform_type == "bottom-mounted" ~ "mooring",
+          TRUE ~ NA_character_
+        ),
+        platform_type = factor(platform_type, levels = levels(moored$deployments$platform_type)),
+        duty_cycle_seconds = NA_character_,
+        analysis_start_date = as_date(monitoring_start_datetime),
+        analysis_end_date = as_date(monitoring_end_datetime),
+        analyzed = TRUE,
+        submission_date = as_date(submission_date),
+        channel = as.character(channel)
+      ) %>% 
+      select(-c(detection_software_name, detection_software_version, min_analysis_frequency_range_hz, max_analysis_frequency_range_hz, recording_duration_seconds, recording_interval_seconds, sample_bits)) %>% 
+      st_as_sf(coords = c("longitude", "latitude"), remove = FALSE)
+    stopifnot(
+      compare_df_cols_same(moored$deployments, deployments),
+      identical(sort(names(moored$deployments)), sort(names(deployments)))
+    )
+    
+    detections <- ucorn_20220214$analyses %>% 
+      select(theme = species_group, id = unique_id, detections) %>% 
+      unnest(detections) %>% 
+      mutate(
+        species = NA_character_,
+        presence = case_when(
+          acoustic_presence == "D" ~ "y",
+          acoustic_presence == "P" ~ "m",
+          acoustic_presence == "N" ~ "n",
+          acoustic_presence == "M" ~ "na",
+          TRUE ~ NA_character_
+        ),
+        presence = factor(presence, levels = levels(moored$detections$presence)),
+        locations = map(theme, ~ NULL)
+      ) %>% 
+      select(-acoustic_presence, -detections)
+    stopifnot(
+      compare_df_cols_same(moored$detections, detections),
+      identical(sort(names(moored$detections)), sort(names(detections)))
+    )
+    
+    filename <- "data/datasets/ucorn_20220214.rds"
+    list(
+      deployments = deployments,
+      detections = detections
+    ) %>% 
+      write_rds(filename)
+    filename
   }, format = "file")
+
+  
 )

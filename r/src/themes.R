@@ -31,23 +31,20 @@ nefsc_20211216 <- read_rds("data/datasets/nefsc_20211216.rds")
 nefsc_20220211 <- read_rds("data/datasets/nefsc_20220211.rds")
 dfo_20211124 <- read_rds("data/datasets/dfo_20211124.rds")
 nydec_20220202 <- read_rds("data/datasets/nydec_20220202.rds")
+ucorn_20220214 <- read_rds("data/datasets/ucorn_20220214.rds")
 
+all_datasets <- list(
+  towed, glider, moored, nefsc,
+  nefsc_20211216, nefsc_20220211,
+  dfo_20211124,
+  nydec_20220202, 
+  ucorn_20220214
+)
 
 # merge -------------------------------------------------------------------
 
-deployments_all <- map_df(
-  list(
-    towed, glider, moored, nefsc,
-    nefsc_20211216, nefsc_20220211, dfo_20211124, nydec_20220202
-  ), ~ .x$deployments
-)
-
-detections_all <- map_df(
-  list(
-    towed, glider, moored, nefsc,
-    nefsc_20211216, nefsc_20220211, dfo_20211124, nydec_20220202
-  ), ~ .x$detections
-)
+deployments_all <- map_df(all_datasets, ~ .x$deployments)
+detections_all <- map_df(all_datasets, ~ .x$detections)
 
 
 # filter: deployments ---------------------------------------------------

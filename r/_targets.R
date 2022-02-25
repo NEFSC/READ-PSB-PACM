@@ -15,11 +15,5 @@ invisible(sapply(list.files("R/datasets", pattern = ".R", full.names = TRUE), so
 
 list(
   targets_template,
-  
   targets_datasets
-  
-  # targets_dfo_20211124,   # beaked
-  # targets_nydec_20211216, # baleen
-  # targets_nefsc_20211216, # harbor porpoise
-  # targets_nefsc_20220211  # hb1603
 )
