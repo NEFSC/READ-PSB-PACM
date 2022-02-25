@@ -15,9 +15,9 @@ source("src/datasets/towed/detections.R")
 source("src/datasets/towed/tracks.R")
 source("src/datasets/towed.R")
 
-source("src/datasets/dfo/deployments.R")
-source("src/datasets/dfo/detections.R")
-source("src/datasets/dfo.R")
+# source("src/datasets/dfo/deployments.R")
+# source("src/datasets/dfo/detections.R")
+# source("src/datasets/dfo.R")
 
 
 # deployment themes --------------------------------------------------------

@@ -14,13 +14,28 @@ df_csv <- read_csv(
   clean_names() %>% 
   distinct()
 
+df_csv <- df_csv %>% 
+  filter(!is.na(analysis_period_start_datetime)) %>% 
+  group_by(unique_id, analysis_period_start_datetime) %>% 
+  slice(1) %>% 
+  ungroup()
+
 stopifnot(
   df_csv %>% 
     transmute(unique_id, date = as_date(ymd_hms(analysis_period_start_datetime))) %>% 
     count(unique_id, date) %>% 
     pull(n) == 1
 )
- 
+
+# df_csv %>% 
+#   filter(is.na(analysis_period_start_datetime)) %>% 
+#   write_csv("~/moored-20220818-detections-missing.csv")
+# df_csv_2 %>% 
+#   filter(!is.na(analysis_period_start_datetime)) %>% 
+#   add_count(unique_id, analysis_period_start_datetime) %>% 
+#   filter(n > 1) %>% view
+#   write_csv("~/moored-20220818-detections-dups.csv")
+
 # df_csv %>%
 #   transmute(unique_id, date = as_date(ymd_hms(analysis_period_start_datetime))) %>%
 #   count(unique_id, date) %>%
