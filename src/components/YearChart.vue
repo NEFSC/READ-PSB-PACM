@@ -25,9 +25,14 @@ export default {
   computed: {
     ...mapGetters(['theme'])
   },
+  watch: {
+    theme () {
+      this.updateChart()
+    }
+  },
   mounted () {
     const dim = xf.dimension(d => d.year)
-    const group = dim.group().reduce(
+    this.group = dim.group().reduce(
       (p, v) => {
         p[v.presence] = (p[v.presence] || 0) + 1
         return p
@@ -74,7 +79,7 @@ export default {
       .height(120)
       .margins({ top: 10, right: 20, bottom: 22, left: 60 })
       .dimension(dim)
-      .group(group, 'y', (d) => d.value.y)
+      .group(this.group, 'y', (d) => d.value.y)
       .x(d3.scaleLinear().domain(filter.slice()))
       .xUnits(() => filter[1] - filter[0])
       .colors(d3.scaleOrdinal().range(detectionTypes.map(d => d.color)))
@@ -95,16 +100,26 @@ export default {
     dc.override(this.chart, 'legendables', () => {
       return this.chart._legendables().reverse()
     })
-    this.chart.stack(group, 'm', d => d.value.m)
-    this.chart.stack(group, 'n', d => d.value.n)
-    this.chart.stack(group, 'na', d => d.value.na)
-    this.chart.stack(group, 'd', d => d.value.d)
+    this.chart.stack(this.group, 'm', d => d.value.m)
+    this.chart.stack(this.group, 'n', d => d.value.n)
+    this.chart.stack(this.group, 'na', d => d.value.na)
+    this.chart.stack(this.group, 'd', d => d.value.d)
     this.chart.xAxis().ticks(6).tickFormat(d3.format('d'))
     this.chart.yAxis().ticks(4)
     this.chart.render()
+
+    this.updateChart()
   },
   beforeDestroy () {
     d3.selectAll('.d3-tip.year-chart').remove()
+  },
+  methods: {
+    updateChart () {
+      if (!this.chart || !this.group) return
+
+      this.chart.xAxis().ticks(Math.min(this.group.all().length, 6))
+      this.chart.render()
+    }
   }
 }
 </script>
