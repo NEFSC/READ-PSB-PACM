@@ -158,8 +158,8 @@ export default {
         [bounds[0][1], bounds[0][0]],
         [bounds[1][1], bounds[1][0]]
       ])
-      this.zoomMinControl.options.minBounds = latLngBounds
-      this.map.fitBounds(latLngBounds)
+      this.map.fitBounds(latLngBounds, { maxZoom: 10 })
+      this.zoomMinControl.options.minBounds = this.map.getBounds()
     },
     onZoom () {
       evt.$emit('map:zoom', this.map.getZoom())
