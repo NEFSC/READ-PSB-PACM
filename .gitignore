@@ -24,3 +24,5 @@ yarn-error.log*
 public/data/**/*.csv
 public/data/**/*.json
 .Rproj.user
+
+dev/

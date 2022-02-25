@@ -6,6 +6,8 @@ python/
 staging/
 .Rproj.user
 .Rhistory
+
+data/
 *.rds
 rmd/*.html
 data/qaqc/*.csv
