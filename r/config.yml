@@ -2,8 +2,8 @@ default:
   files:
     root: "~/Dropbox/Work/nefsc/data"
     moored:
-      metadata: "moored/20220218/Moored_metadata_2022-02-18.csv"
-      detection: "moored/20220218/Moored_detection_data_2022-02-18.csv"
+      metadata: "moored/20220225/Moored_metadata_2022-02-25.csv"
+      detection: "moored/20220225/Moored_detection_data_2022-02-25.csv"
     glider:
       metadata: "glider/20220218/Glider_metadata_2022-02-18.csv"
       detection: "glider/20220218/Glider_detection_data_2022-02-18.csv"

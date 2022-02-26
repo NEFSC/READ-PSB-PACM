@@ -12,18 +12,13 @@ df_csv <- read_csv(
   col_types = cols(.default = col_character())
 ) %>% 
   clean_names() %>% 
-  distinct()
-
-df_csv <- df_csv %>% 
-  filter(!is.na(analysis_period_start_datetime)) %>% 
-  group_by(unique_id, analysis_period_start_datetime) %>% 
-  slice(1) %>% 
-  ungroup()
+  distinct() %>% 
+  filter(!is.na(analysis_period_start_datetime))
 
 stopifnot(
   df_csv %>% 
     transmute(unique_id, date = as_date(ymd_hms(analysis_period_start_datetime))) %>% 
-    count(unique_id, date) %>% 
+    count(unique_id, date) %>%
     pull(n) == 1
 )
 
