@@ -12,15 +12,11 @@ module.exports = {
   configureWebpack: {
     devtool: 'source-map',
     devServer: {
-      watchOptions: {
-        ignored: [/node_modules/, /public/, /dist/]
-      }
+      watchFiles: ['src/**/*']
     },
     plugins: [
       new webpack.DefinePlugin({
-        'process.env': {
-          PACKAGE_VERSION: '"' + version + '"'
-        }
+        'process.env.PACKAGE_VERSION': '"' + version + '"'
       })
     ]
   }

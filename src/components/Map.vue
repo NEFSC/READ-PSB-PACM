@@ -129,7 +129,7 @@ export default {
       }
       L.geoJSON(json, {
         onEachFeature (feature, layer) {
-          var tooltip = L.tooltip()
+          const tooltip = L.tooltip()
           tooltip.setContent('text')
           layer.bindTooltip(`
             <strong>Lobster Management Area</strong><br>

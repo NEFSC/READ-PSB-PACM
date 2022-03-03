@@ -12,9 +12,9 @@ L.Control.ZoomMin = L.Control.Zoom.extend({
   },
 
   onAdd: function (map) {
-    var zoomName = 'leaflet-control-zoom'
-    var container = L.DomUtil.create('div', zoomName + ' leaflet-bar')
-    var options = this.options
+    const zoomName = 'leaflet-control-zoom'
+    const container = L.DomUtil.create('div', zoomName + ' leaflet-bar')
+    const options = this.options
 
     this._map = map
 
@@ -42,8 +42,8 @@ L.Control.ZoomMin = L.Control.Zoom.extend({
   },
 
   _updateDisabled: function () {
-    var map = this._map
-    var className = 'leaflet-disabled'
+    const map = this._map
+    const className = 'leaflet-disabled'
 
     L.DomUtil.removeClass(this._zoomInButton, className)
     L.DomUtil.removeClass(this._zoomOutButton, className)
