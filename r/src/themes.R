@@ -21,24 +21,17 @@ if (file.exists("data/themes.rds")) {
 
 # load --------------------------------------------------------------------
 
-towed <- read_rds("data/datasets/towed.rds")
-moored <- read_rds("data/datasets/moored.rds")
-glider <- read_rds("data/datasets/glider.rds")
-# dfo <- read_rds("data/datasets/dfo.rds")
-nefsc <- read_rds("data/deployment-themes/nefsc.rds")
-
-nefsc_20211216 <- read_rds("data/datasets/nefsc_20211216.rds")
-nefsc_20220211 <- read_rds("data/datasets/nefsc_20220211.rds")
-dfo_20211124 <- read_rds("data/datasets/dfo_20211124.rds")
-nydec_20220202 <- read_rds("data/datasets/nydec_20220202.rds")
-ucorn_20220214 <- read_rds("data/datasets/ucorn_20220214.rds")
-
 all_datasets <- list(
-  towed, glider, moored, nefsc,
-  nefsc_20211216, nefsc_20220211,
-  dfo_20211124,
-  nydec_20220202, 
-  ucorn_20220214
+  read_rds("data/datasets/towed.rds"),
+  read_rds("data/datasets/moored.rds"),
+  read_rds("data/datasets/glider.rds"),
+  read_rds("data/deployment-themes/nefsc.rds"),
+  read_rds("data/datasets/nefsc_20211216.rds"),
+  read_rds("data/datasets/nefsc_20220211.rds"),
+  read_rds("data/datasets/dfo_20211124.rds"),
+  read_rds("data/datasets/nydec_20220202.rds"),
+  read_rds("data/datasets/ucorn_20220214.rds"),
+  read_rds("data/datasets/ucorn_20220302.rds")
 )
 
 # merge -------------------------------------------------------------------

@@ -1,6 +1,8 @@
 
 
-# dataset -----------------------------------------------------------------
+# datasets -----------------------------------------------------------------
+
+noop <- function (x) { x }
 
 join_metadata_detections <- function(metadata, detections, themes) {
   stopifnot(
@@ -228,6 +230,12 @@ create_analyses <- function (metadata, detections, refs) {
     select(-c(monitoring_start_datetime, monitoring_end_datetime, platform_type))
 }
 
+read_metadata <- function (file, clean = noop) {
+  raw <- read_csv(file, col_types = cols(.default = col_character()), na = c("NA", ""))
+  cleaned <- clean(raw)
+  validate_metadata(cleaned)
+}
+
 read_detections <- function(files) {
   tibble(
     FILE = files,
@@ -259,9 +267,10 @@ read_dataset <- function(files, clean = NULL, refs) {
   }
   
   log_info("loading: metadata ({basename(files[['metadata']])})")
-  metadata_raw <- read_csv(files[["metadata"]], col_types = cols(.default = col_character()), na = c("NA", ""))
-  metadata_clean <- clean[["metadata"]](metadata_raw)
-  metadata <- validate_metadata(metadata_clean)
+  # metadata_raw <- read_csv(files[["metadata"]], col_types = cols(.default = col_character()), na = c("NA", ""))
+  # metadata_clean <- clean[["metadata"]](metadata_raw)
+  # metadata <- validate_metadata(metadata_clean)
+  metadata <- read_metadata(files[["metadata"]], clean[["metadata"]])
   log_info("validation: metadata (passed={nrow(metadata$data)}, failed={nrow(metadata$rejected)})")
   
   detections_raw <- read_detections(files[["detections"]])
@@ -382,7 +391,6 @@ process_dataset <- function(dataset, refs) {
     tracks = tracks_hourly
   )
 }
-
 
 plot_analyses <- function (x) {
   x %>% 
