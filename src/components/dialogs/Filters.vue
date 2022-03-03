@@ -19,6 +19,9 @@
         label="Select Data Affiliation"
         hide-details
         clearable
+        multiple
+        chips
+        deletable-chips
       ></v-select>
       <v-select
         outlined
@@ -27,6 +30,9 @@
         label="Select Instrument Type"
         hide-details
         clearable
+        multiple
+        chips
+        deletable-chips
         class="mt-4"
       ></v-select>
       <v-select
@@ -36,6 +42,9 @@
         label="Select Recorder Sampling Rate"
         hide-details
         clearable
+        multiple
+        chips
+        deletable-chips
         class="mt-4"
       ></v-select>
     </v-card-text>
@@ -60,7 +69,7 @@ export default {
       affiliation: {
         dim: null,
         options: [],
-        selected: null
+        selected: []
       },
       instrumentType: {
         dim: null,
@@ -92,9 +101,9 @@ export default {
     }
   },
   mounted () {
-    this.affiliation.dim = xf.dimension(d => d.data_poc_affiliation)
-    this.instrumentType.dim = xf.dimension(d => d.instrument_type)
-    this.samplingRate.dim = xf.dimension(d => d.sampling_rate)
+    this.affiliation.dim = xf.dimension(d => d.data_poc_affiliation || 'N/A')
+    this.instrumentType.dim = xf.dimension(d => d.instrument_type || 'N/A')
+    this.samplingRate.dim = xf.dimension(d => d.sampling_rate || 'N/A')
     this.reset()
   },
   beforeDestroy () {
@@ -104,44 +113,45 @@ export default {
   },
   methods: {
     clearAll () {
-      this.affiliation.selected = null
-      this.instrumentType.selected = null
-      this.samplingRate.selected = null
+      this.affiliation.selected = []
+      this.instrumentType.selected = []
+      this.samplingRate.selected = []
     },
     reset () {
       const detections = xf.all()
 
-      const affiliations = new Set(detections.map(d => d.data_poc_affiliation))
+      const affiliations = new Set(detections.map(d => d.data_poc_affiliation || 'N/A'))
       this.affiliation.options = [...affiliations].sort()
 
-      const instrumentTypes = new Set(detections.map(d => d.instrument_type))
+      const instrumentTypes = new Set(detections.map(d => d.instrument_type || 'N/A'))
       this.instrumentType.options = [...instrumentTypes].sort()
 
-      const samplingRates = new Set(detections.map(d => d.sampling_rate))
-      const samplingRateLevels = ['Low (1-4 kHz)', 'Medium (5-96 kHz)', 'High (97+ kHz)', 'Unknown'].filter(d => samplingRates.has(d))
+      const samplingRates = new Set(detections.map(d => d.sampling_rate || 'N/A'))
+      const samplingRateLevels = ['Low (1-4 kHz)', 'Medium (5-96 kHz)', 'High (97+ kHz)', 'Unknown']
+        .filter(d => samplingRates.has(d))
       this.samplingRate.options = samplingRateLevels
 
       this.clearAll()
     },
     setAffiliationFilter () {
-      if (this.affiliation.selected) {
-        this.affiliation.dim.filter(this.affiliation.selected)
+      if (this.affiliation.selected && this.affiliation.selected.length > 0) {
+        this.affiliation.dim.filter(d => !d || this.affiliation.selected.includes(d))
       } else {
         this.affiliation.dim.filterAll()
       }
       dc.redrawAll()
     },
     setInstrumentTypeFilter () {
-      if (this.instrumentType.selected) {
-        this.instrumentType.dim.filter(this.instrumentType.selected)
+      if (this.instrumentType.selected && this.instrumentType.selected.length > 0) {
+        this.instrumentType.dim.filter(d => !d || this.instrumentType.selected.includes(d))
       } else {
         this.instrumentType.dim.filterAll()
       }
       dc.redrawAll()
     },
     setSamplingRateFilter () {
-      if (this.samplingRate.selected) {
-        this.samplingRate.dim.filter(this.samplingRate.selected)
+      if (this.samplingRate.selected && this.samplingRate.selected.length > 0) {
+        this.samplingRate.dim.filter(d => !d || this.samplingRate.selected.includes(d))
       } else {
         this.samplingRate.dim.filterAll()
       }
