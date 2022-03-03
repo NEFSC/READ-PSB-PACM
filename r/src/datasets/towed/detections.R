@@ -331,7 +331,8 @@ df_sperm_hb1103 <- read_xlsx(
     latitude = latitude,
     longitude = longitude,
     presence = "y"
-  )
+  ) %>%
+  filter(round(latitude, 5) != 41.53024) # newport
 
 df_sperm_hb1303 <- read_xlsx(
   file.path(files$root, files$towed$detections, "SpermWhale_data", "HB1303_Pm_ALL_array_Events.xlsx"),
@@ -348,7 +349,6 @@ df_sperm_hb1303 <- read_xlsx(
     longitude = tm_longitude1,
     presence = "y"
   )
-
 
 # merge: sperm ------------------------------------------------------------
 
