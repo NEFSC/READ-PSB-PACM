@@ -118,6 +118,7 @@
             v-model="dialogs.filters"
             max-width="600"
             scrollable
+            persistent
             :fullscreen="$vuetify.breakpoint.mobile">
             <template v-slot:activator="{ on }">
               <v-btn

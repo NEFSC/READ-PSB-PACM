@@ -28,7 +28,7 @@
       <v-container class="mb-6">
         <v-row justify="space-around">
           <v-col cols="12" md="4" class="text-center" v-if="!$vuetify.breakpoint.mobile">
-            <v-btn color="success darken-2" class="px-8 mx-0" x-large @click="$emit('close', { tour: true })" aria-label="start tour">
+            <v-btn color="success darken-2" class="px-8 mx-0" x-large @click="$emit('close', { tour: true })" aria-label="take a tour">
               <v-icon left>mdi-cursor-default-click</v-icon>
               Take A Tour
             </v-btn>
