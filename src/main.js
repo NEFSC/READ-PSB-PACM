@@ -16,6 +16,7 @@ import '@/assets/css/app.css'
 import '@/assets/css/dc.css'
 
 Vue.config.productionTip = false
+window.type = true // https://github.com/Leaflet/Leaflet.draw/issues/1026
 
 new Vue({
   store,
