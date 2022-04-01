@@ -80,9 +80,33 @@
       <p>
         Further information about Passive Acoustic Monitoring can be found at the <a class="text-decoration-underline" href="https://www.fisheries.noaa.gov/new-england-mid-atlantic/endangered-species-conservation/passive-acoustic-research-atlantic-ocean" target="_blank">NOAA NEFSC Passive Acoustic Research Website</a>
       </p>
-      <p class="mb-0">
+      <p>
         PACM was designed and built by Walker Environmental Research LLC based on a map-based interface for PAM acoustic detection data developed by Hansen Johnson (Dalhousie University).
       </p>
+
+      <h2 class="text-h5 mb-2">Latest Updates</h2>
+
+      <div class="text-subheading font-weight-bold text--secondary">
+        v1.1.2 | April 1, 2022
+      </div>
+      <p>Added wind energy areas layer to map overlays, latest updates to about. Updated NYSDEC baleen whale data.</p>
+
+      <div class="text-subheading font-weight-bold text--secondary">
+        v1.1.1 | March 16, 2022
+      </div>
+      <p>Fixed bug when selecting deployments by bounding box.</p>
+
+      <div class="text-subheading font-weight-bold text--secondary">
+        v1.1.0 | March 7, 2022
+      </div>
+      <p>
+        Added advanced filters, map overlays with Lobster Management Areas layer, harbor porpoise to species list. Added/updated data from DFO, NYSDEC, NEFSC, Cornell Univ.
+      </p>
+
+      <div class="text-subheading font-weight-bold text--secondary">
+        v1.0.0 | May 27, 2021
+      </div>
+      <p>Initial release.</p>
     </v-card-text>
     <v-card-actions>
       <v-spacer></v-spacer>
@@ -97,6 +121,11 @@ export default {
   name: 'About',
   components: {
     Citation
+  },
+  data () {
+    return {
+      version: process.env.PACKAGE_VERSION
+    }
   }
 }
 </script>

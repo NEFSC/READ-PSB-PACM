@@ -9,7 +9,9 @@
       <v-app-bar-nav-icon v-if="$vuetify.breakpoint.mobile" @click="drawer = !drawer"></v-app-bar-nav-icon>
       <v-icon color="white" dark class="mr-4" v-if="!$vuetify.breakpoint.mobile">$whale</v-icon>
       <h1>
-        <v-toolbar-title v-if="!$vuetify.breakpoint.mobile">Passive Acoustic Cetacean Map</v-toolbar-title>
+        <v-toolbar-title v-if="!$vuetify.breakpoint.mobile">
+          Passive Acoustic Cetacean Map <span style="font-size: 50%;vertical-align: bottom;opacity:50%">v{{ version }}</span>
+        </v-toolbar-title>
         <v-toolbar-title v-else class="font-weight-bold">PACM</v-toolbar-title>
       </h1>
 
@@ -249,6 +251,7 @@ export default {
   },
   data () {
     return {
+      version: process.env.PACKAGE_VERSION,
       themes,
       drawer: null,
       counts: {
