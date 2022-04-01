@@ -412,8 +412,8 @@ validate_metadata <- function (raw) {
     relocate(ROW)
 
   parsed <- raw %>%
-    select(-ROW) %>% 
     clean_names() %>%
+    select(-row, -starts_with("x")) %>% 
     mutate(
       across(
         c(

@@ -264,24 +264,41 @@ targets_datasets <- list(
   }, format = "file"),
   
   # NYDEC 20220202 Baleen Whales --------------------------------------------
-  tar_target(nydec_20220202_metadata_file, "data/nydec/20220202-baleen/NYDEC_METADATA_20220215.csv", format = "file"),
-  tar_target(nydec_20220202_detections_file, "data/nydec/20220202-baleen/NYDEC_DETECTIONDATA_20220202.csv", format = "file"),
-  tar_target(nydec_20220202_dataset, read_dataset(
-    list(metadata = nydec_20220202_metadata_file, detections = nydec_20220202_detections_file),
-    list(
-      metadata = function (x) { mutate(x, LONGITUDE = if_else(parse_number(LONGITUDE) < 0, LONGITUDE, as.character(-parse_number(LONGITUDE)))) },
-      detections = function (x) { mutate(x, ANALYSIS_SAMPLING_RATE_HZ = coalesce(ANALYSIS_SAMPLING_RATE_HZ, "2000")) }
-    ),
-    refs
-  )),
-  tar_target(nydec_20220202, process_dataset(nydec_20220202_dataset, refs)),
-  tar_target(nydec_20220202_plot, plot_analyses(nydec_20220202$analyses)),
-  tar_target(nydec_20220202_rds, {
+  tar_target(nydec_20220321_metadata_file, "data/nydec/20220321-baleen/NYDEC_METADATA_20220321.csv", format = "file"),
+  tar_target(nydec_20220321_detections_file, "data/nydec/20220321-baleen/NYDEC_DETECTIONDATA_20220321.csv", format = "file"),
+  tar_target(nydec_20220321_dataset, {
+    read_dataset(
+      list(metadata = nydec_20220321_metadata_file, detections = nydec_20220321_detections_file),
+      list(
+        metadata = function (x) {
+          x %>% 
+            mutate(
+              LONGITUDE = if_else(parse_number(LONGITUDE) > 0, as.character(-1 * parse_number(LONGITUDE)), LONGITUDE),
+              LONGITUDE = if_else(
+                UNIQUE_ID == "NYSDEC_NYB_202001_12_307",
+                "-73.1068",
+                LONGITUDE
+              ),
+              LATITUDE = if_else(
+                UNIQUE_ID == "NYSDEC_NYB_202001_12_307",
+                "39.73563",
+                LATITUDE
+              )
+            )
+        },
+        detections = function (x) { mutate(x, ANALYSIS_SAMPLING_RATE_HZ = coalesce(ANALYSIS_SAMPLING_RATE_HZ, "2000")) }
+      ),
+      refs
+    )
+  }),
+  tar_target(nydec_20220321, process_dataset(nydec_20220321_dataset, refs)),
+  tar_target(nydec_20220321_plot, plot_analyses(nydec_20220321$analyses)),
+  tar_target(nydec_20220321_rds, {
     moored <- read_rds("data/datasets/moored.rds")
     
-    deployments <- nydec_20220202$analyses %>% 
+    deployments <- nydec_20220321$analyses %>% 
       select(-detections) %>% 
-      left_join(nydec_20220202$recorders, by = "unique_id") %>% 
+      left_join(nydec_20220321$recorders, by = "unique_id") %>% 
       rename(
         theme = species_group,
         id = unique_id,
@@ -310,7 +327,7 @@ targets_datasets <- list(
       identical(sort(names(moored$deployments)), sort(names(deployments)))
     )
     
-    detections <- nydec_20220202$analyses %>% 
+    detections <- nydec_20220321$analyses %>% 
       select(theme = species_group, id = unique_id, detections) %>% 
       unnest(detections) %>% 
       mutate(
@@ -331,7 +348,7 @@ targets_datasets <- list(
       identical(sort(names(moored$detections)), sort(names(detections)))
     )
     
-    filename <- "data/datasets/nydec_20220202.rds"
+    filename <- "data/datasets/nydec_20220321.rds"
     list(
       deployments = deployments,
       detections = detections
