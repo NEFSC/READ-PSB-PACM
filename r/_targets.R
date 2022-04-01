@@ -15,5 +15,6 @@ invisible(sapply(list.files("R/datasets", pattern = ".R", full.names = TRUE), so
 
 list(
   targets_template,
-  targets_datasets
+  targets_datasets,
+  targets_gis
 )

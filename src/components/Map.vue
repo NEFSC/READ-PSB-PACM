@@ -42,7 +42,12 @@ export default {
   props: ['points', 'counts'],
   data () {
     return {
-      ready: false
+      ready: false,
+      layers: {
+        wind: {
+          data: null
+        }
+      }
     }
   },
   computed: {
@@ -74,7 +79,8 @@ export default {
       ).addTo(this.map)
     }
     const overlays = {
-      'Lobster Management Areas': await this.createLobsterLayer()
+      'Lobster Management Areas': await this.createLobsterLayer(),
+      'Wind Energy Areas': await this.createWindEnergyLayer()
     }
     L.control.layers(basemaps, overlays, { position: 'topleft' })
       .addTo(this.map)
@@ -147,6 +153,53 @@ export default {
           })
 
           layer.setStyle(styles[feature.properties.AREANAME])
+          layerGroup.addLayer(layer)
+        }
+      })
+      return layerGroup
+    },
+    async createWindEnergyLayer () {
+      const layerGroup = L.layerGroup()
+      const response = await fetch('gis/wind-energy-areas.json')
+      const json = await response.json()
+
+      L.geoJSON(json, {
+        onEachFeature (feature, layer) {
+          const tooltip = L.tooltip()
+          tooltip.setContent('text')
+
+          if (feature.properties.type === 'lease') {
+            layer.bindTooltip(`
+              <strong>Wind Energy Lease Area</strong><br>
+              ID: ${feature.properties.id}<br>
+              Type: ${feature.properties.lease_type}<br>
+              Company: ${feature.properties.lease_company}<br>
+              Lease Date: ${feature.properties.lease_date}<br>
+              Lease Term: ${feature.properties.lease_term}<br>
+              State: ${feature.properties.state}
+            `)
+          } else if (feature.properties.type === 'plan') {
+            layer.bindTooltip(`
+              <strong>Wind Energy Planning Area</strong><br>
+              ID: ${feature.properties.id}<br>
+              Name: ${feature.properties.plan_name}<br>
+              Category: ${feature.properties.plan_category}<br>
+            `)
+          }
+
+          layer.on('mouseover', (e) => {
+            layer.openTooltip(e.latlng)
+          })
+          layer.on('mousemove', (e) => {
+            layer.openTooltip(e.latlng)
+          })
+          layer.on('mouseout', (e) => {
+            layer.closePopup()
+          })
+
+          layer.setStyle({
+            color: feature.properties.type === 'lease' ? '#4B0055' : 'darkorange'
+          })
           layerGroup.addLayer(layer)
         }
       })
