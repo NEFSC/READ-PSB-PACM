@@ -1,60 +1,44 @@
 export const themes = [
   {
-    header: 'Baleen Whales (Mysticeti)'
+    header: 'Detections & Deployments'
   },
   {
-    id: 'narw',
-    label: 'North Atlantic Right Whale'
+    id: 'narw-1',
+    label: 'NARW x1'
   },
   {
-    id: 'blue',
-    label: 'Blue Whale'
+    id: 'narw-2',
+    label: 'NARW x2'
   },
   {
-    id: 'humpback',
-    label: 'Humpback Whale'
+    id: 'narw-4',
+    label: 'NARW x4'
   },
   {
-    id: 'fin',
-    label: 'Fin Whale'
-  },
-  {
-    id: 'sei',
-    label: 'Sei Whale'
+    id: 'narw-8',
+    label: 'NARW x8'
   },
   {
     divider: true
   },
   {
-    header: 'Toothed Whales (Odontoceti)'
+    header: 'Detections Only'
   },
   {
-    id: 'beaked',
-    label: 'Beaked Whale Species',
-    showSpeciesFilter: true
+    id: 'narw-detect-1',
+    label: 'NARW x1 (Detect. Only)'
   },
   {
-    id: 'kogia',
-    label: 'Kogia Species'
+    id: 'narw-detect-2',
+    label: 'NARW x2 (Detect. Only)'
   },
   {
-    id: 'sperm',
-    label: 'Sperm Whale'
+    id: 'narw-detect-4',
+    label: 'NARW x4 (Detect. Only)'
   },
   {
-    id: 'harbor',
-    label: 'Harbor Porpoise'
-  },
-  {
-    divider: true
-  },
-  {
-    header: 'Deployments Only (No Detection Data)'
-  },
-  {
-    id: 'deployments-nefsc',
-    label: 'NEFSC Deployments',
-    deploymentsOnly: true
+    id: 'narw-detect-8',
+    label: 'NARW x8 (Detect. Only)'
   }
 ]
 // export const speciesTypesMap = new Map(speciesTypes.map(d => [d.id, d]))
