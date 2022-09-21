@@ -26,7 +26,7 @@
     "vue-router": "^3.5.3",
     "vue-tour": "^1.6.0",
     "vue2-leaflet": "^2.7.1",
-    "vuetify": "^2.6.3",
+    "vuetify": "^2.6.10",
     "vuex": "^3.5.1"
   },
   "devDependencies": {
