@@ -70,7 +70,7 @@
 // ref: https://bl.ocks.org/mbostock/6452972
 
 import * as d3 from 'd3'
-import dc from 'dc'
+import * as dc from 'dc'
 import moment from 'moment'
 import debounce from 'debounce'
 
@@ -191,9 +191,10 @@ export default {
       .attr('x1', this.x.range()[0])
       .attr('x2', this.x.range()[1])
       .call(d3.drag()
-        .on('start drag', () => {
+        .on('start drag', (event) => {
           if (this.start.jday === this.x.domain()[0] && this.end.jday === this.x.domain()[1]) return
-          const dx = d3.event.dx
+
+          const dx = event.dx
           const dxScale = this.x(2) - this.x(1)
 
           this.start.jday = Math.round(this.start.jday + dx / dxScale)
@@ -224,8 +225,8 @@ export default {
       .attr('cx', this.x(this.start.jday))
       .attr('r', 9)
       .call(d3.drag()
-        .on('start drag', () => {
-          this.start.jday = Math.round(this.x.invert(d3.event.x))
+        .on('start drag', (event) => {
+          this.start.jday = Math.round(this.x.invert(event.x))
           this.render()
         })
       )
@@ -243,8 +244,8 @@ export default {
       .attr('cx', this.x(this.end.jday))
       .attr('r', 9)
       .call(d3.drag()
-        .on('start drag', () => {
-          this.end.jday = Math.round(this.x.invert(d3.event.x))
+        .on('start drag', (event) => {
+          this.end.jday = Math.round(this.x.invert(event.x))
           this.render()
         })
       )

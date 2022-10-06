@@ -1,6 +1,6 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
-import * as d3 from 'd3'
+import { nest } from 'd3-collection'
 
 import { fetchData } from '@/lib/fetch'
 import { setData } from '@/lib/crossfilter'
@@ -88,7 +88,7 @@ export default new Vuex.Store({
               : []
           }).flat()
 
-          const trackDetectionsNest = d3.nest()
+          const trackDetectionsNest = nest()
             .key(d => d.id)
             .map(trackDetections)
 

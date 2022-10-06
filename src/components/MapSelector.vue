@@ -1,7 +1,7 @@
 <script>
 import { mapGetters } from 'vuex'
 import L from 'leaflet'
-import dc from 'dc'
+import * as dc from 'dc'
 
 import { xf } from '@/lib/crossfilter'
 

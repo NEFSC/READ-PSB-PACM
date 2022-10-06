@@ -1,4 +1,4 @@
-import dc from 'dc'
+import * as dc from 'dc'
 
 import evt from '@/lib/events'
 

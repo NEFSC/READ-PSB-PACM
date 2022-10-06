@@ -14,7 +14,7 @@
 </template>
 
 <script>
-import dc from 'dc'
+import * as dc from 'dc'
 import { xf } from '@/lib/crossfilter'
 import { mapGetters } from 'vuex'
 

@@ -5,7 +5,7 @@
 
 <script>
 import * as d3 from 'd3'
-import dc from 'dc'
+import * as dc from 'dc'
 import moment from 'moment'
 import d3Tip from 'd3-tip'
 import pad from 'pad'
@@ -51,7 +51,7 @@ export default {
       .attr('class', 'd3-tip season-chart')
       .attr('role', 'complementary')
       .direction('e')
-      .html((d) => {
+      .html((event, d) => {
         const start = d.data.key
         const end = moment.utc(start).add(NDAY_PER_GROUP - 1, 'days').toDate()
         const formatter = d3.timeFormat('%b %d')
@@ -74,7 +74,7 @@ export default {
       })
 
     const el = this.$el.appendChild(document.createElement('div'))
-    this.chart = dc.barChart(el)
+    this.chart = new dc.BarChart(el)
       .width(450)
       .height(120)
       .margins({ top: 10, right: 20, bottom: 22, left: 60 })
@@ -97,9 +97,13 @@ export default {
         .on('mouseout', this.tip.hide)
     }, 500)
 
-    dc.override(this.chart, 'legendables', () => {
-      return this.chart._legendables().reverse()
-    })
+    const superLegendables = this.chart.legendables
+    this.chart.legendables = () => {
+      return superLegendables.reverse()
+    }
+    // dc.override(this.chart, 'legendables', () => {
+    //   return this.chart._legendables().reverse()
+    // })
     this.chart.stack(group, 'm', d => d.value.m)
     this.chart.stack(group, 'n', d => d.value.n)
     this.chart.stack(group, 'na', d => d.value.na)

@@ -126,9 +126,9 @@ export default {
         .attr('r', 5)
         .attr('cx', d => d.$x)
         .attr('cy', d => d.$y)
-        .on('click', d => this.onClick(d, 'station'))
-        .on('mouseenter', d => this.showTip(d, this.theme.deploymentsOnly ? 'deployment' : 'station'))
-        .on('mouseout', this.hideTip)
+        .on('click', (event, d) => this.onClick(event, d, 'station'))
+        .on('mouseenter', (event, d) => this.showTip(event, d, this.theme.deploymentsOnly ? 'deployment' : 'station'))
+        .on('mouseout', (event, d) => this.hideTip())
     },
     drawPoints () {
       const g = this.container.select('g.points')
@@ -154,9 +154,9 @@ export default {
         .attr('class', 'point')
         .attr('d', d3.symbol().type(d3.symbolSquare))
         .attr('transform', d => `translate(${projection(d)})`)
-        .on('click', d => this.onClick(d, 'point'))
-        .on('mouseenter', d => this.showTip(d, 'point'))
-        .on('mouseout', this.hideTip)
+        .on('click', (event, d) => this.onClick(event, d, 'point'))
+        .on('mouseenter', (event, d) => this.showTip(event, d, 'point'))
+        .on('mouseout', (event, d) => this.hideTip())
     },
     drawTracks () {
       if (!this.deployments) return
@@ -187,9 +187,9 @@ export default {
         .join('path')
         .attr('class', 'track-overlay')
         .attr('d', line)
-        .on('click', d => this.onClick(d, 'track'))
-        .on('mouseenter', d => this.showTip(d, 'track'))
-        .on('mouseout', this.hideTip)
+        .on('click', (event, d) => this.onClick(event, d, 'track'))
+        .on('mouseenter', (event, d) => this.showTip(event, d, 'track'))
+        .on('mouseout', (event, d) => this.hideTip())
     },
     render () {
       if (!this.container) return
@@ -244,8 +244,8 @@ export default {
         .style('display', d => (xf.isElementFiltered(d.$index) ? 'inline' : 'none'))
         .style('fill', d => colorScale(d.presence))
     },
-    onClick (d, type) {
-      if (d3.event._simulated) return // safari bug
+    onClick (event, d, type) {
+      if (event._simulated) return // safari bug
 
       if (type === 'track') {
         return this.selectDeployments([d.id])
@@ -279,7 +279,7 @@ export default {
         points
       }
     },
-    showTip (d, type) {
+    showTip (event, d, type) {
       const el = d3.select('.d3-tip.map')
 
       const deployment = this.$store.getters.deploymentById(d.id)
@@ -294,13 +294,13 @@ export default {
 
       el.html(tipHtml(d, deployment, nNearby, type))
 
-      const offset = tipOffset(el)
+      const offset = tipOffset(event, el)
 
-      el.style('left', (d3.event.x + offset.x) + 'px')
-        .style('top', (d3.event.y + offset.y) + 'px')
+      el.style('left', (event.x + offset.x) + 'px')
+        .style('top', (event.y + offset.y) + 'px')
         .style('opacity', 1)
     },
-    hideTip (d) {
+    hideTip () {
       d3.select('.d3-tip.map')
         .style('opacity', 0)
     }

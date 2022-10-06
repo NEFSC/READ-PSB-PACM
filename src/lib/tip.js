@@ -1,4 +1,4 @@
-import { event, nest } from 'd3'
+import { nest } from 'd3-collection'
 import moment from 'moment'
 import pad from 'pad'
 
@@ -7,7 +7,7 @@ import { platformTypesMap, detectionTypes, detectionTypesMap } from '@/lib/const
 
 const orNa = (value) => value || 'N/A'
 
-export function tipOffset (el) {
+export function tipOffset (event, el) {
   const padding = 20
 
   const screenWidth = document.body.offsetWidth
@@ -195,6 +195,7 @@ const deploymentHtml = (d, deployment) => {
 }
 
 export function tipHtml (d, deployment, nNearby, type) {
+  // console.log(d, deployment, nNearby, type)
   if (type === 'track') {
     return trackHtml(d, deployment)
   }

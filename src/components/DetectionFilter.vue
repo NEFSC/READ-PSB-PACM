@@ -23,7 +23,7 @@
 </template>
 
 <script>
-import dc from 'dc'
+import * as dc from 'dc'
 import * as d3 from 'd3'
 import d3Tip from 'd3-tip'
 
@@ -49,7 +49,7 @@ export default {
       .attr('class', 'd3-tip detection-filter')
       .attr('role', 'complementary')
       .direction('e')
-      .html(d => d.value.toLocaleString())
+      .html((event, d) => d.value.toLocaleString())
 
     const colorScale = d3.scaleOrdinal()
       .domain(detectionTypes.map(d => d.label))
@@ -57,7 +57,7 @@ export default {
 
     // const el = this.$el.appendChild(document.createElement('div'))
     const margins = { top: 20, right: 70, bottom: 40, left: 90 }
-    this.chart = dc.rowChart(this.$refs.chart)
+    this.chart = new dc.RowChart(this.$refs.chart)
       .width(450)
       .height(150)
       .margins(margins)
@@ -95,7 +95,7 @@ export default {
           .attr('r', 8)
           .attr('cy', 8)
           .attr('cx', this.chart.width() - margins.left - margins.right + 40)
-          .on('click', d => {
+          .on('click', (event, d) => {
             this.chart.onClick(d)
           })
 

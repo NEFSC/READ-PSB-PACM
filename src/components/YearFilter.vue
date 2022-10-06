@@ -84,7 +84,7 @@
 // ref: https://bl.ocks.org/mbostock/6452972
 
 import * as d3 from 'd3'
-import dc from 'dc'
+import * as dc from 'dc'
 import debounce from 'debounce'
 
 import YearChart from '@/components/YearChart'
@@ -201,12 +201,12 @@ export default {
           this.drag.start = this.start.value
           this.drag.end = this.end.value
         })
-        .on('drag', () => {
-          const dx = d3.event.dx
+        .on('drag', (event) => {
+          const dx = event.dx
 
           if (dx === 0) return
 
-          this.drag.x += d3.event.dx
+          this.drag.x += event.dx
           const dYear = Math.round(this.drag.x / dxPerYear)
 
           if (this.drag.x < 0) {
@@ -241,8 +241,8 @@ export default {
       .attr('cx', this.x(this.start.value))
       .attr('r', 9)
       .call(d3.drag()
-        .on('start drag', () => {
-          const newStart = Math.round(this.x.invert(d3.event.x))
+        .on('start drag', (event) => {
+          const newStart = Math.round(this.x.invert(event.x))
           if (newStart < this.end.value) {
             this.start.value = newStart
             this.render()
@@ -263,8 +263,8 @@ export default {
       .attr('cx', this.x(this.end.value))
       .attr('r', 9)
       .call(d3.drag()
-        .on('start drag', () => {
-          const newEnd = Math.round(this.x.invert(d3.event.x))
+        .on('start drag', (event) => {
+          const newEnd = Math.round(this.x.invert(event.x))
           if (newEnd > this.start.value) {
             this.end.value = newEnd
             this.render()
