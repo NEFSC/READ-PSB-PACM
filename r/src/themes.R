@@ -25,7 +25,6 @@ all_datasets <- list(
   read_rds("data/datasets/towed.rds"),
   read_rds("data/datasets/moored.rds"),
   read_rds("data/datasets/glider.rds"),
-  read_rds("data/deployment-themes/nefsc.rds"),
   read_rds("data/datasets/nefsc_20211216.rds"),
   read_rds("data/datasets/nefsc_20220211.rds"),
   read_rds("data/datasets/dfo_20211124.rds"),
@@ -36,8 +35,24 @@ all_datasets <- list(
 
 # merge -------------------------------------------------------------------
 
-deployments_all <- map_df(all_datasets, ~ .x$deployments)
+deployments_all1 <- map_df(all_datasets, ~ .x$deployments)
 detections_all <- map_df(all_datasets, ~ .x$detections)
+
+nefsc_deployments <- read_rds("data/deployment-themes/nefsc.rds")$deployments %>% 
+  filter(!id %in% deployments_all1$id) %>% 
+  mutate(theme = "deployments")
+stopifnot(all(!duplicated(nefsc_deployments$id)))
+
+active_deployments <- read_rds("data/datasets/nefsc_20220816_deployments.rds") %>% 
+  mutate(theme = "deployments")
+stopifnot(all(!duplicated(active_deployments$id)))
+
+stopifnot(all(!active_deployments$id %in% deployments_all1$id))
+stopifnot(all(!nefsc_deployments$id %in% deployments_all1$id))
+stopifnot(all(!active_deployments$id %in% nefsc_deployments$id))
+stopifnot(all(!nefsc_deployments$id %in% active_deployments$id))
+
+deployments_all <- bind_rows(deployments_all1, active_deployments, nefsc_deployments)
 
 
 # filter: deployments ---------------------------------------------------
@@ -119,18 +134,20 @@ deployments %>%
   st_drop_geometry() %>% 
   tabyl(submitter_affiliation, theme)
 
+
 # diff --------------------------------------------------------------------
 
 current_deployments <- st_drop_geometry(deployments)
 last_deployments <- st_drop_geometry(last_rds$deployments)
 
+
 # added deployments
-anti_join(current_deployments, last_deployments, by = c("theme", "id")) %>% 
+anti_join(current_deployments, last_deployments, by = c("id")) %>% 
   distinct(id, platform_type, submitter_affiliation) %>% 
   print(n = Inf)
 
 # removed deployments
-anti_join(last_deployments, current_deployments, by = c("theme", "id")) %>% 
+anti_join(last_deployments, current_deployments, by = c("id")) %>% 
   distinct(id, platform_type)
 
 

@@ -65,7 +65,7 @@
           <svg width="200" height="35" v-else>
             <g transform="translate(27,10)">
               <circle cy="7" r="7" stroke="white" stroke-opacity="0.5" :fill="detectionTypes[4].color" />
-              <text x="20" y="8" class="pacm-legend-text">Platform</text>
+              <text x="20" y="8" class="pacm-legend-text">Recorder</text>
             </g>
           </svg>
         </div>

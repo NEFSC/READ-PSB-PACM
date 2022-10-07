@@ -1,4 +1,4 @@
-# export detection themes
+# export themes to PACM
 
 library(tidyverse)
 library(lubridate)
@@ -18,9 +18,8 @@ export_themes <- c(
   "beaked",
   "kogia",
   "sperm",
-  "harbor",
-  
-  "deployments-nefsc"
+  "harbor"
+  # "deployments-nefsc"
 )
 
 
@@ -39,6 +38,48 @@ for (theme in export_themes) {
   )
 }
 
+
+# create deployments ------------------------------------------------------
+
+deployments <- dat$deployments %>% 
+  filter(platform_type %in% c("buoy", "mooring")) %>% 
+  select(-theme) %>% 
+  mutate(
+    across(
+      c(detection_method, protocol_reference, call_type, analysis_sampling_rate, analyzed, analysis_start_date, analysis_end_date),
+      ~ NA
+    ),
+    across(
+      c(analysis_start_date, analysis_end_date),
+      as_date
+    )
+  ) %>% 
+  distinct() %>% 
+  # filter(!is.na(monitoring_end_datetime)) %>% 
+  rowwise() %>% 
+  mutate(
+    detections = list({
+      x <- tibble()
+      if (!is.na(monitoring_end_datetime)) {
+        x <- tibble(
+          date = seq.Date(as_date(monitoring_start_datetime), as_date(monitoring_end_datetime), 1),
+          species = NA_character_,
+          presence = "d",
+          locations = map(id, ~ NULL)
+        )
+      }
+      x
+    })
+  )
+
+stopifnot(all(!duplicated(deployments$id)))
+
+themes[["deployments"]] <- list(
+  theme = "deployments",
+  deployments = select(deployments, -detections),
+  detections = select(deployments, id, detections) %>% 
+    unnest(detections)
+)
 
 # export ------------------------------------------------------------------
 
@@ -67,6 +108,11 @@ for (theme in names(themes)) {
   }
   cat(glue("saving: {file_deployments}"), "\n")
   themes[[theme]]$deployments %>%
-    mutate_at(vars(monitoring_start_datetime, monitoring_end_datetime, analysis_start_date, analysis_end_date, submission_date), format_ISO8601) %>% 
+    mutate(
+      across(
+        c(monitoring_start_datetime, monitoring_end_datetime, analysis_start_date, analysis_end_date, submission_date),
+        format_ISO8601
+      )
+    ) %>%
     write_sf(file_deployments, driver = "GeoJSON", layer_options = "ID_FIELD=id")
 }

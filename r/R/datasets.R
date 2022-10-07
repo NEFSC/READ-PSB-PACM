@@ -1,5 +1,5 @@
 targets_datasets <- list(
-  # NEFSC 2021-12-16 Harbor Porpoise ----------------------------------------
+  # NEFSC 20211216 Harbor Porpoise ----------------------------------------
   tar_target(nefsc_20211216_metadata_file, "data/nefsc/20211216-harbor-porpoise/NEFSC_METADATA_20211216.csv", format = "file"),
   tar_target(nefsc_20211216_detections_file, "data/nefsc/20211216-harbor-porpoise/NEFSC_DETECTIONDATA_20211216.csv", format = "file"),
   tar_target(nefsc_20211216_dataset, read_dataset(
@@ -80,7 +80,7 @@ targets_datasets <- list(
     filename
   }, format = "file"),
 
-  # NEFSC 2022-02-11 HB1603 Sperm Whales ------------------------------------
+  # NEFSC 20220211 HB1603 Sperm Whales ------------------------------------
   tar_target(nefsc_20220211_metadata_file, "data/nefsc/20220211-hb1603/NEFSC_METADATA_20220211.csv", format = "file"),
   tar_target(nefsc_20220211_detections_file, "data/nefsc/20220211-hb1603/NEFSC_DETECTIONS_20220211.csv", format = "file"),
   tar_target(nefsc_20220211_tracks_file, "data/nefsc/20220211-hb1603/NEFSC_GPS_20220211.csv", format = "file"),
@@ -180,7 +180,7 @@ targets_datasets <- list(
     filename
   }, format = "file"),
 
-  # DFO 2021-11-24 Beaked Whales --------------------------------------------
+  # DFO 20211124 Beaked Whales --------------------------------------------
   tar_target(dfo_20211124_metadata_file, "data/dfo/dfo-20211124/DFOCA_METADATA_20211124.csv", format = "file"),
   tar_target(dfo_20211124_detections_files, list.files("data/dfo/dfo-20211124/detections/", full.names = TRUE), format = "file"),
   tar_target(dfo_20211124_dataset, read_dataset(
@@ -492,6 +492,39 @@ targets_datasets <- list(
       deployments = deployments,
       detections = detections
     ) %>% 
+      write_rds(filename)
+    filename
+  }, format = "file"),
+
+  # NEFSC 20220816 Deployments ----------------------------------------------
+  tar_target(nefsc_20220816_metadata_file, "data/nefsc/20220816-deployments/2022-07_Current_Recorders_forRWSC_edit.csv", format = "file"),
+  tar_target(nefsc_20220816_metadata, read_csv(nefsc_20220816_metadata_file, show_col_types = FALSE)),
+  tar_target(nefsc_20220816_deployments, {
+    nefsc_20220816_metadata %>% 
+      janitor::clean_names() %>%
+      transmute(
+        id = str_replace_all(project_name, " ", "_"),
+        project = project_name,
+        site_id = site,
+        latitude = latitude_ddg_deployment,
+        longitude = longitude_ddg_deployment,
+        monitoring_start_datetime = mdy_hm(deploy_datetime_gmt),
+        platform_type = "mooring",
+        sampling_rate_hz = sample_rate_khz * 1e3,
+        instrument_type,
+        data_poc_name = poc_name,
+        data_poc_affiliation = poc_organization,
+        data_poc_email = poc_email,
+        deployment_type = "stationary",
+        soundfiles_timezone = "GMT",
+        analyzed = FALSE
+      ) %>% 
+      filter(!is.na(monitoring_start_datetime)) %>% 
+      st_as_sf(coords = c("longitude", "latitude"))
+  }),
+  tar_target(nefsc_20220816_deployments_rds, {
+    filename <- "data/datasets/nefsc_20220816_deployments.rds"
+    nefsc_20220816_deployments %>%
       write_rds(filename)
     filename
   }, format = "file")

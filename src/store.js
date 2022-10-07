@@ -1,6 +1,8 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
+import moment from 'moment'
 import { nest } from 'd3-collection'
+import { timeDay } from 'd3'
 
 import { fetchData } from '@/lib/fetch'
 import { setData } from '@/lib/crossfilter'
@@ -63,7 +65,35 @@ export default new Vuex.Store({
         .then(([deployments, detections]) => {
           const deploymentsMap = Object.fromEntries(deployments.map(d => [d.id, d]))
 
+          let activeDetections = []
+          if (theme.deploymentsOnly) {
+            activeDetections = deployments
+              .filter(d => d.properties.monitoring_end_datetime === null)
+              .map(d => {
+                const start = new Date(d.properties.monitoring_start_datetime)
+                const end = new Date()
+                return timeDay.range(start, end).map(t => {
+                  const m = moment(t.toISOString().substr(0, 10))
+                  const x = {
+                    id: d.id,
+                    year: m.year(),
+                    doy: m.isLeapYear() && m.dayOfYear() >= 60
+                      ? m.dayOfYear() - 1
+                      : m.dayOfYear(),
+                    species: null,
+                    presence: 'd',
+                    locations: null
+                  }
+                  x.doySeason = Math.floor((x.doy - 1) / 5) * 5 + 1
+                  return x
+                })
+              }).flat()
+          }
+
+          detections = [detections, activeDetections].flat()
           detections.forEach((d, i) => {
+            const deployment = deploymentsMap[d.id]
+            if (!deployment) console.log(d)
             d.$index = i
             d.platform_type = deploymentsMap[d.id].properties.platform_type
             d.data_poc_affiliation = deploymentsMap[d.id].properties.data_poc_affiliation || 'Unknown'

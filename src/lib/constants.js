@@ -52,8 +52,8 @@ export const themes = [
     header: 'Deployments Only (No Detection Data)'
   },
   {
-    id: 'deployments-nefsc',
-    label: 'NEFSC Deployments',
+    id: 'deployments',
+    label: 'Stationary Deployments',
     deploymentsOnly: true
   }
 ]

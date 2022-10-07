@@ -26,9 +26,10 @@ qaqc_dataset <- function (deployments, detections) {
 }
 
 qaqc_deployments <- function (x) {
-  # required columns have no missing values
+  # required columns have no missing values (excluding active deployments)
   stopifnot(
     x %>%
+      filter(!is.na(monitoring_end_datetime)) %>% 
       select(theme, id) %>% 
       complete.cases() %>% 
       all()
