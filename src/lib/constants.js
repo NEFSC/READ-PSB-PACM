@@ -53,7 +53,7 @@ export const themes = [
   },
   {
     id: 'deployments',
-    label: 'Stationary Deployments',
+    label: 'All Deployments',
     deploymentsOnly: true
   }
 ]

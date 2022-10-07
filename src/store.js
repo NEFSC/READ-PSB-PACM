@@ -92,8 +92,6 @@ export default new Vuex.Store({
 
           detections = [detections, activeDetections].flat()
           detections.forEach((d, i) => {
-            const deployment = deploymentsMap[d.id]
-            if (!deployment) console.log(d)
             d.$index = i
             d.platform_type = deploymentsMap[d.id].properties.platform_type
             d.data_poc_affiliation = deploymentsMap[d.id].properties.data_poc_affiliation || 'Unknown'
