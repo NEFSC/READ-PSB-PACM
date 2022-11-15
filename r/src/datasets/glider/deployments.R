@@ -37,7 +37,7 @@ df <- df_csv %>%
     monitoring_start_datetime = ymd(monitoring_start_datetime),
     monitoring_end_datetime = ymd(monitoring_end_datetime),
     
-    platform_type,
+    platform_type = str_remove_all(platform_type, " glider"),
     platform_id,
     water_depth_meters = parse_number(water_depth_meters),
     recorder_depth_meters = parse_number(recorder_depth_meters),

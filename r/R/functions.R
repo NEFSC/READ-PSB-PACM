@@ -168,12 +168,8 @@ aggregate_detections <- function(detections, monitoring_start_datetime,
     all(x_date$date >= start_date),
     all(x_date$date <= end_date)
   )
-  
   x <- x_date %>% 
-    nest_by(species, date, .key = "detections") %>% 
-    ungroup() %>% 
-    complete(date = dates, species, fill = list(detections = list(tibble()))) %>% 
-    rowwise() 
+    nest_by(species, date, .key = "detections")
   if (platform_type == "towed-array") {
     x <- x %>% 
       mutate(
@@ -198,7 +194,8 @@ aggregate_detections <- function(detections, monitoring_start_datetime,
         )
       )
   }
-  ungroup(x)
+  ungroup(x) %>% 
+    complete(date = dates, species, fill = list(acoustic_presence = "M"))
 }
 
 create_analyses <- function (metadata, detections, refs) {
@@ -223,8 +220,12 @@ create_analyses <- function (metadata, detections, refs) {
       metadata %>% 
         select(unique_id, monitoring_start_datetime, monitoring_end_datetime, platform_type),
       by = "unique_id"
-    ) %>% 
+    ) %>%
+    # rowwise() %>%
     mutate(
+      # detections2 = list({
+      #   aggregate_detections(detections, monitoring_start_datetime, monitoring_end_datetime, platform_type)
+      # })
       detections = pmap(list(detections, monitoring_start_datetime, monitoring_end_datetime, platform_type), aggregate_detections)
     ) %>% 
     select(-c(monitoring_start_datetime, monitoring_end_datetime, platform_type))

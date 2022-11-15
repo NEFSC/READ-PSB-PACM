@@ -146,6 +146,9 @@ targets_datasets <- list(
           TRUE ~ NA_character_
         ),
         locations = map(detections, function (x) {
+          if (is.null(x)) {
+            return(tibble())
+          }
           x %>%
             transmute(
               analysis_period_start_datetime,
@@ -422,7 +425,7 @@ targets_datasets <- list(
     list(metadata = ucorn_20220302_metadata_file, detections = ucorn_20220302_detections_file),
     list(
       metadata = function (x) {
-        x %>% 
+        x %>%
           mutate(
             across(c(MONITORING_START_DATETIME, MONITORING_END_DATETIME), ~ as.character(mdy_hm(.x)))
           )

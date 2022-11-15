@@ -9,11 +9,22 @@ source("src/functions.R")
 detections_rds <- read_rds("data/datasets/moored/detections.rds")
 deployments_rds <- read_rds("data/datasets/moored/deployments.rds")
 
+# missing latitude/longitude
+deployments_rds %>% 
+  filter(is.na(latitude) | is.na(longitude)) %>% 
+  distinct(id)
+
+deployments_rds <- deployments_rds %>% 
+  filter(!is.na(latitude) | !is.na(longitude))
+
+detections_rds <- detections_rds %>% 
+  filter(id %in% unique(deployments_rds$id))
 
 # analysis period ---------------------------------------------------------
 # TODO: add analysis_start_date, analysis_end_date, analyzed to deployments metadata table
 
 analysis_periods <- detections_rds %>% 
+  filter(id %in% deployments_rds$id) %>% 
   group_by(id) %>% 
   summarise(
     analysis_start_date = min(date),
@@ -25,8 +36,8 @@ analysis_periods <- detections_rds %>%
   )
 
 deployments_analysis <- deployments_rds %>% 
+  filter(!is.na(latitude)) %>% 
   left_join(analysis_periods, by = "id")
-
 
 # qaqc: analysis period ---------------------------------------------------
 

@@ -18,10 +18,13 @@ df_csv <- read_csv(
   file.path(files$root, files$moored$metadata),
   col_types = cols(.default = col_character())
 ) %>% 
-  janitor::clean_names()
+  janitor::clean_names() %>% 
+  filter(
+    !unique_id == "NEFSC_SBNMS_202209_OLE01_OLE01" | instrument_id == "6125"
+  )
 
 df_deployments <- df_csv %>% 
-  filter(data_poc_affiliation == "NOAA NEFSC") %>% 
+  filter(data_poc_affiliation == "NOAA NEFSC", !is.na(latitude)) %>% 
   transmute(
     theme = "deployments-nefsc",
     id = unique_id,
@@ -67,6 +70,7 @@ df_deployments <- df_csv %>%
 # add geom ----------------------------------------------------------------
 
 stations <- df_deployments %>% 
+  filter(!is.na(latitude)) %>% 
   select(id, latitude, longitude) %>% 
   distinct()
 

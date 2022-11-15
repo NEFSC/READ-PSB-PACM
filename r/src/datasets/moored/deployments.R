@@ -12,6 +12,12 @@ df_csv <- read_csv(
 ) %>% 
   janitor::clean_names()
 
+df_csv <- df_csv %>% 
+  filter(
+    !unique_id == "NEFSC_SBNMS_202209_OLE01_OLE01" | instrument_id == "6125"
+  )
+
+stopifnot(all(!duplicated(df_csv$unique_id)))
 
 # transform ---------------------------------------------------------------
 
