@@ -5,7 +5,7 @@ Passive Acoustic Cetacean Map
 
 This repo contains the source code for the Passive Acoustic Cetacean Map (PACM) web application. The PACM application is an interactive data visualization tool for exploring historical observations of whales and other cetaceans based on passive acoustic montoring (PAM) data.
 
-Development URL: https://nova.nefsc.noaa.gov/pacm_dev/
+Development URL: https://nefsctest.nmfs.local/pacm/html/ (Internal Network Access Only)
 
 Production URL: https://apps-nefsc.fisheries.noaa.gov/pacm/
 
