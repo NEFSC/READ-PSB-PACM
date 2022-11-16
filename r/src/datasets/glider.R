@@ -6,10 +6,20 @@ library(sf)
 
 source("src/functions.R")
 
-detections_rds <- read_rds("data/datasets/glider/detections.rds")$daily
+detections_rds <- read_rds("data/datasets/glider/detections.rds")$daily %>% 
+  filter(id != "WHOI_GMX_201705_gmx0517_we10")
 deployments_rds <- read_rds("data/datasets/glider/deployments.rds")
-tracks_rds <- read_rds("data/datasets/glider/tracks.rds")$sf
+tracks_rds <- read_rds("data/datasets/glider/tracks.rds")$sf %>% 
+  filter(id != "WHOI_GMX_201705_gmx0517_we10")
 
+
+detections_rds %>% 
+  distinct(id) %>% 
+  anti_join(
+    deployments_rds %>% 
+      distinct(id),
+    by = "id"
+  )
 
 # analysis period ---------------------------------------------------------
 # TODO: add analysis_start_date, analysis_end_date, analyzed to deployments metadata table

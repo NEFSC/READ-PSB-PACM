@@ -2,11 +2,11 @@ default:
   files:
     root: "~/Dropbox/Work/nefsc/data"
     moored:
-      metadata: "moored/20221103/Moored_metadata_2022-11-03.csv"
-      detection: "moored/20221103/Moored_detection_data_2022-11-03.csv"
+      metadata: "moored/20221115/Moored_metadata_2022-11-15.csv"
+      detection: "moored/20221115/Moored_detection_data_2022-11-15.csv"
     glider:
-      metadata: "glider/20221103/Glider_metadata_2022-11-03.csv"
-      detection: "glider/20221103/Glider_detection_data_2022-11-03.csv"
+      metadata: "glider/20221115/Glider_metadata_2022-11-15.csv"
+      detection: "glider/20221115/Glider_detection_data_2022-11-15.csv"
     towed:
       metadata: "towed/Towed_Array_effort_Walker_Website_Daily_Resolution.xlsx"
       tracks: "towed/tracks"

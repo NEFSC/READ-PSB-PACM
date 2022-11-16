@@ -14,8 +14,8 @@ deployments_rds %>%
   filter(is.na(latitude) | is.na(longitude)) %>% 
   distinct(id)
 
-deployments_rds <- deployments_rds %>% 
-  filter(!is.na(latitude) | !is.na(longitude))
+# deployments_rds <- deployments_rds %>% 
+#   filter(!is.na(latitude) | !is.na(longitude))
 
 detections_rds <- detections_rds %>% 
   filter(id %in% unique(deployments_rds$id))

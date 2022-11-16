@@ -14,7 +14,7 @@ df_csv <- read_csv(
 
 df_csv <- df_csv %>% 
   filter(
-    !unique_id == "NEFSC_SBNMS_202209_OLE01_OLE01" | instrument_id == "6125"
+    (!project %in% c("NEFSC_GOM_202112_MATINICUS", "NEFSC_GOM_202112_PETITMANAN")) | !is.na(data_poc_name)
   )
 
 stopifnot(all(!duplicated(df_csv$unique_id)))

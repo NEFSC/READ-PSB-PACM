@@ -20,7 +20,21 @@ df_csv <- read_csv(
 ) %>% 
   janitor::clean_names() %>% 
   filter(
-    !unique_id == "NEFSC_SBNMS_202209_OLE01_OLE01" | instrument_id == "6125"
+    unique_id != "NEFSC_SBNMS_202209_OLE01_OLE01"
+  ) %>%
+  mutate(
+    latitude = case_when(
+      unique_id == "NEFSC_MA-RI_202202_NS03_NS03" ~ "40.8626",
+      unique_id == "NEFSC_MA-RI_202202_NS04_NS04" ~ "40.97809",
+      unique_id == "NEFSC_MA-RI_202202_NS05_NS05" ~ "40.62812",
+      TRUE ~ latitude
+    ),
+    longitude = case_when(
+      unique_id == "NEFSC_MA-RI_202202_NS03_NS03" ~ "-70.2048",
+      unique_id == "NEFSC_MA-RI_202202_NS04_NS04" ~ "-69.9335",
+      unique_id == "NEFSC_MA-RI_202202_NS05_NS05" ~ "-69.766",
+      TRUE ~ longitude
+    )
   )
 
 df_deployments <- df_csv %>% 
