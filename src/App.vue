@@ -10,7 +10,7 @@
       <v-icon color="white" dark class="mr-4" v-if="!$vuetify.breakpoint.mobile">$whale</v-icon>
       <h1>
         <v-toolbar-title v-if="!$vuetify.breakpoint.mobile">
-          Passive Acoustic Cetacean Map <span style="font-size: 50%;vertical-align: bottom;opacity:50%">v{{ version }}</span>
+          Passive Acoustic Cetacean Map <span style="font-size: 50%;" class="pl-1">v{{ version }}</span>
         </v-toolbar-title>
         <v-toolbar-title v-else class="font-weight-bold">PACM</v-toolbar-title>
       </h1>
