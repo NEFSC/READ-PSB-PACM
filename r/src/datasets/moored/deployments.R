@@ -12,9 +12,10 @@ df_csv <- read_csv(
 ) %>% 
   janitor::clean_names()
 
-df_csv <- df_csv %>% 
-  filter(
-    (!project %in% c("NEFSC_GOM_202112_MATINICUS", "NEFSC_GOM_202112_PETITMANAN")) | !is.na(data_poc_name)
+df_csv <- df_csv %>%
+  filter(!is.na(project)) %>%
+  mutate(
+    unique_id = coalesce(unique_id, paste0(project, "_", site_id))
   )
 
 stopifnot(all(!duplicated(df_csv$unique_id)))
@@ -40,8 +41,8 @@ df <- df_csv %>%
     latitude = parse_number(latitude),
     longitude = parse_number(longitude),
     
-    monitoring_start_datetime = ymd_hms(monitoring_start_datetime),
-    monitoring_end_datetime = ymd_hms(monitoring_end_datetime),
+    monitoring_start_datetime = mdy_hm(monitoring_start_datetime),
+    monitoring_end_datetime = mdy_hm(monitoring_end_datetime),
     
     platform_type = fct_recode(platform_type, mooring = "Mooring", buoy = "surface buoy"),
     platform_id,
@@ -64,7 +65,7 @@ df <- df_csv %>%
     submitter_name,
     submitter_affiliation,
     submitter_email,
-    submission_date = ymd(submission_date),
+    submission_date = mdy(submission_date),
     
     # species specific
     detection_method,
@@ -86,3 +87,4 @@ tabyl(df, instrument_type, theme)
 # export ------------------------------------------------------------------
 
 write_rds(df, "data/datasets/moored/deployments.rds")
+

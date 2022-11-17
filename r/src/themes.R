@@ -43,16 +43,9 @@ nefsc_deployments <- read_rds("data/deployment-themes/nefsc.rds")$deployments %>
   mutate(theme = "deployments")
 stopifnot(all(!duplicated(nefsc_deployments$id)))
 
-active_deployments <- read_rds("data/datasets/nefsc_20220816_deployments.rds") %>% 
-  mutate(theme = "deployments")
-stopifnot(all(!duplicated(active_deployments$id)))
-
-stopifnot(all(!active_deployments$id %in% deployments_all1$id))
 stopifnot(all(!nefsc_deployments$id %in% deployments_all1$id))
-stopifnot(all(!active_deployments$id %in% nefsc_deployments$id))
-stopifnot(all(!nefsc_deployments$id %in% active_deployments$id))
 
-deployments_all <- bind_rows(deployments_all1, active_deployments, nefsc_deployments)
+deployments_all <- bind_rows(deployments_all1, nefsc_deployments)
 
 
 # filter: deployments ---------------------------------------------------

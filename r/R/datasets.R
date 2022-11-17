@@ -497,38 +497,5 @@ targets_datasets <- list(
     ) %>% 
       write_rds(filename)
     filename
-  }, format = "file"),
-
-  # NEFSC 20220816 Deployments ----------------------------------------------
-  tar_target(nefsc_20220816_metadata_file, "data/nefsc/20220816-deployments/2022-07_Current_Recorders_forRWSC_edit.csv", format = "file"),
-  tar_target(nefsc_20220816_metadata, read_csv(nefsc_20220816_metadata_file, show_col_types = FALSE)),
-  tar_target(nefsc_20220816_deployments, {
-    nefsc_20220816_metadata %>% 
-      janitor::clean_names() %>%
-      transmute(
-        id = str_replace_all(project_name, " ", "_"),
-        project = project_name,
-        site_id = site,
-        latitude = latitude_ddg_deployment,
-        longitude = longitude_ddg_deployment,
-        monitoring_start_datetime = mdy_hm(deploy_datetime_gmt),
-        platform_type = "mooring",
-        sampling_rate_hz = sample_rate_khz * 1e3,
-        instrument_type,
-        data_poc_name = poc_name,
-        data_poc_affiliation = poc_organization,
-        data_poc_email = poc_email,
-        deployment_type = "stationary",
-        soundfiles_timezone = "GMT",
-        analyzed = FALSE
-      ) %>% 
-      filter(!is.na(monitoring_start_datetime)) %>% 
-      st_as_sf(coords = c("longitude", "latitude"))
-  }),
-  tar_target(nefsc_20220816_deployments_rds, {
-    filename <- "data/datasets/nefsc_20220816_deployments.rds"
-    nefsc_20220816_deployments %>%
-      write_rds(filename)
-    filename
   }, format = "file")
 )

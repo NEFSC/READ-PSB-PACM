@@ -19,21 +19,13 @@ df_csv <- read_csv(
   col_types = cols(.default = col_character())
 ) %>% 
   janitor::clean_names() %>% 
-  filter(
-    unique_id != "NEFSC_SBNMS_202209_OLE01_OLE01"
-  ) %>%
+  filter(!is.na(project)) %>% 
   mutate(
-    latitude = case_when(
-      unique_id == "NEFSC_MA-RI_202202_NS03_NS03" ~ "40.8626",
-      unique_id == "NEFSC_MA-RI_202202_NS04_NS04" ~ "40.97809",
-      unique_id == "NEFSC_MA-RI_202202_NS05_NS05" ~ "40.62812",
-      TRUE ~ latitude
-    ),
-    longitude = case_when(
-      unique_id == "NEFSC_MA-RI_202202_NS03_NS03" ~ "-70.2048",
-      unique_id == "NEFSC_MA-RI_202202_NS04_NS04" ~ "-69.9335",
-      unique_id == "NEFSC_MA-RI_202202_NS05_NS05" ~ "-69.766",
-      TRUE ~ longitude
+    unique_id = coalesce(unique_id, paste0(project, "_", site_id)),
+    platform_type = if_else(
+      str_starts(project, "NEFSC_MA-RI_202211"),
+      coalesce(platform_type, "mooring"),
+      platform_type
     )
   )
 
@@ -47,8 +39,8 @@ df_deployments <- df_csv %>%
     latitude = parse_number(latitude),
     longitude = parse_number(longitude),
 
-    monitoring_start_datetime = ymd_hms(monitoring_start_datetime),
-    monitoring_end_datetime = ymd_hms(monitoring_end_datetime),
+    monitoring_start_datetime = mdy_hm(monitoring_start_datetime),
+    monitoring_end_datetime = mdy_hm(monitoring_end_datetime),
 
     platform_type = fct_recode(platform_type, mooring = "Mooring"),
     platform_id,
@@ -71,15 +63,13 @@ df_deployments <- df_csv %>%
     submitter_name,
     submitter_affiliation,
     submitter_email,
-    submission_date = ymd(submission_date),
+    submission_date = mdy(submission_date),
 
     # species specific
     detection_method = NA_character_,
     protocol_reference = NA_character_,
     call_type = NA_character_
-  ) %>% 
-  filter(!is.na(monitoring_end_datetime)) # exclude active deployments because they have no end date to generate rd detections
-
+  )
 
 # add geom ----------------------------------------------------------------
 
@@ -100,6 +90,7 @@ deployments <- sf_stations %>%
 # detections --------------------------------------------------------------
 
 detections <- df_deployments %>% 
+  filter(!is.na(monitoring_end_datetime)) %>% 
   distinct(theme, id, monitoring_start_datetime, monitoring_end_datetime) %>% 
   left_join(
     moored$deployments %>% 
