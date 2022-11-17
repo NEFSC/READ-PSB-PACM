@@ -13,9 +13,9 @@ Production URL: https://apps-nefsc.fisheries.noaa.gov/pacm/
 
 **Who is involved in this project?** This application was developed by Jeffrey D Walker, PhD ([Walker Environmental Research LLC](https://walkerenvres.com)) for Sofie Van Parijs, Genevieve Davis, and Annamaria DeAngelis of the [NEFSC Passive Acoustic Research group](https://www.fisheries.noaa.gov/new-england-mid-atlantic/endangered-species-conservation/passive-acoustic-research-atlantic-ocean).
 
-**When was this project created?** Development of this application began in 2019. The first public release is expected in Spring 2021, after which the project will be ongoing for the foreseeable future.
+**When was this project created?** Development of this application began in 2019. The first public release was in Spring 2021. The project is ongoing for the foreseeable future.
 
-**What is this project?** The goal of this application is provide a user-friendly and map-based data visualization interface for exploring historical detections of whales and other cetaceans based on passive acoustic monitoring data. The dataset includes PAM data collected by the [NEFSC Passive Acoustic Research group](https://www.fisheries.noaa.gov/new-england-mid-atlantic/endangered-species-conservation/passive-acoustic-research-atlantic-ocean) as well as numerous other collaborators.
+**What is this project?** The goal of this application is to provide a user-friendly and map-based data visualization interface for exploring historical detections of whales and other cetaceans based on passive acoustic monitoring data. The dataset includes PAM data collected by the [NEFSC Passive Acoustic Research group](https://www.fisheries.noaa.gov/new-england-mid-atlantic/endangered-species-conservation/passive-acoustic-research-atlantic-ocean) as well as numerous other collaborators.
 
 **Why is this project useful?** Existing PAM datasets are not easily accessible for resource managers, decision makers, other researchers or the general public. PACM was developed in large part to make these datasets more widely available for supporting management, research, and public interest.
 
@@ -41,7 +41,7 @@ Due to their size, the raw data files are not included in this repo. To tell R w
 
 To process the datasets and genrate the final datasets for the web application, open the `r/src/main.R` script, and run the series of `source()` commands (in order) to run each script.
 
-If successful, these scripts should load, clean, and merge the various raw data files, and save the final datasets for the web applciatio in the `public/data` folder.
+If successful, these scripts should load, clean, and merge the various raw data files, and save the final datasets for the web applciation in the `public/data` folder.
 
 ## Web Application Development
 

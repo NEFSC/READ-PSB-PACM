@@ -87,6 +87,11 @@
       <h2 class="text-h5 mb-2">Latest Updates</h2>
 
       <div class="text-subheading font-weight-bold text--secondary">
+        v1.1.3 | November 17, 2022
+      </div>
+      <p>Added nautical charts basemap, updated baleen whale datasets and active deployments.</p>
+
+      <div class="text-subheading font-weight-bold text--secondary">
         v1.1.2 | April 1, 2022
       </div>
       <p>Added wind energy areas layer to map overlays, latest updates to about. Updated NYSDEC baleen whale data.</p>
@@ -106,7 +111,7 @@
       <div class="text-subheading font-weight-bold text--secondary">
         v1.0.0 | May 27, 2021
       </div>
-      <p>Initial release.</p>
+      <p class="mb-0">Initial release.</p>
     </v-card-text>
     <v-card-actions>
       <v-spacer></v-spacer>
