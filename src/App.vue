@@ -167,7 +167,8 @@
       </v-list>
     </v-navigation-drawer>
 
-    <v-main data-v-step="map" style="z-index:0">
+    <div data-v-step="map"></div>
+    <v-main style="z-index:0">
       <div style="height:100%;position:relative">
         <Map :counts="counts"></Map>
         <div style="position:absolute;bottom:0;left:0;width:100%;z-index:1000;background:white;max-height:600px" v-if="selectedDeployments.length > 0">
