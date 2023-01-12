@@ -1,0 +1,210 @@
+---
+title: "`r params$submission_id` | QAQC"
+date: "`r lubridate::today()`"
+output:
+  html_document:
+    toc: true
+    toc-depth: 3
+params:
+  data_dir: ~/data/pacm
+  submission_id: DFOCA_20220712
+editor_options: 
+  chunk_output_type: console
+---
+
+<style>
+.main-container {
+  max-width: 1200px !important;
+}
+</style>
+
+```{r setup}
+#| echo: false
+#| message: false
+#| warning: false
+library(tidyverse)
+library(sf)
+library(glue)
+library(janitor)
+library(leaflet)
+library(DT)
+```
+
+```{r}
+#| echo: false
+data_dir <- params$data_dir
+submission_id <- params$submission_id
+x <- read_rds(file.path(data_dir, "processed", submission_id, glue("{submission_id}.rds")))
+
+has_metadata <- nrow(x$metadata) > 0
+has_detectiondata <- nrow(x$detectiondata) > 0
+```
+
+```text
+data_dir: `r params$data_dir`
+submission_id: `r params$submission_id`
+created: `r lubridate::now(tz = "US/Eastern")`
+has_metadata: `r has_metadata`
+has_detectiondata: `r has_detectiondata`
+```
+
+## Metadata
+
+```{r results="asis"}
+#| echo: false
+if (!has_metadata) {
+  cat("Submission does not contain any metadata files\n")
+}
+```
+
+```{r eval=has_metadata}
+#| echo: false
+x_metadata <- x$metadata %>% 
+  select(filename, parsed) %>% 
+  unnest(parsed)
+datatable(x_metadata)
+```
+
+### Stationary Platform Locations
+
+```{r eval=has_metadata}
+#| echo: false
+x_metadata %>% 
+  filter(STATIONARY_OR_MOBILE == "STATIONARY") %>% 
+  st_as_sf(coords = c("LONGITUDE", "LATITUDE"), crs = "EPSG:4326") %>% 
+  leaflet() %>% 
+  addTiles() %>% 
+  addMarkers(label = ~htmltools::htmlEscape(UNIQUE_ID))
+```
+
+### Monitoring Periods
+
+```{r eval=has_metadata}
+#| echo: false
+x_metadata %>% 
+  ggplot() +
+  geom_segment(aes(x = MONITORING_START_DATETIME, xend = MONITORING_END_DATETIME, y = UNIQUE_ID, yend = UNIQUE_ID)) +
+  labs(x = "MONITORING_START_DATETIME to MONITORING_END_DATETIME") +
+  theme_bw() +
+  theme(plot.margin = unit(c(5, 5, 5, 5), units = "mm"))
+```
+
+### Summary Tables
+
+```{r eval=has_metadata}
+tabyl(x_metadata, DATA_POC_AFFILIATION)
+```
+
+```{r eval=has_metadata}
+tabyl(x_metadata, SITE_ID, PROJECT)
+```
+
+```{r eval=has_metadata}
+tabyl(x_metadata, PLATFORM_TYPE, STATIONARY_OR_MOBILE)
+```
+
+```{r eval=has_metadata}
+tabyl(x_metadata, INSTRUMENT_TYPE)
+```
+
+```{r eval=has_metadata}
+tabyl(x_metadata, SAMPLING_RATE_HZ)
+```
+
+### Validation
+
+```{r eval=(has_metadata)}
+#| echo: false
+x$metadata %>% 
+  select(filename, n_rows, n_errors) %>% 
+  print()
+```
+
+```{r eval=(has_metadata), results='asis'}
+#| echo: false
+if (sum(x$metadata$n_errors) == 0) {
+  cat("Metadata does not contain any validation errors\n")
+} else {
+  cat(glue("Metadata contains {sum(x$metadata$n_errors)} validation errors. Here are the first 10 errors:\n"))
+}
+```
+
+```{r eval=(has_metadata & sum(x$metadata$n_errors) > 0)}
+#| echo: false
+x_metadata_validation_errors <- x$metadata %>% 
+  select(filename, validation_errors) %>% 
+  unnest(validation_errors)
+x_metadata_validation_errors %>% 
+  head(10) %>% 
+  print(width = Inf)
+```
+
+## Detection Data
+
+```{r results="asis"}
+#| echo: false
+if (!has_detectiondata) {
+  cat("Submission does not contain any detection data files\n")
+}
+```
+
+```{r eval=has_detectiondata}
+#| echo: false
+x_detectiondata <- x$detectiondata %>% 
+  select(filename, parsed) %>% 
+  unnest(parsed)
+```
+
+Summary of each `UNIQUE_ID` and `SPECIES` including start/end of analysis period, number of detections (`ACOUSTIC_PRESENCE='P'`) and total number of rows.
+
+```{r eval=has_detectiondata}
+#| echo: false
+x_detectiondata_summary <- x_detectiondata %>% 
+  group_by(filename, UNIQUE_ID, SPECIES) %>% 
+  summarize(
+    ANALYSIS_PERIOD_START_DATETIME = min(ANALYSIS_PERIOD_START_DATETIME),
+    ANALYSIS_PERIOD_END_DATETIME = max(ANALYSIS_PERIOD_END_DATETIME),
+    N_DETECTIONS = sum(ACOUSTIC_PRESENCE == "D"),
+    N_ROWS = n(),
+    .groups = "drop"
+  )
+datatable(x_detectiondata_summary)
+```
+
+### Summary Tables
+
+```{r eval=has_detectiondata, echo=has_detectiondata}
+tabyl(x_detectiondata, UNIQUE_ID, ACOUSTIC_PRESENCE, SPECIES)
+```
+
+```{r eval=has_detectiondata, echo=has_detectiondata}
+tabyl(x_detectiondata, CALL_TYPE, SPECIES)
+```
+
+### Validation
+
+```{r eval=(has_detectiondata)}
+#| echo: false
+x$detectiondata %>% 
+  select(filename, n_rows, n_errors) %>% 
+  print()
+```
+
+```{r eval=(has_detectiondata), results='asis'}
+#| echo: false
+if (sum(x$detectiondata$n_errors) == 0) {
+  cat("Detection data does not contain any validation errors\n")
+} else {
+  cat(glue("Detection data contains {sum(x$detectiondata$n_errors)} validation errors. Here are the first 10 errors:\n"))
+}
+```
+
+```{r eval=(has_detectiondata & sum(x$detectiondata$n_errors) > 0)}
+#| echo: false
+x_detectiondata_validation_errors <- x$detectiondata %>% 
+  select(filename, validation_errors) %>% 
+  unnest(validation_errors)
+x_detectiondata_validation_errors %>% 
+  head(10) %>% 
+  print(width = Inf)
+```
