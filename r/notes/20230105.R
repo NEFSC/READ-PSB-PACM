@@ -264,10 +264,11 @@ load_submission <- function (submission_id, data_dir, write_log = !interactive()
   
   noop <- function (x) x
   
-  rm(transform_metadata, transform_detectiondata, transform_gpsdata)
+  # rm(transform_metadata, transform_detectiondata, transform_gpsdata)
+  # browser()
   if ("transform.R" %in% submission_files) {
     log_info("loading transformers")
-    source(file.path(submission_dir, "transform.R"))
+    source(file.path(submission_dir, "transform.R"), local = TRUE)
   }
   
   if (!exists("transform_metadata")) {
@@ -404,7 +405,7 @@ export_submission <- function (x, data_dir, write_log = !interactive()) {
   import_files <- c()
   
   if (nrow(x$metadata) > 0) {
-    metadata_file <- file.path(import_dir, glue("{submission_affiliation}_METADATA_{submission_date}.csv"))
+    metadata_file <- file.path(import_dir, glue("{submission_affiliation}_{submission_date}_METADATA.csv"))
     log_info("saving metadata file: {metadata_file}")
     import_files <- c(import_files, metadata_file)
     x$metadata %>% 
@@ -417,7 +418,7 @@ export_submission <- function (x, data_dir, write_log = !interactive()) {
   }
   
   if (nrow(x$detectiondata) > 0) {
-    detectiondata_file <- file.path(import_dir, glue("{submission_affiliation}_DETECTIONDATA_{submission_date}.csv"))
+    detectiondata_file <- file.path(import_dir, glue("{submission_affiliation}_{submission_date}_DETECTIONDATA.csv"))
     log_info("saving detectiondata file: {detectiondata_file}")
     import_files <- c(import_files, detectiondata_file)
     x$detectiondata %>% 
@@ -427,6 +428,15 @@ export_submission <- function (x, data_dir, write_log = !interactive()) {
       write_csv(detectiondata_file, na = "", progress = FALSE)
   } else {
     log_info("no detection data found")
+  }
+  
+  if (length(import_files) > 0) {
+    log_info("copying import files to global import folder")
+    for (f in import_files) {
+      f_to <- file.path(data_dir, "import", basename(f))
+      log_info("{f} -> {f_to}")
+      file.copy(f, f_to)
+    }
   }
   
   log_info("done: {now(tz = 'US/Eastern')}")
@@ -461,7 +471,7 @@ qaqc_submission <- function (x, data_dir, write_log = !interactive()) {
     dir.create(qaqc_dir, showWarnings = FALSE, recursive = TRUE)
   }
   
-  qaqc_file <- glue("{submission_affiliation}_QAQC_{submission_date}.html")
+  qaqc_file <- glue("{submission_affiliation}_{submission_date}_QAQC.html")
   log_info("generating qaqc report file: {qaqc_file}")
   rmarkdown::render(
     input = "templates/submission-qaqc.rmd", 
@@ -503,8 +513,9 @@ submission_ids <- list.dirs(file.path(data_dir, "submissions"), full.names = FAL
 walk(submission_ids, function (submission_id) {
   process_submission(submission_id, data_dir, TRUE)
 })
-x <- load_submission("JASCO_20220819", data_dir)
-process_submission("JASCO_20220819", data_dir, TRUE)
+
+# x <- load_submission("JASCO_20220819", data_dir)
+# process_submission("JASCO_20220819", data_dir, TRUE)
 
 
 all_detections <- map_df(submission_ids, function (x) {
@@ -517,3 +528,115 @@ all_detections %>%
   unnest(parsed) %>% 
   distinct(submission_id, filename, SPECIES, CALL_TYPE) %>% 
   write_csv("~/submissions-call-types.csv")
+
+
+# import from db ----------------------------------------------------------
+
+in_metadata <- map_df(submission_ids, function (x) {
+  cat(x, "\n")
+  x <- read_rds(file.path(data_dir, "processed", x, glue("{x}.rds")))$metadata
+  x
+}) %>% 
+  select(parsed) %>% 
+  unnest(parsed) %>% 
+  select(-row) %>% 
+  mutate(INSTRUMENT_ID = as.numeric(INSTRUMENT_ID)) %>% 
+  arrange(UNIQUE_ID)
+
+in_detectiondata <- map_df(submission_ids, function (x) {
+  cat(x, "\n")
+  x <- read_rds(file.path(data_dir, "processed", x, glue("{x}.rds")))$detectiondata
+  x
+}) %>% 
+  select(parsed) %>% 
+  unnest(parsed) %>% 
+  select(-row) %>% 
+  arrange(UNIQUE_ID, SPECIES, ANALYSIS_PERIOD_START_DATETIME)
+
+out_dir <- file.path("~/Dropbox/work/nefsc", "data", "db", "db-20230116")
+out_metadata <- read_csv(file.path(out_dir, "metadata.csv"), col_types = cols(.default = col_character())) %>% 
+  mutate(
+    across(
+      c(MONITORING_START_DATETIME, MONITORING_END_DATETIME, SUBMISSION_DATE, DATA_LOAD_DATETIME),
+      ymd_hms
+    ),
+    across(
+      c(CHANNEL, INSTRUMENT_ID, LATITUDE, LONGITUDE, RECORDER_DEPTH_METERS, RECORDING_DURATION_SECONDS, RECORDING_INTERVAL_SECONDS, SAMPLE_BITS, SAMPLING_RATE_HZ, WATER_DEPTH_METERS),
+      as.numeric
+    )
+  ) %>% 
+  arrange(UNIQUE_ID)
+out_detectiondata <- tibble(
+  filename = list.files(file.path(out_dir, "detectiondata"))
+) %>% 
+  mutate(
+    data = map(filename, function (x) {
+      file.path(out_dir, "detectiondata", x) %>% 
+        read_csv(col_types = cols(.default = col_character()))
+    })
+  ) %>% 
+  unnest(data) %>% 
+  select(-filename) %>% 
+  rename(ANALYSIS_SAMPLING_RATE_HZ = ANALYSIS_SAMPLING_RANGE_HZ) %>% 
+  mutate(
+    across(
+      c(ANALYSIS_PERIOD_START_DATETIME, ANALYSIS_PERIOD_END_DATETIME, DATA_LOAD_DATETIME),
+      ymd_hms
+    ),
+    across(
+      c(ANALYSIS_PERIOD_EFFORT_SECONDS, N_VALIDATED_DETECTIONS, MIN_ANALYSIS_FREQUENCY_RANGE_HZ, MAX_ANALYSIS_FREQUENCY_RANGE_HZ, ANALYSIS_SAMPLING_RATE_HZ),
+      as.numeric
+    )
+  ) %>% 
+  arrange(UNIQUE_ID, SPECIES, ANALYSIS_PERIOD_START_DATETIME)
+
+# compare metadata
+nrow(in_metadata) == nrow(out_metadata)
+identical(sort(in_metadata$UNIQUE_ID), sort(out_metadata$UNIQUE_ID))
+janitor::compare_df_cols(in_metadata, out_metadata)
+diffdf::diffdf(
+  in_metadata %>% 
+    select(-DATA_POC_EMAIL, -SUBMITTER_EMAIL) %>% 
+    mutate(across(c(LATITUDE, LONGITUDE), round, 3)), 
+  out_metadata %>% 
+    select(
+      -DATA_LOAD_DATETIME, -DATE_OF_SUBMISSION_FROM_FILE, -LOAD_FILENAME, -ORGANIZATION_CODE_FROM_FILE,
+      -DATA_POC_EMAIL, -SUBMITTER_EMAIL
+    ) %>% 
+    mutate(across(c(LATITUDE, LONGITUDE), round, 3))
+)
+str(in_metadata)
+in_metadata %>% 
+  tabyl(SAMPLE_BITS)
+
+# compare detection data
+nrow(in_detectiondata) == nrow(out_detectiondata)
+janitor::compare_df_cols(in_detectiondata, out_detectiondata)
+diffdf::diffdf(
+  in_detectiondata %>% 
+    select(
+      -DETECTION_DISTANCE_M, -LOCALIZATION_DISTANCE_METHOD, -LOCALIZATION_DISTANCE_PROTOCOL, -LOCALIZED_LATITUDE, -LOCALIZED_LONGITUDE
+    ), 
+  out_detectiondata %>% 
+    select(
+      -DATA_LOAD_DATETIME, -DATE_OF_SUBMISSION_FROM_FILE, -LOAD_FILENAME, -ORGANIZATION_CODE_FROM_FILE
+    )
+)
+
+in_detectiondata %>% 
+  filter(is.na(ANALYSIS_PERIOD_START_DATETIME)) %>% 
+  select(UNIQUE_ID, ANALYSIS_PERIOD_START_DATETIME, ANALYSIS_PERIOD_END_DATETIME)
+out_detectiondata %>% 
+  tabyl(QC_PROCESSING)
+
+in_detectiondata %>% 
+  tabyl(DETECTION_SOFTWARE_VERSION)
+
+out_detectiondata %>% 
+  count(UNIQUE_ID, SPECIES) %>% 
+  arrange(desc(n))
+
+out_detectiondata %>% 
+  filter(UNIQUE_ID == "LISTEN_GOM_DT_13", SPECIES == 46) %>% 
+  ggplot(aes(ANALYSIS_PERIOD_START_DATETIME, ACOUSTIC_PRESENCE)) +
+  geom_point(aes(color = ACOUSTIC_PRESENCE))
