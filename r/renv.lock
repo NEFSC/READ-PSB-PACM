@@ -386,6 +386,16 @@
         "withr"
       ]
     },
+    "diffdf": {
+      "Package": "diffdf",
+      "Version": "1.0.4",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "9ddedef46959baad2080047a1b0117fe",
+      "Requirements": [
+        "tibble"
+      ]
+    },
     "digest": {
       "Package": "digest",
       "Version": "0.6.29",

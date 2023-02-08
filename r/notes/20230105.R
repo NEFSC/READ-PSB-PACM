@@ -56,6 +56,30 @@ rules <- list(
   )
 )
 
+species <- read_csv("data/db/species.csv", show_col_types = FALSE) %>% 
+  clean_names() %>% 
+  select(species_id, species_code = pacm_species_code) %>% 
+  filter(!is.na(species_code)) %>% 
+  mutate(
+    species_code = case_when(
+      species_code == "WDSO" ~ "WSDO",
+      TRUE ~ species_code
+    )
+  )
+
+call_types <- read_csv("data/db/call_types.csv", show_col_types = FALSE) %>% 
+  clean_names() %>%
+  select(call_type_id, call_type_code = pacm_call_type_code, species_codes = permissible_pacm_species_codes) %>% 
+  filter(!is.na(call_type_code))
+
+call_types_species <- call_types %>% 
+  separate_rows(species_codes) %>% 
+  rename(species_code = species_codes)
+
+# verify all species_codes are valid in call_types
+# call_types_species %>% 
+#   anti_join(species, by = "species_code")
+
 codes <- list(
   STATIONARY_OR_MOBILE = toupper(c("Stationary", "Mobile")),
   PLATFORM_TYPE = toupper(
@@ -63,14 +87,8 @@ codes <- list(
       "Towed-array", "Linear-array", "Drifting-buoy")
   ),
   ACOUSTIC_PRESENCE = c("D", "P", "N", "M"),
-  SPECIES = c("91", "14", "45", "59", "75", "18", "67", "72", "4", "61", 
-              "48", "33", "74", "26", "55", "69", "40", "76", "37", "31", "71", 
-              "108", "84", "774", "90", "35", "36", "32", "47", "804", "21", 
-              "15", "73", "17", "86", "56", "46", "3", "2", "13", "82", "77", 
-              "49", "51", "34", "80", "12"),
-  CALL_TYPE = c("99", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", 
-                "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", 
-                "23", "24", "98")
+  SPECIES = species$species_code,
+  CALL_TYPE = call_types$call_type_code
 )
 
 read_raw_file <- function (filepath) {
@@ -157,7 +175,10 @@ parse_detectiondata <- function (x) {
           N_VALIDATED_DETECTIONS, 
           MIN_ANALYSIS_FREQUENCY_RANGE_HZ, 
           MAX_ANALYSIS_FREQUENCY_RANGE_HZ,
-          ANALYSIS_SAMPLING_RATE_HZ
+          ANALYSIS_SAMPLING_RATE_HZ,
+          LOCALIZED_LATITUDE,
+          LOCALIZED_LONGITUDE,
+          DETECTION_DISTANCE_M
         ),
         parse_number
       ),
@@ -517,7 +538,6 @@ walk(submission_ids, function (submission_id) {
 # x <- load_submission("JASCO_20220819", data_dir)
 # process_submission("JASCO_20220819", data_dir, TRUE)
 
-
 all_detections <- map_df(submission_ids, function (x) {
   y <- read_rds(file.path(data_dir, "processed", x, glue("{x}.rds")))
   y$detectiondata
@@ -526,10 +546,14 @@ all_detections <- map_df(submission_ids, function (x) {
 all_detections %>% 
   select(submission_id, filename, parsed) %>% 
   unnest(parsed) %>% 
-  distinct(submission_id, filename, SPECIES, CALL_TYPE) %>% 
+  distinct(submission_id, filename, SPECIES, CALL_TYPE) %>% view()
   write_csv("~/submissions-call-types.csv")
 
-
+all_detections %>% 
+  select(submission_id, filename, parsed) %>% 
+  unnest(parsed) %>% 
+  tabyl(SPECIES, CALL_TYPE)
+  
 # import from db ----------------------------------------------------------
 
 in_metadata <- map_df(submission_ids, function (x) {
