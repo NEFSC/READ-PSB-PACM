@@ -1,3 +1,8 @@
+#!/usr/bin/env Rscript
+# Process External PACM Submissions
+# usage: Rscript process-submissions.R -d data_dir <submission_id>
+# example: Rscript process-submissions.R -d /path/to/data ORGID_YYYYMMDD
+
 options(warn = -1, readr.show_progress = FALSE)
 suppressPackageStartupMessages(library(tidyverse))
 suppressPackageStartupMessages(library(lubridate))
@@ -6,11 +11,44 @@ suppressPackageStartupMessages(library(janitor))
 suppressPackageStartupMessages(library(sf))
 suppressPackageStartupMessages(library(validate))
 suppressPackageStartupMessages(library(logger))
+suppressPackageStartupMessages(library(optparse))
 
 log_appender(appender_stdout)
 
-# references and functions ------------------------------------------------
+# arguments ---------------------------------------------------------------
 
+parser <- OptionParser(
+  usage = "usage: %prog [options] <SUBMISSION_ID> <SUBMISSION_ID> ...",
+  description = "Process external dataset submissions for PACM"
+)
+parser <- add_option(
+  parser, c("-a", "--all"), action = "store_true", type = "logical", default = FALSE,
+  help = "Flag to process all submissions located within ${dir}/submissions directory"
+)
+parser <- add_option(
+  parser, c("-d", "--dir"), type = "character", metavar = "/path/to/data",
+  help = "Path to root directory of submissions datasets"
+)
+argv <- parse_args(parser, positional_arguments = TRUE)
+
+data_dir <- argv$options$dir
+if (!dir.exists(data_dir)) {
+  stop("Submissions data directory not found")
+}
+
+if (argv$options$all) {
+  submission_ids <- list.dirs(file.path(data_dir, "submissions"), full.names = FALSE, recursive = FALSE)
+} else {
+  submission_ids <- argv$args
+}
+
+if (length(submission_ids) == 0) {
+  stop("Missing submission IDs")
+}
+
+# references ---------------------------------------------------------
+# TODO: load species and call types from database
+# TODO: load metadata from database
 
 species <- read_csv("data/db/species.csv", show_col_types = FALSE) %>% 
   clean_names() %>% 
@@ -47,6 +85,8 @@ codes <- list(
 )
 
 # rules -------------------------------------------------------------------
+# TODO: metadata$unique_id does not already exist in database
+# TODO: detectiondata$unique_id exists in either database or metadata file(s)
 
 rules <- list(
   metadata = validator(
@@ -93,6 +133,8 @@ rules <- list(
     # qc_processing_valid = qc_processing %in% codes$QC_PROCESSING
   )
 )
+
+# functions ----------------------------------------------------------------
 
 read_raw_file <- function (filepath) {
   filename <- basename(filepath)
@@ -192,19 +234,6 @@ parse_detectiondata <- function (x) {
     )
 }
 
-# detectiondata_validation
-# summary(detectiondata_validation)
-# as.data.frame(detectiondata_validation)
-# values(detectiondata_validation)
-# summary(detectiondata_validation)
-# violating(detectiondata_parsed, detectiondata_validation)
-# plot(detectiondata_validation)
-# barplot(detectiondata_validation)
-# aggregate(detectiondata_validation, by = "rule")
-# aggregate(detectiondata_validation, by = "record")
-
-# functions ----------------------------------------------------------------
-
 copy_submission_files <- function (submission_dir, processed_dir) {
   files <- list.files(submission_dir)
   
@@ -267,7 +296,7 @@ split_submission_id <- function (x) {
 load_submission <- function (submission_id, data_dir, write_log = !interactive()) {
   submission_dir <- get_submission_dir(submission_id, data_dir)
   processed_dir <- get_processed_dir(submission_id, data_dir)
-
+  
   if (write_log) {
     logfile <- file.path(processed_dir, "submission_load.log")
     log_info("log file: {logfile}")
@@ -387,7 +416,7 @@ load_submission <- function (submission_id, data_dir, write_log = !interactive()
     metadata = metadata,
     detectiondata = detectiondata
   )
-
+  
   rds_filename <- file.path(processed_dir, glue("{submission_id}.rds"))
   log_info("saving submission to rds file: {basename(rds_filename)}")
   write_rds(out, rds_filename)
@@ -534,7 +563,7 @@ qaqc_submission <- function (x, data_dir, write_log = !interactive()) {
   
   qaqc_file
 }
- 
+
 process_submission <- function (submission_id, data_dir, write_log = !interactive()) {
   log_info("submission_id: {submission_id}")
   x <- load_submission(submission_id, data_dir, write_log)
@@ -544,152 +573,4 @@ process_submission <- function (submission_id, data_dir, write_log = !interactiv
 
 # cli --------------------------------------------------------------------
 
-data_dir <- "~/data/pacm"
-
-submission_ids <- list.dirs(file.path(data_dir, "submissions"), full.names = FALSE, recursive = FALSE)
-
-# process_submission(submission_ids[[1]], data_dir, TRUE)
-
-walk(submission_ids, function (submission_id) {
-  process_submission(submission_id, data_dir, TRUE)
-})
-
-# x <- load_submission("JASCO_20220819", data_dir)
-# process_submission("JASCO_20220819", data_dir, TRUE)
-
-all_detections <- map_df(submission_ids, function (x) {
-  y <- read_rds(file.path(data_dir, "processed", x, glue("{x}.rds")))
-  y$detectiondata
-})
-
-all_detections %>% 
-  select(submission_id, filename, parsed) %>% 
-  unnest(parsed) %>% 
-  distinct(submission_id, filename, SPECIES, CALL_TYPE) %>% view()
-  write_csv("~/submissions-call-types.csv")
-
-all_detections %>% 
-  select(submission_id, filename, parsed) %>% 
-  unnest(parsed) %>% 
-  tabyl(SPECIES, CALL_TYPE)
-  
-# import from db ----------------------------------------------------------
-
-in_metadata <- map_df(submission_ids, function (x) {
-  cat(x, "\n")
-  x <- read_rds(file.path(data_dir, "processed", x, glue("{x}.rds")))$metadata
-  x
-}) %>% 
-  select(parsed) %>% 
-  unnest(parsed) %>% 
-  select(-row) %>% 
-  mutate(INSTRUMENT_ID = as.numeric(INSTRUMENT_ID)) %>% 
-  arrange(UNIQUE_ID)
-
-in_detectiondata <- map_df(submission_ids, function (x) {
-  cat(x, "\n")
-  x <- read_rds(file.path(data_dir, "processed", x, glue("{x}.rds")))$detectiondata
-  x
-}) %>% 
-  select(parsed) %>% 
-  unnest(parsed) %>% 
-  select(-row) %>% 
-  rename(
-    SPECIES_CODE = SPECIES,
-    CALL_TYPE_CODE = CALL_TYPE
-  ) %>% 
-  left_join(
-    select(species, SPECIES = species_id, SPECIES_CODE = species_code),
-    by = "SPECIES_CODE"
-  ) %>% 
-  relocate(SPECIES, .after = SPECIES_CODE) %>% 
-  left_join(
-    select(call_types, CALL_TYPE = call_type_id, CALL_TYPE_CODE = call_type_code),
-    by = "CALL_TYPE_CODE"
-  ) %>% 
-  relocate(CALL_TYPE, .after = CALL_TYPE_CODE) %>% 
-  select(-SPECIES_CODE, -CALL_TYPE_CODE) %>% 
-  mutate(across(c(CALL_TYPE, SPECIES), as.character)) %>% 
-  arrange(UNIQUE_ID, SPECIES, ANALYSIS_PERIOD_START_DATETIME)
-
-out_dir <- file.path("~/Dropbox/work/nefsc", "data", "db", "db-20230216")
-out_metadata <- read_csv(file.path(out_dir, "metadata.csv"), col_types = cols(.default = col_character())) %>% 
-  mutate(
-    across(
-      c(MONITORING_START_DATETIME, MONITORING_END_DATETIME, SUBMISSION_DATE, DATA_LOAD_DATETIME),
-      ymd_hms
-    ),
-    across(
-      c(CHANNEL, INSTRUMENT_ID, LATITUDE, LONGITUDE, RECORDER_DEPTH_METERS, RECORDING_DURATION_SECONDS, RECORDING_INTERVAL_SECONDS, SAMPLE_BITS, SAMPLING_RATE_HZ, WATER_DEPTH_METERS),
-      as.numeric
-    )
-  ) %>% 
-  arrange(UNIQUE_ID)
-out_detectiondata <- tibble(
-  filename = list.files(file.path(out_dir, "detectiondata"))
-) %>% 
-  mutate(
-    data = map(filename, function (x) {
-      file.path(out_dir, "detectiondata", x) %>% 
-        read_csv(col_types = cols(.default = col_character()))
-    })
-  ) %>% 
-  unnest(data) %>% 
-  select(-filename) %>% 
-  mutate(
-    across(
-      c(ANALYSIS_PERIOD_START_DATETIME, ANALYSIS_PERIOD_END_DATETIME, DATA_LOAD_DATETIME),
-      ymd_hms
-    ),
-    across(
-      c(ANALYSIS_PERIOD_EFFORT_SECONDS, N_VALIDATED_DETECTIONS, MIN_ANALYSIS_FREQUENCY_RANGE_HZ, MAX_ANALYSIS_FREQUENCY_RANGE_HZ, ANALYSIS_SAMPLING_RATE_HZ, DETECTION_DISTANCE_M, LOCALIZED_LATITUDE, LOCALIZED_LONGITUDE),
-      as.numeric
-    )
-  ) %>% 
-  arrange(UNIQUE_ID, SPECIES, ANALYSIS_PERIOD_START_DATETIME)
-
-# compare metadata
-nrow(in_metadata) == nrow(out_metadata)
-identical(sort(in_metadata$UNIQUE_ID), sort(out_metadata$UNIQUE_ID))
-janitor::compare_df_cols(in_metadata, out_metadata)
-diffdf::diffdf(
-  in_metadata %>% 
-    select(-DATA_POC_EMAIL, -SUBMITTER_EMAIL) %>% 
-    mutate(across(c(LATITUDE, LONGITUDE), round, 3)), 
-  out_metadata %>% 
-    select(
-      -DATA_LOAD_DATETIME, -DATE_OF_SUBMISSION_FROM_FILE, -LOAD_FILENAME, -ORGANIZATION_CODE_FROM_FILE,
-      -DATA_POC_EMAIL, -SUBMITTER_EMAIL
-    ) %>% 
-    mutate(across(c(LATITUDE, LONGITUDE), round, 3))
-)
-str(in_metadata)
-
-# compare detection data
-nrow(in_detectiondata) == nrow(out_detectiondata)
-janitor::compare_df_cols(in_detectiondata, out_detectiondata)
-diffdf::diffdf(
-  in_detectiondata, 
-  out_detectiondata %>% 
-    select(
-      -DATA_LOAD_DATETIME, -DATE_OF_SUBMISSION_FROM_FILE, -LOAD_FILENAME, -ORGANIZATION_CODE_FROM_FILE
-    )
-)
-
-in_detectiondata %>% 
-  filter(is.na(ANALYSIS_PERIOD_START_DATETIME)) %>% 
-  select(UNIQUE_ID, ANALYSIS_PERIOD_START_DATETIME, ANALYSIS_PERIOD_END_DATETIME)
-out_detectiondata %>% 
-  tabyl(QC_PROCESSING)
-
-in_detectiondata %>% 
-  tabyl(DETECTION_SOFTWARE_VERSION)
-
-out_detectiondata %>% 
-  count(UNIQUE_ID, SPECIES) %>% 
-  arrange(desc(n))
-
-out_detectiondata %>% 
-  filter(UNIQUE_ID == "LISTEN_GOM_DT_13", SPECIES == 46) %>% 
-  ggplot(aes(ANALYSIS_PERIOD_START_DATETIME, ACOUSTIC_PRESENCE)) +
-  geom_point(aes(color = ACOUSTIC_PRESENCE))
+walk(submission_ids, ~ process_submission(., data_dir, TRUE))
