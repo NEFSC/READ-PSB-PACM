@@ -6,8 +6,8 @@ output:
     toc: true
     toc-depth: 3
 params:
-  data_dir: ~/data/pacm
-  submission_id: DFOCA_20220712
+  data_dir: C:\Users\jeffrey.walker\data\pacm
+  submission_id: TEST_20230227
 editor_options: 
   chunk_output_type: console
 ---
@@ -15,6 +15,9 @@ editor_options:
 <style>
 .main-container {
   max-width: 1200px !important;
+}
+.table {
+ width: 0 !important;
 }
 </style>
 
@@ -28,47 +31,89 @@ library(glue)
 library(janitor)
 library(leaflet)
 library(DT)
+
+knitr::opts_chunk$set(echo = FALSE)
 ```
 
 ```{r}
-#| echo: false
 data_dir <- params$data_dir
 submission_id <- params$submission_id
 x <- read_rds(file.path(data_dir, "processed", submission_id, glue("{submission_id}.rds")))
 
 has_metadata <- nrow(x$metadata) > 0
+valid_metadata <- !has_metadata | sum(x$metadata$n_errors) == 0 
 has_detectiondata <- nrow(x$detectiondata) > 0
+valid_detectiondata <- !has_detectiondata | sum(x$detectiondata$n_errors) == 0 
 ```
 
 ```text
 data_dir: `r params$data_dir`
 submission_id: `r params$submission_id`
 created: `r lubridate::now(tz = "US/Eastern")`
-has_metadata: `r has_metadata`
-has_detectiondata: `r has_detectiondata`
 ```
+
+```{r eval=(has_metadata & !valid_metadata), results="asis"}
+cat('<div class="alert alert-danger">**Error**: Metadata contains', sum(x$metadata$n_errors), 'validation errors</div>')
+```
+
+```{r eval=(has_detectiondata & !valid_detectiondata), results="asis"}
+cat('<div class="alert alert-danger">**Error**: Detection data contains', sum(x$detectiondata$n_errors), 'validation errors</div>')
+```
+
+----
 
 ## Metadata
 
 ```{r results="asis"}
-#| echo: false
 if (!has_metadata) {
-  cat("Submission does not contain any metadata files\n")
+  cat('<div class="alert alert-info">Submission does not contain any metadata files</div>\n')
 }
 ```
 
-```{r eval=has_metadata}
-#| echo: false
+```{r eval=(has_metadata)}
 x_metadata <- x$metadata %>% 
   select(filename, parsed) %>% 
   unnest(parsed)
-datatable(x_metadata)
+x$metadata %>% 
+  select(filename, n_rows, n_errors) %>% 
+  knitr::kable(col.names = c("Filename", "# Rows", "# Errors"), caption = "Metadata File Summary")
 ```
 
-### Stationary Platform Locations
+### Validation
+
+```{r eval=(has_metadata), results="asis"}
+if (!valid_metadata) {
+  cat('<div class="alert alert-danger">Metadata contains', sum(x$metadata$n_errors), 'validation errors.</div>')
+} else {
+  cat('<div class="alert alert-info">No validation errors</div>')
+}
+```
+
+```{r eval=(has_metadata & !valid_metadata)}
+x_metadata_validation_errors <- x$metadata %>% 
+  select(filename, validation_errors) %>% 
+  unnest(validation_errors)
+knitr::kable(tabyl(x_metadata_validation_errors, name), caption = "Validation Error Summary")
+```
+
+```{r eval=(has_metadata & !valid_metadata), results="asis"}
+cat("First 10 rows with validation errors (see `errors` column)")
+```
+
+```{r eval=(has_metadata & !valid_metadata)}
+x_metadata_validation_errors %>% 
+  group_by(filename, row) %>% 
+  summarise(errors = str_c(unique(name), sep = ","), .groups = "drop") %>% 
+  arrange(filename, row) %>% 
+  left_join(x_metadata, by = c("filename", "row")) %>% 
+  datatable()
+```
+
+### Map
+
+Stationary platforms only
 
 ```{r eval=has_metadata}
-#| echo: false
 x_metadata %>% 
   filter(STATIONARY_OR_MOBILE == "STATIONARY") %>% 
   st_as_sf(coords = c("LONGITUDE", "LATITUDE"), crs = "EPSG:4326") %>% 
@@ -92,73 +137,33 @@ x_metadata %>%
 ### Summary Tables
 
 ```{r eval=has_metadata}
-tabyl(x_metadata, DATA_POC_AFFILIATION)
+knitr::kable(tabyl(x_metadata, DATA_POC_AFFILIATION), caption = "DATA_POC_AFFILIATION")
+knitr::kable(tabyl(x_metadata, SITE_ID, PROJECT), caption = "SITE_ID x PROJECT")
+knitr::kable(tabyl(x_metadata, PLATFORM_TYPE, STATIONARY_OR_MOBILE), caption = "PLATFORM_TYPE x STATIONARY_OR_MOBILE")
+knitr::kable(tabyl(x_metadata, INSTRUMENT_TYPE), caption = "INSTRUMENT_TYPE")
+knitr::kable(tabyl(x_metadata, SAMPLING_RATE_HZ), caption = "SAMPLING_RATE_HZ")
 ```
+
+### Dataset
 
 ```{r eval=has_metadata}
-tabyl(x_metadata, SITE_ID, PROJECT)
+datatable(x_metadata)
 ```
 
-```{r eval=has_metadata}
-tabyl(x_metadata, PLATFORM_TYPE, STATIONARY_OR_MOBILE)
-```
-
-```{r eval=has_metadata}
-tabyl(x_metadata, INSTRUMENT_TYPE)
-```
-
-```{r eval=has_metadata}
-tabyl(x_metadata, SAMPLING_RATE_HZ)
-```
-
-### Validation
-
-```{r eval=(has_metadata)}
-#| echo: false
-x$metadata %>% 
-  select(filename, n_rows, n_errors) %>% 
-  print()
-```
-
-```{r eval=(has_metadata), results='asis'}
-#| echo: false
-if (sum(x$metadata$n_errors) == 0) {
-  cat("Metadata does not contain any validation errors\n")
-} else {
-  cat(glue("Metadata contains {sum(x$metadata$n_errors)} validation errors. Here are the first 10 errors:\n"))
-}
-```
-
-```{r eval=(has_metadata & sum(x$metadata$n_errors) > 0)}
-#| echo: false
-x_metadata_validation_errors <- x$metadata %>% 
-  select(filename, validation_errors) %>% 
-  unnest(validation_errors)
-x_metadata_validation_errors %>% 
-  head(10) %>% 
-  print(width = Inf)
-```
+----
 
 ## Detection Data
 
 ```{r results="asis"}
-#| echo: false
 if (!has_detectiondata) {
-  cat("Submission does not contain any detection data files\n")
+  cat('<div class="alert alert-info">Submission does not contain any detection data files</div>\n')
 }
 ```
 
-```{r eval=has_detectiondata}
-#| echo: false
+```{r eval=(has_detectiondata)}
 x_detectiondata <- x$detectiondata %>% 
   select(filename, parsed) %>% 
   unnest(parsed)
-```
-
-Summary of each `UNIQUE_ID` and `SPECIES` including start/end of analysis period, number of detections (`ACOUSTIC_PRESENCE='P'`) and total number of rows.
-
-```{r eval=has_detectiondata}
-#| echo: false
 x_detectiondata_summary <- x_detectiondata %>% 
   group_by(filename, UNIQUE_ID, SPECIES) %>% 
   summarize(
@@ -168,43 +173,51 @@ x_detectiondata_summary <- x_detectiondata %>%
     N_ROWS = n(),
     .groups = "drop"
   )
-datatable(x_detectiondata_summary)
-```
 
-### Summary Tables
-
-```{r eval=has_detectiondata, echo=has_detectiondata}
-tabyl(x_detectiondata, UNIQUE_ID, ACOUSTIC_PRESENCE, SPECIES)
-```
-
-```{r eval=has_detectiondata, echo=has_detectiondata}
-tabyl(x_detectiondata, CALL_TYPE, SPECIES)
+x$detectiondata %>% 
+  select(filename, n_rows, n_errors) %>% 
+  knitr::kable(col.names = c("Filename", "# Rows", "# Errors"), caption = "Detection Data File Summary")
 ```
 
 ### Validation
 
-```{r eval=(has_detectiondata)}
-#| echo: false
-x$detectiondata %>% 
-  select(filename, n_rows, n_errors) %>% 
-  print()
-```
-
-```{r eval=(has_detectiondata), results='asis'}
-#| echo: false
-if (sum(x$detectiondata$n_errors) == 0) {
-  cat("Detection data does not contain any validation errors\n")
+```{r eval=(has_detectiondata), results="asis"}
+if (!valid_detectiondata) {
+  cat('<div class="alert alert-danger">Detection data contains', sum(x$detectiondata$n_errors), 'validation errors.</div>')
 } else {
-  cat(glue("Detection data contains {sum(x$detectiondata$n_errors)} validation errors. Here are the first 10 errors:\n"))
+  cat('<div class="alert alert-info">No validation errors</div>')
 }
 ```
 
-```{r eval=(has_detectiondata & sum(x$detectiondata$n_errors) > 0)}
-#| echo: false
+```{r eval=(has_detectiondata & !valid_detectiondata)}
 x_detectiondata_validation_errors <- x$detectiondata %>% 
   select(filename, validation_errors) %>% 
   unnest(validation_errors)
+knitr::kable(tabyl(x_detectiondata_validation_errors, name), caption = "Validation Error Summary")
+```
+
+```{r eval=(has_detectiondata & !valid_detectiondata)}
 x_detectiondata_validation_errors %>% 
-  head(10) %>% 
-  print(width = Inf)
+  group_by(filename, row) %>% 
+  summarise(errors = str_c(unique(name), sep = ","), .groups = "drop") %>% 
+  arrange(filename, row) %>% 
+  left_join(x_detectiondata, by = c("filename", "row")) %>% 
+  datatable()
+```
+
+
+### Summary Tables
+
+```{r eval=has_detectiondata}
+knitr::kable(tabyl(x_detectiondata, UNIQUE_ID, SPECIES), caption = "UNIQUE_ID x SPECIES")
+knitr::kable(tabyl(x_detectiondata, SPECIES, ACOUSTIC_PRESENCE), caption = "SPECIES x ACOUSTIC_PRESENCE")
+knitr::kable(tabyl(x_detectiondata, SPECIES, CALL_TYPE), caption = "SPECIES x CALL_TYPE")
+```
+
+### Dataset
+
+Summary of each `UNIQUE_ID` and `SPECIES` including start/end of analysis period, number of detections (`ACOUSTIC_PRESENCE='P'`) and total number of rows.
+
+```{r eval=has_detectiondata}
+datatable(x_detectiondata_summary)
 ```

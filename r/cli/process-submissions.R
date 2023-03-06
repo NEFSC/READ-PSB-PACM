@@ -50,18 +50,44 @@ if (length(submission_ids) == 0) {
 # TODO: load species and call types from database
 # TODO: load metadata from database
 
-species <- read_csv("data/db/species.csv", show_col_types = FALSE) %>% 
+db_connect <- function () {
+  dotenv::load_dot_env()
+  log_info("connecting to database")
+  con <- DBI::dbConnect(
+    odbc::odbc(),
+    dsn = Sys.getenv("PACM_DB_DSN"),
+    uid = Sys.getenv("PACM_DB_UID"), 
+    pwd = Sys.getenv("PACM_DB_PWD"), 
+    believeNRows = FALSE
+  )
+  con
+}
+
+load_db_tables <- function () {
+  con <- db_connect()
+  
+  log_info("fetching metadata, species, call_types from database")
+  metadata <- DBI::dbGetQuery(con, "SELECT * FROM PAGROUP.E_PACM_METADATA;")
+  species <- DBI::dbGetQuery(con, "SELECT * FROM PAGROUP.S_SPECIES;")
+  call_types <- DBI::dbGetQuery(con, "SELECT * FROM PAGROUP.S_CALL_TYPE;")
+  
+  DBI::dbDisconnect(con)
+  
+  list(
+    metadata = as_tibble(metadata),
+    species = as_tibble(species),
+    call_types = as_tibble(call_types)
+  )
+}
+
+db_tables <- load_db_tables()
+
+species <- db_tables$species %>% 
   clean_names() %>% 
   select(species_id, species_code = pacm_species_code) %>% 
-  filter(!is.na(species_code)) %>% 
-  mutate(
-    species_code = case_when(
-      species_code == "WDSO" ~ "WSDO",
-      TRUE ~ species_code
-    )
-  )
+  filter(!is.na(species_code))
 
-call_types <- read_csv("data/db/call_types.csv", show_col_types = FALSE) %>% 
+call_types <- db_tables$call_types %>% 
   clean_names() %>%
   select(call_type_id, call_type_code = pacm_call_type_code, species_codes = permissible_pacm_species_codes) %>% 
   filter(!is.na(call_type_code))
@@ -71,6 +97,8 @@ call_types_species <- call_types %>%
   rename(species_code = species_codes) %>% 
   unite(species_call_type, c("species_code", "call_type_code"), sep = ":") %>% 
   pull(species_call_type)
+
+db_unique_ids <- db_tables$metadata$UNIQUE_ID
 
 codes <- list(
   STATIONARY_OR_MOBILE = toupper(c("Stationary", "Mobile")),
@@ -92,6 +120,7 @@ rules <- list(
   metadata = validator(
     unique_id_missing = !is.na(UNIQUE_ID),
     unique_id_duplicate = is_unique(UNIQUE_ID),
+    unique_id_already_exists = !UNIQUE_ID %vin% codes$EXISTING_UNIQUE_IDS,
     project_missing = !is.na(PROJECT),
     data_poc_name_missing = !is.na(DATA_POC_NAME),
     data_poc_affiliation_missing = !is.na(DATA_POC_AFFILIATION),
@@ -119,7 +148,7 @@ rules <- list(
   ),
   detectiondata = validator(
     unique_id_missing = !is.na(UNIQUE_ID),
-    # unique_id_not_in_metadata = unique_id %vin% unique_ids,
+    unique_id_does_not_exists = UNIQUE_ID %vin% codes$EXISTING_UNIQUE_IDS,
     analysis_period_start_datetime_missing = !is.na(ANALYSIS_PERIOD_START_DATETIME_MISSING),
     analysis_period_end_datetime_missing = !is.na(ANALYSIS_PERIOD_END_DATETIME_MISSING),
     # analysis_period_effort_seconds_missing = !is.na(analysis_period_effort_seconds),
@@ -150,11 +179,11 @@ read_raw_file <- function (filepath) {
     select(-starts_with("..."))
 }
 
-validate_data <- function (x, rules) {
+validate_data <- function (x, rules, unique_ids = c()) {
   out <- confront(
     x,
     rules,
-    ref = list(codes = codes),
+    ref = list(codes = c(codes, list(EXISTING_UNIQUE_IDS = unique_ids))),
     key = "row"
   )
   cat("\n")
@@ -317,7 +346,6 @@ load_submission <- function (submission_id, data_dir, write_log = !interactive()
   
   noop <- function (x) x
   
-  # rm(transform_metadata, transform_detectiondata, transform_gpsdata)
   if ("transform.R" %in% submission_files) {
     log_info("loading transformers")
     source(file.path(submission_dir, "transform.R"), local = TRUE)
@@ -356,7 +384,7 @@ load_submission <- function (submission_id, data_dir, write_log = !interactive()
         }),
         validation = list({
           log_info("{filename}: validating")
-          validate_data(parsed, rules$metadata)
+          validate_data(parsed, rules$metadata, unique_ids = db_unique_ids)
         }),
         validation_errors = list(extract_validation_errors(validation)),
         n_rows = nrow(raw),
@@ -364,6 +392,9 @@ load_submission <- function (submission_id, data_dir, write_log = !interactive()
       ) |> 
       ungroup()
     log_info("loaded {nrow(metadata)} metadata file(s) (n_rows={sum(metadata$n_rows)}, n_errors={sum(metadata$n_errors)})")
+    if (sum(metadata$n_errors) > 0) {
+      log_warn("metadata file(s) contain {sum(metadata$n_errors)} validation errors")
+    }
     cat("\n")
     print(select(metadata, filename, n_rows, n_errors))
     cat("\n")
@@ -375,6 +406,14 @@ load_submission <- function (submission_id, data_dir, write_log = !interactive()
   log_info("processing detection data")
   detectiondata_files <- grep("*_DETECTIONDATA_*", submission_files, value = TRUE)
   if (length(detectiondata_files) > 0) {
+    if (nrow(metadata) > 0) {
+      metadata_unique_ids <- metadata |>
+        select(parsed) |>
+        unnest(parsed) |>
+        pull(UNIQUE_ID)
+      # print("METADATA UNIQUE IDS")
+      # print(metadata_unique_ids)
+    }
     detectiondata <- tibble(
       submission_id = submission_id,
       filename = detectiondata_files
@@ -395,7 +434,7 @@ load_submission <- function (submission_id, data_dir, write_log = !interactive()
         }),
         validation = list({
           log_info("{filename}: validating")
-          validate_data(parsed, rules$detectiondata)
+          validate_data(parsed, rules$detectiondata, unique_ids = c(db_unique_ids, metadata_unique_ids))
         }),
         validation_errors = list(extract_validation_errors(validation)),
         n_rows = nrow(raw),
@@ -403,6 +442,9 @@ load_submission <- function (submission_id, data_dir, write_log = !interactive()
       ) |> 
       ungroup()
     log_info("loaded {nrow(detectiondata)} detection data file(s) (n_rows={sum(detectiondata$n_rows)}, n_errors={sum(detectiondata$n_errors)})")
+    if (sum(detectiondata$n_errors) > 0) {
+      log_warn("detectiondata file(s) contain {sum(detectiondata$n_errors)} validation errors")
+    }
     cat("\n")
     print(select(detectiondata, filename, n_rows, n_errors))
     cat("\n")
@@ -433,6 +475,8 @@ export_submission <- function (x, data_dir, write_log = !interactive()) {
   submission_id <- x$submission_id
   processed_dir <- get_processed_dir(submission_id, data_dir)
   
+  n_errors <- 0
+  
   if (write_log) {
     logfile <- file.path(processed_dir, "submission_export.log")
     log_info("log file: {logfile}")
@@ -450,7 +494,11 @@ export_submission <- function (x, data_dir, write_log = !interactive()) {
   log_info("processed directory: {processed_dir}")
   
   import_dir <- file.path(processed_dir, "import")
-  if (!exists(import_dir)) {
+  if (dir.exists(import_dir)) {
+    log_info("clearing import directory: {import_dir}")
+    print(list.files(import_dir))
+    walk(list.files(import_dir, full.names = TRUE), unlink)
+  } else {
     log_info("creating import directory: {import_dir}")
     dir.create(import_dir, showWarnings = FALSE, recursive = TRUE)
   }
@@ -465,6 +513,7 @@ export_submission <- function (x, data_dir, write_log = !interactive()) {
       unnest(parsed) %>% 
       select(-row) %>% 
       write_csv(metadata_file, na = "", progress = FALSE)
+    n_errors <- n_errors + sum(x$metadata$n_errors)
   } else {
     log_info("no metadata found")
   }
@@ -492,17 +541,27 @@ export_submission <- function (x, data_dir, write_log = !interactive()) {
       ) %>% 
       relocate(CALL_TYPE, .after = CALL_TYPE_CODE) %>% 
       select(-SPECIES_CODE, -CALL_TYPE_CODE) %>% 
-      write_csv(detectiondata_file, na = "", progress = FALSE)
+      write_csv(detectiondata_file, na = "", progress = FALSE) 
+    n_errors <- n_errors + sum(x$metadata$n_errors)
   } else {
     log_info("no detection data found")
   }
   
   if (length(import_files) > 0) {
-    log_info("copying import files to global import folder")
-    for (f in import_files) {
-      f_to <- file.path(data_dir, "import", basename(f))
-      log_info("{f} -> {f_to}")
-      file.copy(f, f_to, overwrite = TRUE)
+    if (n_errors > 0) {
+      log_info("not copying files to global import folder, submission files contain {n_errors} validation errors total")
+    } else {
+      global_import_dir <- file.path(data_dir, "import")
+      if (!dir.exists(global_import_dir)) {
+        log_info("creating global import folder: {global_import_dir}")
+        dir.create(global_import_dir)
+      }
+      log_info("copying import files to global import folder")
+      for (f in import_files) {
+        f_to <- file.path(data_dir, "import", basename(f))
+        log_info("{f} -> {f_to}")
+        file.copy(f, f_to, overwrite = TRUE)
+      } 
     }
   }
   
@@ -572,5 +631,8 @@ process_submission <- function (submission_id, data_dir, write_log = !interactiv
 }
 
 # cli --------------------------------------------------------------------
+
+# load_submission("TEST_20230227", "C:/Users/jeffrey.walker/data/pacm", write_log = FALSE)
+# process_submission("TEST_20230227", "C:/Users/jeffrey.walker/data/pacm", write_log = FALSE)
 
 walk(submission_ids, ~ process_submission(., data_dir, TRUE))
