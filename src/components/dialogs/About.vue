@@ -75,7 +75,7 @@
         <Citation></Citation>
       </p>
       <p>
-        For questions about contributing data to this project or any other inquiries, please contact <a class="text-decoration-underline" href="mailto:nmfs.pacmdata@noaa.gov">nmfs.pacmdata@noaa.gov</a>.
+        For questions about contributing data to this project or any other inquiries, please contact <a class="text-decoration-underline" href="mailto:nmfs.nec.pacmdata@noaa.gov">nmfs.nec.pacmdata@noaa.gov</a>.
       </p>
       <p>
         Further information about Passive Acoustic Monitoring can be found at the <a class="text-decoration-underline" href="https://www.fisheries.noaa.gov/new-england-mid-atlantic/endangered-species-conservation/passive-acoustic-research-atlantic-ocean" target="_blank">NOAA NEFSC Passive Acoustic Research Website</a>
@@ -85,6 +85,11 @@
       </p>
 
       <h2 class="text-h5 mb-2">Latest Updates</h2>
+
+      <div class="text-subheading font-weight-bold text--secondary">
+        v1.1.4 | March 22, 2023
+      </div>
+      <p>Updated contact email address to <a class="text-decoration-underline" href="mailto:nmfs.nec.pacmdata@noaa.gov">nmfs.nec.pacmdata@noaa.gov</a>. Fixed ESRI Ocean basemap.</p>
 
       <div class="text-subheading font-weight-bold text--secondary">
         v1.1.3 | November 17, 2022

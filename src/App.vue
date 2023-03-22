@@ -187,7 +187,7 @@
         <p class="body-1">
           An error occurred fetching the dataset from the server.
           Please refresh and try again.
-          If the problem continues, please contact us at <a href="mailto:nmfs.pacmdata@noaa.gov">nmfs.pacmdata@noaa.gov</a>.
+          If the problem continues, please contact us at <a href="mailto:nmfs.nec.pacmdata@noaa.gov">nmfs.nec.pacmdata@noaa.gov</a>.
         </p>
       </v-alert>
     </v-dialog>

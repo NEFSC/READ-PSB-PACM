@@ -395,7 +395,7 @@
                       Can I contribute my own passive acoustic detection data?
                     </v-expansion-panel-header>
                     <v-expansion-panel-content class="text-body-2">
-                      If you have passive acoustic data that you would like to contribute to this project, please contact <a href="mailto:nmfs.pacmdata@noaa.gov">nmfs.pacmdata@noaa.gov</a>.
+                      If you have passive acoustic data that you would like to contribute to this project, please contact <a href="mailto:nmfs.nec.pacmdata@noaa.gov">nmfs.nec.pacmdata@noaa.gov</a>.
                     </v-expansion-panel-content>
                   </v-expansion-panel>
 
@@ -414,7 +414,7 @@
                   </v-expansion-panel>
                 </v-expansion-panels>
                 <p class="mt-4 text-center">
-                  For any other questions or inquiries, please contact <a href="mailto:nmfs.pacmdata@noaa.gov">nmfs.pacmdata@noaa.gov</a>
+                  For any other questions or inquiries, please contact <a href="mailto:nmfs.nec.pacmdata@noaa.gov">nmfs.nec.pacmdata@noaa.gov</a>
                 </p>
             </v-card-text>
           </v-card>
