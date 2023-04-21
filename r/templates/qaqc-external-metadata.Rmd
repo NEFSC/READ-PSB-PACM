@@ -1,0 +1,83 @@
+----
+
+## Metadata
+
+```{r}
+x_metadata <- x$data$metadata %>% 
+  select(filename, parsed) %>% 
+  unnest(parsed)
+x$data$metadata %>% 
+  select(filename, n_rows, n_errors) %>% 
+  knitr::kable(col.names = c("Filename", "# Rows", "# Errors"), caption = "Metadata File Summary")
+```
+
+### Validation
+
+```{r results="asis"}
+if (!valid_metadata) {
+  cat('<div class="alert alert-danger">Metadata contains', sum(x$data$metadata$n_errors), 'validation errors.</div>')
+} else {
+  cat('<div class="alert alert-success"><strong>No validation errors</strong></div>')
+}
+```
+
+```{r eval=!valid_metadata}
+x_metadata_validation_errors <- x$data$metadata %>% 
+  select(filename, validation_errors) %>% 
+  unnest(validation_errors)
+knitr::kable(tabyl(x_metadata_validation_errors, name), caption = "Validation Error Summary")
+```
+
+```{r eval=!valid_metadata, results="asis"}
+cat("First 10 rows with validation errors (see `errors` column)")
+```
+
+```{r eval=!valid_metadata}
+x_metadata_validation_errors %>% 
+  group_by(filename, row) %>% 
+  summarise(errors = str_c(unique(name), sep = ","), .groups = "drop") %>% 
+  arrange(filename, row) %>% 
+  left_join(x_metadata, by = c("filename", "row")) %>% 
+  datatable()
+```
+
+### Map
+
+Stationary platforms only
+
+```{r}
+x_metadata %>% 
+  filter(STATIONARY_OR_MOBILE == "STATIONARY") %>% 
+  st_as_sf(coords = c("LONGITUDE", "LATITUDE"), crs = "EPSG:4326") %>% 
+  leaflet() %>% 
+  addTiles() %>% 
+  addMarkers(label = ~htmltools::htmlEscape(UNIQUE_ID))
+```
+
+### Monitoring Periods
+
+```{r}
+#| echo: false
+x_metadata %>% 
+  ggplot() +
+  geom_segment(aes(x = MONITORING_START_DATETIME, xend = MONITORING_END_DATETIME, y = UNIQUE_ID, yend = UNIQUE_ID)) +
+  labs(x = "MONITORING_START_DATETIME to MONITORING_END_DATETIME") +
+  theme_bw() +
+  theme(plot.margin = unit(c(5, 5, 5, 5), units = "mm"))
+```
+
+### Summary Tables
+
+```{r}
+knitr::kable(tabyl(x_metadata, DATA_POC_AFFILIATION), caption = "DATA_POC_AFFILIATION")
+knitr::kable(tabyl(x_metadata, SITE_ID, PROJECT), caption = "SITE_ID x PROJECT")
+knitr::kable(tabyl(x_metadata, PLATFORM_TYPE, STATIONARY_OR_MOBILE), caption = "PLATFORM_TYPE x STATIONARY_OR_MOBILE")
+knitr::kable(tabyl(x_metadata, INSTRUMENT_TYPE), caption = "INSTRUMENT_TYPE")
+knitr::kable(tabyl(x_metadata, SAMPLING_RATE_HZ), caption = "SAMPLING_RATE_HZ")
+```
+
+### Dataset
+
+```{r}
+datatable(x_metadata)
+```

@@ -1,0 +1,71 @@
+----
+
+## Detail Files
+
+```{r}
+detail_files <- x$data$detail
+detail_data <- detail_files %>% 
+  select(filename, parsed) %>% 
+  unnest(parsed)
+detail_valid <- sum(detail_files$n_errors) == 0
+detail_summary <- detail_data %>% 
+  group_by(filename, DEPLOYMENT_ID, DETECTION_ID, PACM_SPECIES_CODE) %>% 
+  summarize(
+    ANALYSIS_PERIOD_START_DATETIME = min(ANALYSIS_PERIOD_START_DATETIME),
+    ANALYSIS_PERIOD_END_DATETIME = max(ANALYSIS_PERIOD_END_DATETIME),
+    N_DETECTIONS = sum(ACOUSTIC_PRESENCE == "D"),
+    N_ROWS = n(),
+    .groups = "drop"
+  )
+```
+
+```{r}
+detail_files %>% 
+  select(filename, n_rows, n_errors) %>% 
+  knitr::kable(col.names = c("Filename", "# Rows", "# Errors"), caption = "Detection Data File Summary")
+```
+
+### Validation
+
+```{r results="asis"}
+if (!detail_valid) {
+  cat('<div class="alert alert-danger">Detection data contains', sum(detail_files$n_errors), 'validation errors.</div>')
+} else {
+  cat('<div class="alert alert-success"><strong>No validation errors</strong></div>')
+}
+```
+
+```{r eval=!detail_valid}
+detail_errors <- detail_files %>% 
+  select(filename, validation_errors) %>% 
+  unnest(validation_errors)
+knitr::kable(tabyl(detail_errors, name), caption = "Validation Errors")
+```
+
+```{r eval=!detail_valid}
+detail_errors %>% 
+  group_by(filename, row) %>% 
+  summarise(errors = str_c(unique(name), sep = ","), .groups = "drop") %>% 
+  arrange(filename, row) %>% 
+  group_by(errors) %>% 
+  slice_head(n = 10) %>% 
+  left_join(detail_data, by = c("filename", "row")) %>% 
+  datatable()
+```
+
+
+### Summary Tables
+
+```{r}
+# knitr::kable(tabyl(detail_data, DEPLOYMENT_ID, SPECIES), caption = "DEPLOYMENT_ID x SPECIES")
+knitr::kable(tabyl(detail_data, PACM_SPECIES_CODE, ACOUSTIC_PRESENCE), caption = "PACM_SPECIES_CODE x ACOUSTIC_PRESENCE")
+knitr::kable(tabyl(detail_data, PACM_SPECIES_CODE, PACM_CALL_TYPE_CODE), caption = "PACM_SPECIES_CODE x PACM_CALL_TYPE_CODE")
+```
+
+### Dataset
+
+Summary of each `DEPLOMENT_ID`, `DETECTION_ID`, and `PACM_SPECIES_CODE` including start/end of analysis period, number of detections (`ACOUSTIC_PRESENCE=1`) and total number of rows.
+
+```{r eval=has_detectiondata}
+datatable(detail_summary)
+```

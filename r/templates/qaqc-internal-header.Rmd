@@ -1,0 +1,79 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+----
+
+## Header Files
+
+```{r}
+header_files <- x$data$header
+header_data <- header_files %>% 
+  select(filename, parsed) %>% 
+  unnest(parsed)
+header_valid <- sum(header_files$n_errors) == 0
+```
+
+```{r}
+header_files %>% 
+  select(filename, n_rows, n_errors) %>% 
+  knitr::kable(col.names = c("Filename", "# Rows", "# Errors"), caption = "Header Files Loaded")
+```
+
+### Validation
+
+```{r results="asis"}
+if (!header_valid) {
+  cat('<div class="alert alert-danger">Header files contain', sum(header_files$n_errors), 'validation errors.</div>')
+}
+```
+
+```{r eval=!header_valid}
+header_errors <- header_files %>% 
+  select(filename, validation_errors) %>% 
+  unnest(validation_errors)
+knitr::kable(tabyl(header_errors, name), caption = "Validation Errors")
+```
+
+```{r eval=!header_valid, results="asis"}
+cat("First 10 rows with validation errors (see `errors` column)")
+```
+
+```{r eval=!header_valid}
+header_errors %>% 
+  group_by(filename, row) %>% 
+  summarise(errors = str_c(unique(name), sep = ","), .groups = "drop") %>% 
+  arrange(filename, row) %>% 
+  left_join(header_data, by = c("filename", "row")) %>% 
+  datatable()
+```
+
+### Monitoring Periods
+
+```{r}
+#| echo: false
+header_data %>% 
+  ggplot() +
+  geom_segment(aes(x = MONITORING_START_DATETIME, xend = MONITORING_END_DATETIME, y = DEPLOYMENT_ID, yend = DEPLOYMENT_ID)) +
+  labs(x = "MONITORING_START_DATETIME to MONITORING_END_DATETIME") +
+  theme_bw() +
+  theme(plot.margin = unit(c(5, 5, 5, 5), units = "mm"))
+```
+
+### Summary Tables
+
+```{r}
+# knitr::kable(tabyl(header_data, DATA_POC_AFFILIATION), caption = "DATA_POC_AFFILIATION")
+# knitr::kable(tabyl(header_data, SITE_ID, PROJECT), caption = "SITE_ID x PROJECT")
+# knitr::kable(tabyl(header_data, PLATFORM_TYPE, STATIONARY_OR_MOBILE), caption = "PLATFORM_TYPE x STATIONARY_OR_MOBILE")
+# knitr::kable(tabyl(header_data, INSTRUMENT_TYPE), caption = "INSTRUMENT_TYPE")
+# knitr::kable(tabyl(header_data, SAMPLING_RATE_HZ), caption = "SAMPLING_RATE_HZ")
+```
+
+### Dataset
+
+```{r}
+datatable(header_data)
+```

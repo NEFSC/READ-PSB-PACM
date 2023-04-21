@@ -1,0 +1,71 @@
+----
+
+## Detection Data
+
+```{r results="asis"}
+if (!has_detectiondata) {
+  cat('<div class="alert alert-info">Submission does not contain any detection data files</div>\n')
+}
+```
+
+```{r eval=(has_detectiondata)}
+x_detectiondata <- x$data$detectiondata %>% 
+  select(filename, joined) %>% 
+  unnest(joined)
+x_detectiondata_summary <- x_detectiondata %>% 
+  group_by(filename, UNIQUE_ID, SPECIES_CODE) %>% 
+  summarize(
+    ANALYSIS_PERIOD_START_DATETIME = min(ANALYSIS_PERIOD_START_DATETIME),
+    ANALYSIS_PERIOD_END_DATETIME = max(ANALYSIS_PERIOD_END_DATETIME),
+    N_DETECTIONS = sum(ACOUSTIC_PRESENCE == "D"),
+    N_ROWS = n(),
+    .groups = "drop"
+  )
+
+x$data$detectiondata %>% 
+  select(filename, n_rows, n_errors) %>% 
+  knitr::kable(col.names = c("Filename", "# Rows", "# Errors"), caption = "Detection Data File Summary")
+```
+
+### Validation
+
+```{r eval=(has_detectiondata), results="asis"}
+if (!valid_detectiondata) {
+  cat('<div class="alert alert-danger">Detection data contains', sum(x$data$detectiondata$n_errors), 'validation errors.</div>')
+} else {
+  cat('<div class="alert alert-success"><strong>No validation errors</strong></div>')
+}
+```
+
+```{r eval=(has_detectiondata & !valid_detectiondata)}
+x_detectiondata_validation_errors <- x$data$detectiondata %>% 
+  select(filename, validation_errors) %>% 
+  unnest(validation_errors)
+knitr::kable(tabyl(x_detectiondata_validation_errors, name), caption = "Validation Error Summary")
+```
+
+```{r eval=(has_detectiondata & !valid_detectiondata)}
+x_detectiondata_validation_errors %>% 
+  group_by(filename, row) %>% 
+  summarise(errors = str_c(unique(name), sep = ","), .groups = "drop") %>% 
+  arrange(filename, row) %>% 
+  left_join(x_detectiondata, by = c("filename", "row")) %>% 
+  datatable()
+```
+
+
+### Summary Tables
+
+```{r eval=has_detectiondata}
+knitr::kable(tabyl(x_detectiondata, UNIQUE_ID, SPECIES_CODE), caption = "UNIQUE_ID x SPECIES_CODE")
+knitr::kable(tabyl(x_detectiondata, SPECIES_CODE, ACOUSTIC_PRESENCE), caption = "SPECIES_CODE x ACOUSTIC_PRESENCE")
+knitr::kable(tabyl(x_detectiondata, SPECIES_CODE, CALL_TYPE_CODE), caption = "SPECIES_CODE x CALL_TYPE_CODE")
+```
+
+### Dataset
+
+Summary of each `UNIQUE_ID` and `SPECIES_CODE` including start/end of analysis period, number of detections (`ACOUSTIC_PRESENCE='D'`) and total number of rows.
+
+```{r eval=has_detectiondata}
+datatable(x_detectiondata_summary)
+```

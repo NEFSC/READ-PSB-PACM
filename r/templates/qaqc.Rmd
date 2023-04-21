@@ -1,0 +1,99 @@
+---
+title: "QAQC | `r params$submission$id`"
+date: "`r lubridate::today()`"
+output:
+  html_document:
+    toc: true
+    toc-depth: 3
+params:
+  submission: NULL
+editor_options: 
+  chunk_output_type: console
+---
+
+<style>
+body {
+  background: #EEEEEE;
+}
+.main-container {
+  max-width: 1200px !important;
+  background: white;
+  border: 1px solid black;
+  border-radius: 5px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+.table {
+  width: 0 !important;
+}
+.datatables {
+  overflow-x: auto !important;
+}
+th, td {
+  white-space: nowrap !important;
+}
+caption {
+  white-space: nowrap !important;
+}
+h2 {
+  background: #F2F2F2;
+  padding: 10px;
+  border-left: 2px solid black;
+}
+</style>
+
+```{r setup}
+#| echo: false
+#| message: false
+#| warning: false
+library(tidyverse)
+library(sf)
+library(glue)
+library(janitor)
+library(leaflet)
+library(DT)
+
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r}
+x <- params$submission
+# x <- read_rds(file.path(dir, submission_id, glue("{submission_id}.rds")))
+
+data <- bind_rows(x$data, .id = "type")
+
+has_metadata <- "metadata" %in% data$type
+valid_metadata <- !has_metadata | sum(x$data$metadata$n_errors) == 0 
+has_detectiondata <- "detectiondata" %in% data$type
+valid_detectiondata <- !has_detectiondata | sum(x$data$detectiondata$n_errors) == 0 
+
+has_header <- "header" %in% data$type
+valid_header <- !has_header | sum(x$data$header$n_errors) == 0 
+has_detail <- "detail" %in% data$type
+valid_detail <- !has_detail | sum(x$data$detail$n_errors) == 0 
+```
+
+```text
+submission id: `r x$type`/`r x$id`
+created: `r lubridate::now(tz = "US/Eastern")`
+```
+
+```{r}
+data %>% 
+  select(type, filename, n_rows, n_errors) %>% 
+  mutate(across(type, toupper)) %>% 
+  arrange(type, desc(n_errors), type, filename) %>% 
+  knitr::kable(col.names = c("Type", "File", "# Rows", "# Errors"))
+```
+
+```{r, child=if (x$type == "internal" & has_header) 'qaqc-internal-header.Rmd'}
+```
+
+```{r, child=if (x$type == "internal" & has_detail) 'qaqc-internal-detail.Rmd'}
+```
+
+```{r, child=if (x$type == "external" & has_metadata) 'qaqc-external-metadata.Rmd'}
+```
+
+```{r, child=if (x$type == "external" & has_detectiondata) 'qaqc-external-detectiondata.Rmd'}
+```
