@@ -59,10 +59,6 @@
       "Version": "7.3-58.2",
       "Source": "Repository",
       "Repository": "CRAN",
-<<<<<<< HEAD
-      "Hash": "e02d1a0f6122fd3e634b25b433704344",
-      "Requirements": []
-=======
       "Requirements": [
         "R",
         "grDevices",
@@ -72,7 +68,6 @@
         "utils"
       ],
       "Hash": "762e1804143a332333c054759f89a706"
->>>>>>> 6ab46b9 (renv upgrade)
     },
     "Matrix": {
       "Package": "Matrix",
@@ -306,10 +301,6 @@
       "Version": "7.3-21",
       "Source": "Repository",
       "Repository": "CRAN",
-<<<<<<< HEAD
-      "Hash": "8ae0d4328e2eb3a582dfd5391a3663b7",
-=======
->>>>>>> 6ab46b9 (renv upgrade)
       "Requirements": [
         "MASS",
         "R",
@@ -360,15 +351,10 @@
       "Version": "0.2-19",
       "Source": "Repository",
       "Repository": "CRAN",
-<<<<<<< HEAD
-      "Hash": "c089a619a7fae175d149d89164f8c7d8",
-      "Requirements": []
-=======
       "Requirements": [
         "R"
       ],
       "Hash": "019388fc48e48b3da0d3a76ff94608a8"
->>>>>>> 6ab46b9 (renv upgrade)
     },
     "colorspace": {
       "Package": "colorspace",
@@ -1269,10 +1255,6 @@
       "Version": "1.8-42",
       "Source": "Repository",
       "Repository": "CRAN",
-<<<<<<< HEAD
-      "Hash": "3460beba7ccc8946249ba35327ba902a",
-=======
->>>>>>> 6ab46b9 (renv upgrade)
       "Requirements": [
         "Matrix",
         "R",
