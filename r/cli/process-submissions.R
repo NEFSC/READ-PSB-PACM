@@ -56,7 +56,7 @@ if (!dir.exists(data_dir)) {
 
 type <- argv$options$type
 log_info("type: {type}")
-stopifnot(type %in% c("internal", "external"))
+stopifnot(!is.null(type), type %in% c("internal", "external"))
 if (!dir.exists(file.path(data_dir, type))) {
   stop(glue("Data directory for type '{type}' not found: {file.path(data_dir, type)}"))
 }
@@ -89,21 +89,20 @@ walk(ids, function (id) {
 
 
 # sandbox -----------------------------------------------------------------
-# 
+#
 # db_tables <- load_db_tables()
-# write_rds(db_tables, "~/db-tables.rds")
-# db_tables$metadata <- head(db_tables$metadata, 0)
+# write_rds(db_tables, "C:\\Users\\jeffrey.walker\\data\\pacm\\db-tables.rds")
+# db_tables <- read_rds("C:\\Users\\jeffrey.walker\\data\\pacm\\db-tables.rds")
+# db_tables$metadata <- head(db_tables$metadata, 0) # remove existing metadata
 # codes <- load_codes(db_tables)
-#  
-# type <- "internal"
-# id <- "DAVIS_20230322"
-# 
+
+# type <- "external"
+# id <- "JASCO_20230505"
+
 # source("cli/functions.R")
-# process_submission(id, type, db_tables = db_tables)
+# process_submission(id, type, db_tables = db_tables, write_log = FALSE)
 # process_submission(id, type)
 # x <- load_submission(id, type, db_tables = db_tables)
 # qaqc_submission(x)
 # export_submission(x)
 # move_submission(x)
-# 
-# 
