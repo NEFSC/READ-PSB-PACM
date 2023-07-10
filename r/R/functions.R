@@ -1,5 +1,181 @@
 
 
+# external ----------------------------------------------------------------
+
+load_external_rules <- function () {
+  email_pattern <- "^[_a-z0-9-]+(\\.[_a-z0-9-]+)*@[a-z0-9-]+(\\.[a-z0-9-]+)*(\\.[a-z]{2,})$"
+  
+  list(
+    metadata = validate::validator(
+      UNIQUE_ID.missing = !is.na(UNIQUE_ID),
+      UNIQUE_ID.duplicated = is_unique(UNIQUE_ID),
+      UNIQUE_ID.already_exists = !UNIQUE_ID %vin% codes[["UNIQUE_ID"]],
+      PROJECT.missing = !is.na(PROJECT),
+      DATA_POC_NAME.missing = !is.na(DATA_POC_NAME),
+      DATA_POC_AFFILIATION.missing = !is.na(DATA_POC_AFFILIATION),
+      DATA_POC_EMAIL.missing = !is.na(DATA_POC_EMAIL),
+      DATA_POC_EMAIL.invalid_email = grepl(email_pattern, DATA_POC_EMAIL),
+      STATIONARY_OR_MOBILE.missing = !is.na(STATIONARY_OR_MOBILE),
+      STATIONARY_OR_MOBILE.not_found = STATIONARY_OR_MOBILE %vin% codes[["STATIONARY_OR_MOBILE"]],
+      PLATFORM_TYPE.missing = !is.na(PLATFORM_TYPE),
+      PLATFORM_TYPE.not_found = PLATFORM_TYPE %vin% codes[["PLATFORM_TYPE"]],
+      SITE_ID.missing = !is.na(SITE_ID),
+      INSTRUMENT_TYPE.missing = !is.na(INSTRUMENT_TYPE),
+      # INSTRUMENT_ID.missing = !is.na(INSTRUMENT_ID),
+      # CHANNEL.missing_or_nonnumeric = !is.na(CHANNEL),
+      MONITORING_START_DATETIME.missing_or_invalid_format = !is.na(MONITORING_START_DATETIME),
+      MONITORING_START_DATETIME.out_of_range = in_range(
+        MONITORING_START_DATETIME, min = ymd_hm(199001010000), max = now()
+      ),
+      MONITORING_START_DATETIME.start_greater_than_end = MONITORING_START_DATETIME <= MONITORING_END_DATETIME,
+      MONITORING_END_DATETIME.missing_or_invalid_format = !is.na(MONITORING_END_DATETIME),
+      MONITORING_END_DATETIME.out_of_range = in_range(
+        MONITORING_END_DATETIME, min = ymd_hm(199001010000), max = now()
+      ),
+      SOUNDFILES_TIMEZONE.missing = !is.na(SOUNDFILES_TIMEZONE),
+      SOUNDFILES_TIMEZONE.not_found = SOUNDFILES_TIMEZONE %in% codes[["TIMEZONE_ID"]],
+      LATITUDE.missing_or_nonnumeric = if (STATIONARY_OR_MOBILE == "STATIONARY") !is.na(LATITUDE),
+      LATITUDE.out_of_range = if (STATIONARY_OR_MOBILE == "STATIONARY") in_range(LATITUDE, -90, 90),
+      LONGITUDE.missing_or_nonnumeric = if (STATIONARY_OR_MOBILE == "STATIONARY") !is.na(LONGITUDE),
+      LONGITUDE.out_of_range = if (STATIONARY_OR_MOBILE == "STATIONARY") in_range(LONGITUDE, -180, 180),
+      WATER_DEPTH_METERS.missing_or_nonnumeric = if (STATIONARY_OR_MOBILE == "STATIONARY") !is.na(WATER_DEPTH_METERS),
+      WATER_DEPTH_METERS.is_negative = if (STATIONARY_OR_MOBILE == "STATIONARY") in_range(WATER_DEPTH_METERS, 0, Inf),
+      RECORDER_DEPTH_METERS.is_negative = is.na(RECORDER_DEPTH_METERS) | in_range(RECORDER_DEPTH_METERS, 0, Inf),
+      SAMPLING_RATE_HZ.missing_or_nonnumeric = !is.na(SAMPLING_RATE_HZ),
+      SAMPLING_RATE_HZ.is_negative = in_range(RECORDER_DEPTH_METERS, 0, Inf),
+      RECORDING_DURATION_SECONDS.missing = !is.na(RECORDING_DURATION_SECONDS),
+      RECORDING_DURATION_SECONDS.is_negative = in_range(RECORDING_DURATION_SECONDS, 0, Inf),
+      RECORDING_INTERVAL_SECONDS.missing = !is.na(RECORDING_INTERVAL_SECONDS),
+      RECORDING_INTERVAL_SECONDS.is_negative = in_range(RECORDING_INTERVAL_SECONDS, 0, Inf),
+      SAMPLE_BITS.nonnumeric = is.na(SAMPLE_BITS) | !is.na(as.numeric(SAMPLE_BITS)),
+      SUBMITTER_NAME.missing = !is.na(SUBMITTER_NAME),
+      SUBMITTER_AFFILIATION.missing = !is.na(SUBMITTER_AFFILIATION),
+      SUBMITTER_EMAIL.missing = !is.na(SUBMITTER_EMAIL),
+      SUBMITTER_EMAIL.invalid_email = grepl(email_pattern, SUBMITTER_EMAIL),
+      SUBMISSION_DATE.missing_or_invalid_format = !is.na(SUBMISSION_DATE),
+      SUBMISSION_DATE.out_of_range = in_range(
+        SUBMISSION_DATE, min = ymd(20200101), max = today()
+      )
+    ),
+    detectiondata = validate::validator(
+      UNIQUE_ID.missing = !is.na(UNIQUE_ID),
+      UNIQUE_ID.not_found = UNIQUE_ID %vin% codes[["UNIQUE_ID"]],
+      ANALYSIS_PERIOD_START_DATETIME.missing_or_invalid_format = !is.na(ANALYSIS_PERIOD_START_DATETIME),
+      ANALYSIS_PERIOD_START_DATETIME.outside_monitoring_period = in_range(
+        ANALYSIS_PERIOD_START_DATETIME, 
+        min = floor_date(METADATA.MONITORING_START_DATETIME, "day") - days(1),
+        max = floor_date(METADATA.MONITORING_END_DATETIME, "day") + days(2)
+      ),
+      ANALYSIS_PERIOD_START_DATETIME.start_greater_than_end = ANALYSIS_PERIOD_START_DATETIME <= ANALYSIS_PERIOD_END_DATETIME,
+      ANALYSIS_PERIOD_END_DATETIME.missing_or_invalid_format = !is.na(ANALYSIS_PERIOD_END_DATETIME),
+      ANALYSIS_PERIOD_END_DATETIME.outside_monitoring_period = in_range(
+        ANALYSIS_PERIOD_END_DATETIME, 
+        min = floor_date(METADATA.MONITORING_START_DATETIME, "day") - days(1),
+        max = floor_date(METADATA.MONITORING_END_DATETIME, "day") + days(2)
+      ),
+      ANALYSIS_TIME_ZONE.missing = !is.na(ANALYSIS_TIME_ZONE),
+      ANALYSIS_TIME_ZONE.not_found = ANALYSIS_TIME_ZONE %in% codes[["TIMEZONE_ID"]],
+      SPECIES_CODE.missing = !is.na(SPECIES_CODE),
+      SPECIES_CODE.not_found = SPECIES_CODE %vin% codes[["SPECIES_CODE"]],
+      ACOUSTIC_PRESENCE.missing = !is.na(ACOUSTIC_PRESENCE),
+      ACOUSTIC_PRESENCE.not_found = ACOUSTIC_PRESENCE %vin% codes[["ACOUSTIC_PRESENCE"]][["external"]],
+      N_VALIDATED_DETECTIONS.is_negative = is.na(N_VALIDATED_DETECTIONS) | in_range(N_VALIDATED_DETECTIONS, 0, Inf),
+      CALL_TYPE_CODE.missing = !is.na(CALL_TYPE_CODE),
+      CALL_TYPE_CODE.not_found_for_species = CALL_TYPE_CODE %vin% codes[["CALL_TYPE_CODE"]][[codes[["SPECIES_CODE"]] == SPECIES_CODE]],
+      DETECTION_METHOD.missing = !is.na(DETECTION_METHOD),
+      PROTOCOL_REFERENCE.missing = !is.na(PROTOCOL_REFERENCE),
+      DETECTION_SOFTWARE_NAME.missing = !is.na(DETECTION_SOFTWARE_NAME),
+      MIN_ANALYSIS_FREQUENCY_RANGE_HZ.missing_or_nonnumeric = !is.na(MIN_ANALYSIS_FREQUENCY_RANGE_HZ),
+      MIN_ANALYSIS_FREQUENCY_RANGE_HZ.out_of_range = in_range(
+        MIN_ANALYSIS_FREQUENCY_RANGE_HZ, 
+        min = 0,
+        max = METADATA.SAMPLING_RATE_HZ
+      ),
+      MIN_ANALYSIS_FREQUENCY_RANGE_HZ.min_greater_than_max = MIN_ANALYSIS_FREQUENCY_RANGE_HZ <= MAX_ANALYSIS_FREQUENCY_RANGE_HZ,
+      MAX_ANALYSIS_FREQUENCY_RANGE_HZ.missing_or_nonnumeric = !is.na(MAX_ANALYSIS_FREQUENCY_RANGE_HZ),
+      MAX_ANALYSIS_FREQUENCY_RANGE_HZ.out_of_range = in_range(
+        MAX_ANALYSIS_FREQUENCY_RANGE_HZ, 
+        min = 0,
+        max = METADATA.SAMPLING_RATE_HZ
+      ),
+      QC_PROCESSING.missing = !is.na(QC_PROCESSING),
+      QC_PROCESSING.not_found = QC_PROCESSING %in% codes[["QC_PROCESSING"]][["external"]]
+    ),
+    gpsdata = validate::validator(
+      UNIQUE_ID.missing = !is.na(UNIQUE_ID),
+      UNIQUE_ID.not_found = UNIQUE_ID %vin% codes[["UNIQUE_ID"]],
+      DATETIME.missing_or_invalid_format = !is.na(DATETIME),
+      DATETIME.out_of_range = in_range(
+        DATETIME, 
+        min = floor_date(METADATA.MONITORING_START_DATETIME, "day") - days(30),
+        max = floor_date(METADATA.MONITORING_END_DATETIME, "day") + days(30)
+      ),
+      LATITUDE.missing_or_nonnumeric = !is.na(LATITUDE),
+      LATITUDE.out_of_range = in_range(LATITUDE, -90, 90),
+      LONGITUDE.missing_or_nonnumeric = !is.na(LONGITUDE),
+      LONGITUDE.out_of_range = in_range(LONGITUDE, -180, 180)
+    )
+  )
+}
+
+load_external_submission <- function (id, root_dir, db_tables) {
+  raw_dir <- file.path(root_dir, id)
+  stopifnot(dir.exists(raw_dir))
+
+  log_info("loading raw files: {raw_dir}")
+  
+  raw_files <- list.files(raw_dir)
+  rules <- load_external_rules()
+  if (length(raw_files) == 0) {
+    stop("raw directory is empty")
+  }
+  log_info("raw files: {str_c(raw_files, collapse = ', ')}")
+  
+  transformers <- load_transformers(raw_dir)
+  
+  out <- list(
+    id = id
+  )
+  
+  codes <- load_codes(db_tables)
+  
+  metadata <- load_submission_files(
+    id,
+    files = file.path(raw_dir, raw_files),
+    pattern = "*_METADATA_*",
+    rules = rules$metadata, 
+    codes = codes, 
+    parse = parse_external_metadata,
+    transform = transformers$metadata
+  )
+  if (nrow(metadata) > 0) {
+    metadata_unique_ids <- unlist(map(metadata$parsed, \(x) x$UNIQUE_ID))
+    codes[["UNIQUE_ID"]] <- c(codes[["UNIQUE_ID"]], metadata_unique_ids)
+  }
+  join_metadata <- bind_rows(db_tables$metadata, bind_rows(metadata$parsed)) %>% 
+    filter(!duplicated(UNIQUE_ID)) %>% 
+    select(UNIQUE_ID, MONITORING_START_DATETIME, MONITORING_END_DATETIME, SAMPLING_RATE_HZ) %>% 
+    rename_with(~ paste0("METADATA.", .x))
+
+  detectiondata <- load_submission_files(
+    id,
+    files = file.path(raw_dir, raw_files),
+    pattern = "*_DETECTIONDATA_*",
+    rules = rules$detectiondata, 
+    codes = codes, 
+    parse = parse_external_detectiondata,
+    transform = transformers$detectiondata,
+    join_data = join_metadata,
+    join_by = c("UNIQUE_ID" = "METADATA.UNIQUE_ID")
+  )
+  
+  list(
+    id = id,
+    metadata = metadata,
+    detectiondata = detectiondata
+  )
+}
+
 # datasets -----------------------------------------------------------------
 
 noop <- function (x) { x }
@@ -662,4 +838,137 @@ validate_track <- function (raw, metadata, refs) {
     data = satisfying(parsed, out, include_missing = TRUE),
     rejected = rejected_rows
   )
+}
+
+
+# settings (old) ----------------------------------------------------------
+
+multispecies_themes = "beaked"
+deployment_themes = "deployments-nefsc"
+glider_platform_types = "slocum"
+
+# qaqc (old) --------------------------------------------------------------------
+
+qaqc_dataset <- function (deployments, detections) {
+  x_deployments <- tibble(deployments) %>% 
+    select(-geometry)
+  x_detections <- detections %>% 
+    mutate(
+      n_locations = map_int(locations, ~ if_else(is.null(.), 0L, nrow(.)))
+    ) %>% 
+    left_join(
+      x_deployments %>% 
+        select(theme, id, deployment_type, platform_type),
+      by = c("theme", "id")
+    )
+  
+  qaqc_deployments(x_deployments)
+  qaqc_detections(x_detections)
+}
+
+qaqc_deployments <- function (x) {
+  # required columns have no missing values (excluding active deployments)
+  stopifnot(
+    x %>%
+      filter(!is.na(monitoring_end_datetime)) %>% 
+      select(theme, id) %>% 
+      complete.cases() %>% 
+      all()
+  )
+}
+
+qaqc_detections <- function (x) {
+  # required columns have no missing values
+  stopifnot(
+    x %>% 
+      select(-species, -locations) %>% 
+      complete.cases() %>% 
+      all()
+  )
+  
+  # no missing species for multispecies theme (beaked) when presence = y or m
+  stopifnot(
+    x %>% 
+      select(-locations) %>% 
+      filter(theme %in% multispecies_themes, presence %in% c("y", "m")) %>% 
+      complete.cases() %>% 
+      all()
+  )
+  
+  # all species missing except beaked
+  stopifnot(
+    x %>% 
+      select(-locations) %>% 
+      filter(!theme %in% multispecies_themes) %>% 
+      pull(species) %>% 
+      is.na() %>% 
+      all()
+  )
+  
+  # no locations when deployment_type = mobile and presence = n or na
+  stopifnot(
+    all(
+      x %>% 
+        filter(
+          deployment_type == "mobile",
+          presence %in% c("n", "na")
+        ) %>% 
+        pull(n_locations) == 0
+    )
+  )
+  
+  # at least one location when deployment_type = mobile and presence = y or m
+  stopifnot(
+    all(
+      x %>% 
+        filter(
+          deployment_type == "mobile",
+          presence %in% c("y", "m")
+        ) %>% 
+        pull(n_locations) > 0
+    )
+  )
+  
+  # exactly one location when platform_type is glider and presence = y or m
+  stopifnot(
+    all(
+      x %>% 
+        filter(
+          platform_type %in% glider_platform_types,
+          presence %in% c("y", "m")
+        ) %>% 
+        pull(n_locations) == 1
+    )
+  )
+  
+  # presence = "d" when theme is a deployment theme
+  stopifnot(
+    all(
+      x %>% 
+        filter(theme %in% deployment_themes) %>% 
+        pull(presence) == "d"
+    )
+  )
+  
+  # presence != "d" when theme is not a deployment theme
+  stopifnot(
+    all(
+      x %>% 
+        filter(!theme %in% deployment_themes) %>% 
+        pull(presence) != "d"
+    )
+  )
+  
+  # one row per distinct(theme, id, species, date)
+  stopifnot(
+    x %>%
+      count(theme, id, species, date) %>% 
+      pull(n) == 1
+  )
+  
+  # no future dates
+  stopifnot(all(x$date <= today()))
+  
+  # no dates before 2000
+  stopifnot(all(x$date >= ymd(20000101)))
 }

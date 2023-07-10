@@ -3,6 +3,7 @@ library(targets)
 # packages
 options(tidyverse.quiet = TRUE)
 tar_option_set(packages = c(
+  "tarchetypes",
   "tidyverse",
   "lubridate",
   "janitor",
@@ -13,7 +14,8 @@ tar_option_set(packages = c(
   "readxl",
   "validate",
   "sf",
-  "dotenv"
+  "dotenv",
+  "validate"
 ))
 
 # load packages into session
@@ -22,14 +24,27 @@ if (interactive()) {
 }
 
 # load all functions
+source("cli/functions.R")
 invisible(sapply(list.files("R", pattern = ".R", full.names = TRUE), source))
-invisible(sapply(list.files("R/datasets", pattern = ".R", full.names = TRUE), source))
+invisible(sapply(list.files("R/internal", pattern = ".R", full.names = TRUE), source))
+
 
 list(
   tar_target(data_dir, Sys.getenv("PACM_DATA_DIR"), cue = tar_cue("always")),
-  targets_templates,
-  targets_refs,
+  # targets_templates,
+  # targets_refs,
   targets_gis,
-  targets_moored
+  
+  targets_moored,
+  targets_glider,
+  targets_towed_tracks,
+  targets_towed_detections,
+  targets_towed,
+  targets_internal,
+  
+  targets_external,
+  targets_deployments,
+  
+  targets_pacm
   # targets_datasets,
 )

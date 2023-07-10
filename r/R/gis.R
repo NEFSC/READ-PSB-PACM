@@ -1,5 +1,5 @@
 targets_gis <- list(
-  tar_target(gis_wind_lease_file, file.path(data_dir, "gis/wind/Wind_Lease_Boundaries_March_2022.shp"), format = "file"),
+  tar_target(gis_wind_lease_file, "data/gis/wind/Wind_Lease_Boundaries_March_2022.shp", format = "file"),
   tar_target(gis_wind_lease, {
     st_read(gis_wind_lease_file) %>% 
       clean_names() %>% 
@@ -13,7 +13,7 @@ targets_gis <- list(
         type = "lease"
       )
   }),
-  tar_target(gis_wind_plan_file, file.path(data_dir, "gis/wind/Wind_Planning_Area_Boundaries_March25_2022.shp"), format = "file"),
+  tar_target(gis_wind_plan_file, "data/gis/wind/Wind_Planning_Area_Boundaries_March25_2022.shp", format = "file"),
   tar_target(gis_wind_plan, {
     st_read(gis_wind_plan_file) %>% 
       clean_names() %>% 
