@@ -81,6 +81,8 @@ themes[["deployments"]] <- list(
     unnest(detections)
 )
 
+# write_rds(themes[["deployments"]], "data/themes-deployments-20230707.rds")
+
 # export ------------------------------------------------------------------
 
 for (theme in names(themes)) {

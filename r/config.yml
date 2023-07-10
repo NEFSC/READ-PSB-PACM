@@ -1,6 +1,6 @@
 default:
   files:
-    root: "~/Dropbox/Work/nefsc/data"
+    root: "~/Dropbox/Work/pacm/data"
     moored:
       metadata: "moored/20221115/Moored_metadata_2022-11-16.csv"
       detection: "moored/20221115/Moored_detection_data_2022-11-15.csv"

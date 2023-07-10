@@ -165,266 +165,255 @@ load_codes <- function (db_tables) {
   )
 }
 
-email <- function(x) {
-  grepl("^[_a-z0-9-]+(\\.[_a-z0-9-]+)*@[a-z0-9-]+(\\.[a-z0-9-]+)*(\\.[a-z]{2,})$", x)
-}
-
-numeric <- function(x) {
-  !is.na(as.numeric(x))
-}
-
-nonnegative <- function(x) {
-  if (!is.na(x)) {
-    return(in_range(x, 0, Inf))
-  }
-  FALSE
-}
-
 
 # rules -------------------------------------------------------------------
 
-pacm_rules <- list(
-  external = list(
-    metadata = validator(
-      UNIQUE_ID.missing = !is.na(UNIQUE_ID),
-      UNIQUE_ID.duplicated = is_unique(UNIQUE_ID),
-      UNIQUE_ID.already_exists = !UNIQUE_ID %vin% codes[["UNIQUE_ID"]],
-      PROJECT.missing = !is.na(PROJECT),
-      DATA_POC_NAME.missing = !is.na(DATA_POC_NAME),
-      DATA_POC_AFFILIATION.missing = !is.na(DATA_POC_AFFILIATION),
-      DATA_POC_EMAIL.missing = !is.na(DATA_POC_EMAIL),
-      DATA_POC_EMAIL.invalid_email = email(DATA_POC_EMAIL),
-      STATIONARY_OR_MOBILE.missing = !is.na(STATIONARY_OR_MOBILE),
-      STATIONARY_OR_MOBILE.not_found = STATIONARY_OR_MOBILE %vin% codes[["STATIONARY_OR_MOBILE"]],
-      PLATFORM_TYPE.missing = !is.na(PLATFORM_TYPE),
-      PLATFORM_TYPE.not_found = PLATFORM_TYPE %vin% codes[["PLATFORM_TYPE"]],
-      SITE_ID.missing = !is.na(SITE_ID),
-      INSTRUMENT_TYPE.missing = !is.na(INSTRUMENT_TYPE),
-      INSTRUMENT_ID.missing = !is.na(INSTRUMENT_ID),
-      CHANNEL.missing_or_nonnumeric = !is.na(CHANNEL),
-      MONITORING_START_DATETIME.missing_or_invalid_format = !is.na(MONITORING_START_DATETIME),
-      MONITORING_START_DATETIME.out_of_range = in_range(
-        MONITORING_START_DATETIME, min = ymd_hm(199001010000), max = now()
+pacm_rules <- function () {
+  email_pattern <- "^[_a-z0-9-]+(\\.[_a-z0-9-]+)*@[a-z0-9-]+(\\.[a-z0-9-]+)*(\\.[a-z]{2,})$"
+  
+  list(
+    external = list(
+      metadata = validate::validator(
+        UNIQUE_ID.missing = !is.na(UNIQUE_ID),
+        UNIQUE_ID.duplicated = is_unique(UNIQUE_ID),
+        UNIQUE_ID.already_exists = !UNIQUE_ID %vin% codes[["UNIQUE_ID"]],
+        PROJECT.missing = !is.na(PROJECT),
+        DATA_POC_NAME.missing = !is.na(DATA_POC_NAME),
+        DATA_POC_AFFILIATION.missing = !is.na(DATA_POC_AFFILIATION),
+        DATA_POC_EMAIL.missing = !is.na(DATA_POC_EMAIL),
+        DATA_POC_EMAIL.invalid_email = grepl(email_pattern, DATA_POC_EMAIL),
+        STATIONARY_OR_MOBILE.missing = !is.na(STATIONARY_OR_MOBILE),
+        STATIONARY_OR_MOBILE.not_found = STATIONARY_OR_MOBILE %vin% codes[["STATIONARY_OR_MOBILE"]],
+        PLATFORM_TYPE.missing = !is.na(PLATFORM_TYPE),
+        PLATFORM_TYPE.not_found = PLATFORM_TYPE %vin% codes[["PLATFORM_TYPE"]],
+        SITE_ID.missing = !is.na(SITE_ID),
+        INSTRUMENT_TYPE.missing = !is.na(INSTRUMENT_TYPE),
+        INSTRUMENT_ID.missing = !is.na(INSTRUMENT_ID),
+        CHANNEL.missing_or_nonnumeric = !is.na(CHANNEL),
+        MONITORING_START_DATETIME.missing_or_invalid_format = !is.na(MONITORING_START_DATETIME),
+        MONITORING_START_DATETIME.out_of_range = in_range(
+          MONITORING_START_DATETIME, min = ymd_hm(199001010000), max = now()
+        ),
+        MONITORING_START_DATETIME.start_greater_than_end = MONITORING_START_DATETIME <= MONITORING_END_DATETIME,
+        MONITORING_END_DATETIME.missing_or_invalid_format = !is.na(MONITORING_END_DATETIME),
+        MONITORING_END_DATETIME.out_of_range = in_range(
+          MONITORING_END_DATETIME, min = ymd_hm(199001010000), max = now()
+        ),
+        SOUNDFILES_TIMEZONE.missing = !is.na(SOUNDFILES_TIMEZONE),
+        SOUNDFILES_TIMEZONE.not_found = SOUNDFILES_TIMEZONE %in% codes[["TIMEZONE_ID"]],
+        LATITUDE.missing_or_nonnumeric = if (STATIONARY_OR_MOBILE == "STATIONARY") !is.na(LATITUDE),
+        LATITUDE.out_of_range = if (STATIONARY_OR_MOBILE == "STATIONARY") in_range(LATITUDE, -90, 90),
+        LONGITUDE.missing_or_nonnumeric = if (STATIONARY_OR_MOBILE == "STATIONARY") !is.na(LONGITUDE),
+        LONGITUDE.out_of_range = if (STATIONARY_OR_MOBILE == "STATIONARY") in_range(LONGITUDE, -180, 180),
+        WATER_DEPTH_METERS.missing_or_nonnumeric = if (STATIONARY_OR_MOBILE == "STATIONARY") !is.na(WATER_DEPTH_METERS),
+        WATER_DEPTH_METERS.is_negative = if (STATIONARY_OR_MOBILE == "STATIONARY") in_range(WATER_DEPTH_METERS, 0, Inf),
+        RECORDER_DEPTH_METERS.is_negative = is.na(RECORDER_DEPTH_METERS) | in_range(RECORDER_DEPTH_METERS, 0, Inf),
+        SAMPLING_RATE_HZ.missing_or_nonnumeric = !is.na(SAMPLING_RATE_HZ),
+        SAMPLING_RATE_HZ.is_negative = in_range(RECORDER_DEPTH_METERS, 0, Inf),
+        RECORDING_DURATION_SECONDS.missing = !is.na(RECORDING_DURATION_SECONDS),
+        RECORDING_DURATION_SECONDS.is_negative = in_range(RECORDING_DURATION_SECONDS, 0, Inf),
+        RECORDING_INTERVAL_SECONDS.missing = !is.na(RECORDING_INTERVAL_SECONDS),
+        RECORDING_INTERVAL_SECONDS.is_negative = in_range(RECORDING_INTERVAL_SECONDS, 0, Inf),
+        SAMPLE_BITS.nonnumeric = is.na(SAMPLE_BITS) | !is.na(as.numeric(SAMPLE_BITS)),
+        SUBMITTER_NAME.missing = !is.na(SUBMITTER_NAME),
+        SUBMITTER_AFFILIATION.missing = !is.na(SUBMITTER_AFFILIATION),
+        SUBMITTER_EMAIL.missing = !is.na(SUBMITTER_EMAIL),
+        SUBMITTER_EMAIL.invalid_email = grepl(email_pattern, SUBMITTER_EMAIL),
+        SUBMISSION_DATE.missing_or_invalid_format = !is.na(SUBMISSION_DATE),
+        SUBMISSION_DATE.out_of_range = in_range(
+          SUBMISSION_DATE, min = ymd(20200101), max = today()
+        )
       ),
-      MONITORING_START_DATETIME.start_greater_than_end = MONITORING_START_DATETIME <= MONITORING_END_DATETIME,
-      MONITORING_END_DATETIME.missing_or_invalid_format = !is.na(MONITORING_END_DATETIME),
-      MONITORING_END_DATETIME.out_of_range = in_range(
-        MONITORING_END_DATETIME, min = ymd_hm(199001010000), max = now()
+      detectiondata = validate::validator(
+        UNIQUE_ID.missing = !is.na(UNIQUE_ID),
+        UNIQUE_ID.not_found = UNIQUE_ID %vin% codes[["UNIQUE_ID"]],
+        ANALYSIS_PERIOD_START_DATETIME.missing_or_invalid_format = !is.na(ANALYSIS_PERIOD_START_DATETIME),
+        ANALYSIS_PERIOD_START_DATETIME.outside_monitoring_period = in_range(
+          ANALYSIS_PERIOD_START_DATETIME, 
+          min = floor_date(METADATA.MONITORING_START_DATETIME, "day") - days(1),
+          max = floor_date(METADATA.MONITORING_END_DATETIME, "day") + days(2)
+        ),
+        ANALYSIS_PERIOD_START_DATETIME.start_greater_than_end = ANALYSIS_PERIOD_START_DATETIME <= ANALYSIS_PERIOD_END_DATETIME,
+        ANALYSIS_PERIOD_END_DATETIME.missing_or_invalid_format = !is.na(ANALYSIS_PERIOD_END_DATETIME),
+        ANALYSIS_PERIOD_END_DATETIME.outside_monitoring_period = in_range(
+          ANALYSIS_PERIOD_END_DATETIME, 
+          min = floor_date(METADATA.MONITORING_START_DATETIME, "day") - days(1),
+          max = floor_date(METADATA.MONITORING_END_DATETIME, "day") + days(2)
+        ),
+        ANALYSIS_TIME_ZONE.missing = !is.na(ANALYSIS_TIME_ZONE),
+        ANALYSIS_TIME_ZONE.not_found = ANALYSIS_TIME_ZONE %in% codes[["TIMEZONE_ID"]],
+        SPECIES_CODE.missing = !is.na(SPECIES_CODE),
+        SPECIES_CODE.not_found = SPECIES_CODE %vin% codes[["SPECIES_CODE"]],
+        ACOUSTIC_PRESENCE.missing = !is.na(ACOUSTIC_PRESENCE),
+        ACOUSTIC_PRESENCE.not_found = ACOUSTIC_PRESENCE %vin% codes[["ACOUSTIC_PRESENCE"]][["external"]],
+        N_VALIDATED_DETECTIONS.is_negative = is.na(N_VALIDATED_DETECTIONS) | in_range(N_VALIDATED_DETECTIONS, 0, Inf),
+        CALL_TYPE_CODE.missing = !is.na(CALL_TYPE_CODE),
+        CALL_TYPE_CODE.not_found_for_species = CALL_TYPE_CODE %vin% codes[["CALL_TYPE_CODE"]][[codes[["SPECIES_CODE"]] == SPECIES_CODE]],
+        DETECTION_METHOD.missing = !is.na(DETECTION_METHOD),
+        PROTOCOL_REFERENCE.missing = !is.na(PROTOCOL_REFERENCE),
+        DETECTION_SOFTWARE_NAME.missing = !is.na(DETECTION_SOFTWARE_NAME),
+        MIN_ANALYSIS_FREQUENCY_RANGE_HZ.missing_or_nonnumeric = !is.na(MIN_ANALYSIS_FREQUENCY_RANGE_HZ),
+        MIN_ANALYSIS_FREQUENCY_RANGE_HZ.out_of_range = in_range(
+          MIN_ANALYSIS_FREQUENCY_RANGE_HZ, 
+          min = 0,
+          max = METADATA.SAMPLING_RATE_HZ
+        ),
+        MIN_ANALYSIS_FREQUENCY_RANGE_HZ.min_greater_than_max = MIN_ANALYSIS_FREQUENCY_RANGE_HZ <= MAX_ANALYSIS_FREQUENCY_RANGE_HZ,
+        MAX_ANALYSIS_FREQUENCY_RANGE_HZ.missing_or_nonnumeric = !is.na(MAX_ANALYSIS_FREQUENCY_RANGE_HZ),
+        MAX_ANALYSIS_FREQUENCY_RANGE_HZ.out_of_range = in_range(
+          MAX_ANALYSIS_FREQUENCY_RANGE_HZ, 
+          min = 0,
+          max = METADATA.SAMPLING_RATE_HZ
+        ),
+        QC_PROCESSING.missing = !is.na(QC_PROCESSING),
+        QC_PROCESSING.not_found = QC_PROCESSING %in% codes[["QC_PROCESSING"]][["external"]]
       ),
-      SOUNDFILES_TIMEZONE.missing = !is.na(SOUNDFILES_TIMEZONE),
-      SOUNDFILES_TIMEZONE.not_found = SOUNDFILES_TIMEZONE %in% codes[["TIMEZONE_ID"]],
-      LATITUDE.missing_or_nonnumeric = if (STATIONARY_OR_MOBILE == "STATIONARY") !is.na(LATITUDE),
-      LATITUDE.out_of_range = if (STATIONARY_OR_MOBILE == "STATIONARY") in_range(LATITUDE, -90, 90),
-      LONGITUDE.missing_or_nonnumeric = if (STATIONARY_OR_MOBILE == "STATIONARY") !is.na(LONGITUDE),
-      LONGITUDE.out_of_range = if (STATIONARY_OR_MOBILE == "STATIONARY") in_range(LONGITUDE, -180, 180),
-      WATER_DEPTH_METERS.missing_or_nonnumeric = !is.na(WATER_DEPTH_METERS),
-      WATER_DEPTH_METERS.is_negative = nonnegative(WATER_DEPTH_METERS),
-      RECORDER_DEPTH_METERS.is_negative = nonnegative(RECORDER_DEPTH_METERS),
-      SAMPLING_RATE_HZ.missing_or_nonnumeric = !is.na(SAMPLING_RATE_HZ),
-      SAMPLING_RATE_HZ.is_negative = nonnegative(SAMPLING_RATE_HZ),
-      RECORDING_DURATION_SECONDS.missing = !is.na(RECORDING_DURATION_SECONDS),
-      RECORDING_DURATION_SECONDS.is_negative = nonnegative(RECORDING_DURATION_SECONDS),
-      RECORDING_INTERVAL_SECONDS.missing = !is.na(RECORDING_INTERVAL_SECONDS),
-      RECORDING_INTERVAL_SECONDS.is_negative = nonnegative(RECORDING_INTERVAL_SECONDS),
-      SAMPLE_BITS.nonnumeric = numeric(SAMPLE_BITS),
-      SUBMITTER_NAME.missing = !is.na(SUBMITTER_NAME),
-      SUBMITTER_AFFILIATION.missing = !is.na(SUBMITTER_AFFILIATION),
-      SUBMITTER_EMAIL.missing = !is.na(SUBMITTER_EMAIL),
-      SUBMITTER_EMAIL.invalid_email = email(SUBMITTER_EMAIL),
-      SUBMISSION_DATE.missing_or_invalid_format = !is.na(SUBMISSION_DATE),
-      SUBMISSION_DATE.out_of_range = in_range(
-        SUBMISSION_DATE, min = ymd(20200101), max = today()
+      gpsdata = validate::validator(
+        UNIQUE_ID.missing = !is.na(UNIQUE_ID),
+        UNIQUE_ID.not_found = UNIQUE_ID %vin% codes[["UNIQUE_ID"]],
+        DATETIME.missing_or_invalid_format = !is.na(DATETIME),
+        DATETIME.out_of_range = in_range(
+          DATETIME, 
+          min = floor_date(METADATA.MONITORING_START_DATETIME, "day") - days(30),
+          max = floor_date(METADATA.MONITORING_END_DATETIME, "day") + days(30)
+        ),
+        LATITUDE.missing_or_nonnumeric = !is.na(LATITUDE),
+        LATITUDE.out_of_range = in_range(LATITUDE, -90, 90),
+        LONGITUDE.missing_or_nonnumeric = !is.na(LONGITUDE),
+        LONGITUDE.out_of_range = in_range(LONGITUDE, -180, 180)
       )
     ),
-    detectiondata = validator(
-      UNIQUE_ID.missing = !is.na(UNIQUE_ID),
-      UNIQUE_ID.not_found = UNIQUE_ID %vin% codes[["UNIQUE_ID"]],
-      ANALYSIS_PERIOD_START_DATETIME.missing_or_invalid_format = !is.na(ANALYSIS_PERIOD_START_DATETIME),
-      ANALYSIS_PERIOD_START_DATETIME.outside_monitoring_period = in_range(
-        ANALYSIS_PERIOD_START_DATETIME, 
-        min = floor_date(METADATA.MONITORING_START_DATETIME, "day") - days(1),
-        max = floor_date(METADATA.MONITORING_END_DATETIME, "day") + days(2)
+    internal = list(
+      header = validate::validator(
+        DEPLOYMENT_ID.missing = !is.na(DEPLOYMENT_ID),
+        DEPLOYMENT_ID.not_found = DEPLOYMENT_ID %vin% codes[["DEPLOYMENT_ID"]],
+        DETECTION_ID.missing = !is.na(DETECTION_ID),
+        DETECTION_ID.duplicated = is_unique(DETECTION_ID),
+        
+        DATA_POC.missing = !is.na(DATA_POC),
+        DATA_POC.invalid_email = grepl(email_pattern, DATA_POC),
+        DATA_POC.not_found = DATA_POC %vin% codes[["POC_ID"]],
+        SUBMITTER_POC.missing = !is.na(SUBMITTER_POC),
+        SUBMITTER_POC.invalid_email = grepl(email_pattern, SUBMITTER_POC),
+        SUBMITTER_POC.not_found = SUBMITTER_POC %vin% codes[["POC_ID"]],
+        SUBMISSION_DATE.missing_or_invalid_format = !is.na(SUBMISSION_DATE),
+        SUBMISSION_DATE.out_of_range = in_range(
+          SUBMISSION_DATE, min = ymd(20200101), max = today()
+        ),
+        
+        ANALYSIS_SAMPLING_RATE_HZ.missing = !is.na(ANALYSIS_SAMPLING_RATE_HZ),
+        ANALYSIS_SAMPLING_RATE_HZ.is_negative = in_range(ANALYSIS_SAMPLING_RATE_HZ, 0, Inf),
+        MIN_ANALYSIS_FREQUENCY_HZ.missing = !is.na(MIN_ANALYSIS_FREQUENCY_HZ),
+        MIN_ANALYSIS_FREQUENCY_HZ.out_of_range = in_range(
+          MIN_ANALYSIS_FREQUENCY_HZ, 
+          min = 0,
+          max = ANALYSIS_SAMPLING_RATE_HZ
+        ),
+        MIN_ANALYSIS_FREQUENCY_HZ.min_greater_than_max = MIN_ANALYSIS_FREQUENCY_HZ <= MAX_ANALYSIS_FREQUENCY_HZ,
+        
+        MAX_ANALYSIS_FREQUENCY_HZ.missing = !is.na(MAX_ANALYSIS_FREQUENCY_HZ),
+        MAX_ANALYSIS_FREQUENCY_HZ.out_of_range = in_range(
+          MAX_ANALYSIS_FREQUENCY_HZ, 
+          min = 0,
+          max = ANALYSIS_SAMPLING_RATE_HZ
+        ),
+        
+        MONITORING_START_DATETIME.missing = !is.na(MONITORING_START_DATETIME),
+        MONITORING_START_DATETIME.out_of_range = in_range(
+          MONITORING_START_DATETIME, 
+          min = ymd_hm(199001010000),
+          max = now()
+        ),
+        MONITORING_START_DATETIME.start_greater_than_end = MONITORING_START_DATETIME <= MONITORING_END_DATETIME,
+        MONITORING_END_DATETIME.missing = !is.na(MONITORING_END_DATETIME),
+        MONITORING_END_DATETIME.out_of_range = in_range(
+          MONITORING_END_DATETIME, 
+          min = ymd_hm(199001010000),
+          max = now()
+        ),
+        
+        PRIMARY_ANALYST.missing = !is.na(PRIMARY_ANALYST),
+        PRIMARY_ANALYST.invalid_email = grepl(email_pattern, PRIMARY_ANALYST),
+        PRIMARY_ANALYST.not_found = PRIMARY_ANALYST %vin% codes[["POC_ID"]],
+        SECONDARY_ANALYST.invalid_email = is.na(SECONDARY_ANALYST) | grepl(email_pattern, SECONDARY_ANALYST),
+        SECONDARY_ANALYST.not_found = is.na(SECONDARY_ANALYST) | SECONDARY_ANALYST %vin% codes[["POC_ID"]],
+        TERTIARY_ANALYST.invalid_email = is.na(TERTIARY_ANALYST) | grepl(email_pattern, TERTIARY_ANALYST),
+        TERTIARY_ANALYST.not_found = is.na(TERTIARY_ANALYST) | TERTIARY_ANALYST %vin% codes[["POC_ID"]],
+        
+        ANALYSIS_TIMEZONE.missing = !is.na(ANALYSIS_TIMEZONE),
+        ANALYSIS_TIMEZONE.not_found = ANALYSIS_TIMEZONE %vin% codes[["TIMEZONE_ID"]],
+        
+        DETECTION_METHOD.missing = !is.na(DETECTION_METHOD),
+        PROTOCOL_REFERENCE.missing = !is.na(PROTOCOL_REFERENCE),
+        DETECTOR_OUTPUT_FILENAME.missing = !is.na(DETECTOR_OUTPUT_FILENAME),
+        SOFTWARE.missing = !is.na(SOFTWARE),
+        DETECTOR_SETTINGS_ID.not_found = is.na(DETECTOR_SETTINGS_ID) | DETECTOR_SETTINGS_ID %vin% codes[["DETECTOR_SETTINGS_ID"]]
       ),
-      ANALYSIS_PERIOD_START_DATETIME.start_greater_than_end = ANALYSIS_PERIOD_START_DATETIME <= ANALYSIS_PERIOD_END_DATETIME,
-      ANALYSIS_PERIOD_END_DATETIME.missing_or_invalid_format = !is.na(ANALYSIS_PERIOD_END_DATETIME),
-      ANALYSIS_PERIOD_END_DATETIME.outside_monitoring_period = in_range(
-        ANALYSIS_PERIOD_END_DATETIME, 
-        min = floor_date(METADATA.MONITORING_START_DATETIME, "day") - days(1),
-        max = floor_date(METADATA.MONITORING_END_DATETIME, "day") + days(2)
-      ),
-      ANALYSIS_TIME_ZONE.missing = !is.na(ANALYSIS_TIME_ZONE),
-      ANALYSIS_TIME_ZONE.not_found = ANALYSIS_TIME_ZONE %in% codes[["TIMEZONE_ID"]],
-      SPECIES_CODE.missing = !is.na(SPECIES_CODE),
-      SPECIES_CODE.not_found = SPECIES_CODE %vin% codes[["SPECIES_CODE"]],
-      ACOUSTIC_PRESENCE.missing = !is.na(ACOUSTIC_PRESENCE),
-      ACOUSTIC_PRESENCE.not_found = ACOUSTIC_PRESENCE %vin% codes[["ACOUSTIC_PRESENCE"]][["external"]],
-      N_VALIDATED_DETECTIONS.is_negative = nonnegative(N_VALIDATED_DETECTIONS),
-      CALL_TYPE_CODE.missing = !is.na(CALL_TYPE_CODE),
-      CALL_TYPE_CODE.not_found_for_species = CALL_TYPE_CODE %vin% codes[["CALL_TYPE_CODE"]][[codes[["SPECIES_CODE"]] == SPECIES_CODE]],
-      DETECTION_METHOD.missing = !is.na(DETECTION_METHOD),
-      PROTOCOL_REFERENCE.missing = !is.na(PROTOCOL_REFERENCE),
-      DETECTION_SOFTWARE_NAME.missing = !is.na(DETECTION_SOFTWARE_NAME),
-      MIN_ANALYSIS_FREQUENCY_RANGE_HZ.missing_or_nonnumeric = !is.na(MIN_ANALYSIS_FREQUENCY_RANGE_HZ),
-      MIN_ANALYSIS_FREQUENCY_RANGE_HZ.out_of_range = in_range(
-        MIN_ANALYSIS_FREQUENCY_RANGE_HZ, 
-        min = 0,
-        max = METADATA.SAMPLING_RATE_HZ
-      ),
-      MIN_ANALYSIS_FREQUENCY_RANGE_HZ.min_greater_than_max = MIN_ANALYSIS_FREQUENCY_RANGE_HZ <= MAX_ANALYSIS_FREQUENCY_RANGE_HZ,
-      MAX_ANALYSIS_FREQUENCY_RANGE_HZ.missing_or_nonnumeric = !is.na(MAX_ANALYSIS_FREQUENCY_RANGE_HZ),
-      MAX_ANALYSIS_FREQUENCY_RANGE_HZ.out_of_range = in_range(
-        MAX_ANALYSIS_FREQUENCY_RANGE_HZ, 
-        min = 0,
-        max = METADATA.SAMPLING_RATE_HZ
-      ),
-      QC_PROCESSING.missing = !is.na(QC_PROCESSING),
-      QC_PROCESSING.not_found = QC_PROCESSING %in% codes[["QC_PROCESSING"]][["external"]]
-    ),
-    gpsdata = validator(
-      UNIQUE_ID.missing = !is.na(UNIQUE_ID),
-      UNIQUE_ID.not_found = UNIQUE_ID %vin% codes[["UNIQUE_ID"]],
-      DATETIME.missing_or_invalid_format = !is.na(DATETIME),
-      DATETIME.out_of_range = in_range(
-        DATETIME, 
-        min = floor_date(METADATA.MONITORING_START_DATETIME, "day") - days(30),
-        max = floor_date(METADATA.MONITORING_END_DATETIME, "day") + days(30)
-      ),
-      LATITUDE.missing_or_nonnumeric = !is.na(LATITUDE),
-      LATITUDE.out_of_range = in_range(LATITUDE, -90, 90),
-      LONGITUDE.missing_or_nonnumeric = !is.na(LONGITUDE),
-      LONGITUDE.out_of_range = in_range(LONGITUDE, -180, 180)
-    )
-  ),
-  internal = list(
-    header = validator(
-      DEPLOYMENT_ID.missing = !is.na(DEPLOYMENT_ID),
-      DEPLOYMENT_ID.not_found = DEPLOYMENT_ID %vin% codes[["DEPLOYMENT_ID"]],
-      DETECTION_ID.missing = !is.na(DETECTION_ID),
-      DETECTION_ID.duplicated = is_unique(DETECTION_ID),
-      
-      DATA_POC.missing = !is.na(DATA_POC),
-      DATA_POC.invalid_email = email(DATA_POC),
-      DATA_POC.not_found = DATA_POC %vin% codes[["POC_ID"]],
-      SUBMITTER_POC.missing = !is.na(SUBMITTER_POC),
-      SUBMITTER_POC.invalid_email = email(SUBMITTER_POC),
-      SUBMITTER_POC.not_found = SUBMITTER_POC %vin% codes[["POC_ID"]],
-      SUBMISSION_DATE.missing_or_invalid_format = !is.na(SUBMISSION_DATE),
-      SUBMISSION_DATE.out_of_range = in_range(
-        SUBMISSION_DATE, min = ymd(20200101), max = today()
-      ),
-      
-      ANALYSIS_SAMPLING_RATE_HZ.missing = !is.na(ANALYSIS_SAMPLING_RATE_HZ),
-      ANALYSIS_SAMPLING_RATE_HZ.is_negative = nonnegative(ANALYSIS_SAMPLING_RATE_HZ),
-      MIN_ANALYSIS_FREQUENCY_HZ.missing = !is.na(MIN_ANALYSIS_FREQUENCY_HZ),
-      MIN_ANALYSIS_FREQUENCY_HZ.out_of_range = in_range(
-        MIN_ANALYSIS_FREQUENCY_HZ, 
-        min = 0,
-        max = ANALYSIS_SAMPLING_RATE_HZ
-      ),
-      MIN_ANALYSIS_FREQUENCY_HZ.min_greater_than_max = MIN_ANALYSIS_FREQUENCY_HZ <= MAX_ANALYSIS_FREQUENCY_HZ,
-      
-      MAX_ANALYSIS_FREQUENCY_HZ.missing = !is.na(MAX_ANALYSIS_FREQUENCY_HZ),
-      MAX_ANALYSIS_FREQUENCY_HZ.out_of_range = in_range(
-        MAX_ANALYSIS_FREQUENCY_HZ, 
-        min = 0,
-        max = ANALYSIS_SAMPLING_RATE_HZ
-      ),
-      
-      MONITORING_START_DATETIME.missing = !is.na(MONITORING_START_DATETIME),
-      MONITORING_START_DATETIME.out_of_range = in_range(
-        MONITORING_START_DATETIME, 
-        min = ymd_hm(199001010000),
-        max = now()
-      ),
-      MONITORING_START_DATETIME.start_greater_than_end = MONITORING_START_DATETIME <= MONITORING_END_DATETIME,
-      MONITORING_END_DATETIME.missing = !is.na(MONITORING_END_DATETIME),
-      MONITORING_END_DATETIME.out_of_range = in_range(
-        MONITORING_END_DATETIME, 
-        min = ymd_hm(199001010000),
-        max = now()
-      ),
-      
-      PRIMARY_ANALYST.missing = !is.na(PRIMARY_ANALYST),
-      PRIMARY_ANALYST.invalid_email = email(PRIMARY_ANALYST),
-      PRIMARY_ANALYST.not_found = PRIMARY_ANALYST %vin% codes[["POC_ID"]],
-      SECONDARY_ANALYST.invalid_email = is.na(SECONDARY_ANALYST) | email(SECONDARY_ANALYST),
-      SECONDARY_ANALYST.not_found = is.na(SECONDARY_ANALYST) | SECONDARY_ANALYST %vin% codes[["POC_ID"]],
-      TERTIARY_ANALYST.invalid_email = is.na(TERTIARY_ANALYST) | email(TERTIARY_ANALYST),
-      TERTIARY_ANALYST.not_found = is.na(TERTIARY_ANALYST) | TERTIARY_ANALYST %vin% codes[["POC_ID"]],
-      
-      ANALYSIS_TIMEZONE.missing = !is.na(ANALYSIS_TIMEZONE),
-      ANALYSIS_TIMEZONE.not_found = ANALYSIS_TIMEZONE %vin% codes[["TIMEZONE_ID"]],
-      
-      DETECTION_METHOD.missing = !is.na(DETECTION_METHOD),
-      PROTOCOL_REFERENCE.missing = !is.na(PROTOCOL_REFERENCE),
-      DETECTOR_OUTPUT_FILENAME.missing = !is.na(DETECTOR_OUTPUT_FILENAME),
-      SOFTWARE.missing = !is.na(SOFTWARE),
-      DETECTOR_SETTINGS_ID.not_found = is.na(DETECTOR_SETTINGS_ID) | DETECTOR_SETTINGS_ID %vin% codes[["DETECTOR_SETTINGS_ID"]]
-    ),
-    detail = validator(
-      DEPLOYMENT_ID.missing = !is.na(DEPLOYMENT_ID),
-      DEPLOYMENT_ID.not_found = DEPLOYMENT_ID %vin% codes[["DEPLOYMENT_ID"]],
-      DETECTION_ID.missing = !is.na(DETECTION_ID),
-      DETECTION_ID.not_found = DETECTION_ID %vin% codes[["DETECTION_ID"]],
-      
-      ANALYSIS_PERIOD_START_DATETIME.missing = !is.na(ANALYSIS_PERIOD_START_DATETIME),
-      ANALYSIS_PERIOD_START_DATETIME.outside_monitoring_period = in_range(
-        ANALYSIS_PERIOD_START_DATETIME,
-        min = floor_date(HEADER.MONITORING_START_DATETIME, "day"),
-        max = floor_date(HEADER.MONITORING_END_DATETIME, "day") + days(1)
-      ),
-      ANALYSIS_PERIOD_START_DATETIME.start_greater_than_end = ANALYSIS_PERIOD_START_DATETIME <= ANALYSIS_PERIOD_END_DATETIME,
-      ANALYSIS_PERIOD_END_DATETIME.missing = !is.na(ANALYSIS_PERIOD_END_DATETIME),
-      ANALYSIS_PERIOD_END_DATETIME.outside_monitoring_period = in_range(
-        ANALYSIS_PERIOD_END_DATETIME,
-        min = floor_date(HEADER.MONITORING_START_DATETIME, "day"),
-        max = floor_date(HEADER.MONITORING_END_DATETIME, "day") + days(1)
-      ),
-      ANALYSIS_PERIOD_EFFORT_SECONDS.missing = !is.na(ANALYSIS_PERIOD_EFFORT_SECONDS),
-      ANALYSIS_PERIOD_EFFORT_SECONDS.is_negative = nonnegative(ANALYSIS_PERIOD_EFFORT_SECONDS),
-      ANALYSIS_PERIOD_EFFORT_SECONDS.greater_than_period_duration = ANALYSIS_PERIOD_EFFORT_SECONDS > as.numeric(difftime(ANALYSIS_PERIOD_END_DATETIME, ANALYSIS_PERIOD_END_DATETIME, units = "secs")),
+      detail = validate::validator(
+        DEPLOYMENT_ID.missing = !is.na(DEPLOYMENT_ID),
+        DEPLOYMENT_ID.not_found = DEPLOYMENT_ID %vin% codes[["DEPLOYMENT_ID"]],
+        DETECTION_ID.missing = !is.na(DETECTION_ID),
+        DETECTION_ID.not_found = DETECTION_ID %vin% codes[["DETECTION_ID"]],
+        
+        ANALYSIS_PERIOD_START_DATETIME.missing = !is.na(ANALYSIS_PERIOD_START_DATETIME),
+        ANALYSIS_PERIOD_START_DATETIME.outside_monitoring_period = in_range(
+          ANALYSIS_PERIOD_START_DATETIME,
+          min = floor_date(HEADER.MONITORING_START_DATETIME, "day"),
+          max = floor_date(HEADER.MONITORING_END_DATETIME, "day") + days(1)
+        ),
+        ANALYSIS_PERIOD_START_DATETIME.start_greater_than_end = ANALYSIS_PERIOD_START_DATETIME <= ANALYSIS_PERIOD_END_DATETIME,
+        ANALYSIS_PERIOD_END_DATETIME.missing = !is.na(ANALYSIS_PERIOD_END_DATETIME),
+        ANALYSIS_PERIOD_END_DATETIME.outside_monitoring_period = in_range(
+          ANALYSIS_PERIOD_END_DATETIME,
+          min = floor_date(HEADER.MONITORING_START_DATETIME, "day"),
+          max = floor_date(HEADER.MONITORING_END_DATETIME, "day") + days(1)
+        ),
+        ANALYSIS_PERIOD_EFFORT_SECONDS.missing = !is.na(ANALYSIS_PERIOD_EFFORT_SECONDS),
+        ANALYSIS_PERIOD_EFFORT_SECONDS.is_negative = in_range(ANALYSIS_PERIOD_EFFORT_SECONDS, 0, Inf),
+        ANALYSIS_PERIOD_EFFORT_SECONDS.greater_than_period_duration = ANALYSIS_PERIOD_EFFORT_SECONDS > as.numeric(difftime(ANALYSIS_PERIOD_END_DATETIME, ANALYSIS_PERIOD_END_DATETIME, units = "secs")),
+        
+        PACM_SPECIES_CODE.missing = !is.na(PACM_SPECIES_CODE),
+        PACM_SPECIES_CODE.not_found = PACM_SPECIES_CODE %vin% codes[["SPECIES_CODE"]],
+        
+        ACOUSTIC_PRESENCE.missing = !is.na(ACOUSTIC_PRESENCE),
+        ACOUSTIC_PRESENCE.not_found = ACOUSTIC_PRESENCE %vin% codes[["ACOUSTIC_PRESENCE"]][["internal"]],
+        
+        N_VALIDATED_DETECTIONS.is_negative = is.na(N_VALIDATED_DETECTIONS) | in_range(N_VALIDATED_DETECTIONS, 0, Inf),
+        N_TOTAL_DETECTIONS.is_negative = is.na(N_TOTAL_DETECTIONS) | in_range(N_TOTAL_DETECTIONS, 0, Inf),
+        MIN_NUMBER_ANIMALS.is_negative = is.na(MIN_NUMBER_ANIMALS) | in_range(MIN_NUMBER_ANIMALS, 0, Inf),
+        BEST_NUMBER_ANIMALS.is_negative = is.na(BEST_NUMBER_ANIMALS) | in_range(BEST_NUMBER_ANIMALS, 0, Inf),
+        MAX_NUMBER_ANIMALS.is_negative = is.na(MAX_NUMBER_ANIMALS) | in_range(MAX_NUMBER_ANIMALS, 0, Inf),
 
-      PACM_SPECIES_CODE.missing = !is.na(PACM_SPECIES_CODE),
-      PACM_SPECIES_CODE.not_found = PACM_SPECIES_CODE %vin% codes[["SPECIES_CODE"]],
-      
-      ACOUSTIC_PRESENCE.missing = !is.na(ACOUSTIC_PRESENCE),
-      ACOUSTIC_PRESENCE.not_found = ACOUSTIC_PRESENCE %vin% codes[["ACOUSTIC_PRESENCE"]][["internal"]],
-      
-      N_VALIDATED_DETECTIONS.is_negative = nonnegative(N_VALIDATED_DETECTIONS),
-      N_TOTAL_DETECTIONS.is_negative = nonnegative(N_TOTAL_DETECTIONS),
-      MIN_NUMBER_ANIMALS.is_negative = nonnegative(MIN_NUMBER_ANIMALS),
-      BEST_NUMBER_ANIMALS.is_negative = nonnegative(BEST_NUMBER_ANIMALS),
-      MAX_NUMBER_ANIMALS.is_negative = nonnegative(MAX_NUMBER_ANIMALS),
-      
-      LOWER_FREQUENCY_HZ.is_negative = nonnegative(LOWER_FREQUENCY_HZ),
-      LOWER_FREQUENCY_HZ.lower_greater_than_upper = LOWER_FREQUENCY_HZ <= UPPER_FREQUENCY_HZ,
-      UPPER_FREQUENCY_HZ.is_negative = nonnegative(UPPER_FREQUENCY_HZ),
-      
-      DETECTION_LATITUDE.missing_or_nonnumeric = !is.na(DETECTION_LATITUDE),
-      DETECTION_LATITUDE.out_of_range = in_range(DETECTION_LATITUDE, -90, 90),
-      DETECTION_LONGITUDE.missing_or_nonnumeric = !is.na(DETECTION_LONGITUDE),
-      DETECTION_LONGITUDE.out_of_range = in_range(DETECTION_LONGITUDE, -180, 180),
-      
-      PERPENDICULAR_DISTANCE_M.is_negative = nonnegative(PERPENDICULAR_DISTANCE_M),
-      PERPENDICULAR_DISTANCE_ERROR_M.is_negative = nonnegative(PERPENDICULAR_DISTANCE_ERROR_M),
-      ANIMAL_DEPTH_ERROR.is_negative = nonnegative(ANIMAL_DEPTH_ERROR),
-      ANIMAL_DEPTH.is_negative = nonnegative(ANIMAL_DEPTH),
-      N_SIGNALS_DEPTH_ESTIMATION.is_negative = nonnegative(N_SIGNALS_DEPTH_ESTIMATION),
-      
-      PACM_CALL_TYPE_CODE.missing = !is.na(PACM_CALL_TYPE_CODE),
-      PACM_CALL_TYPE_CODE.not_found_for_species = PACM_CALL_TYPE_CODE %vin% codes[["CALL_TYPE_CODE"]][["CALL_TYPE_CODE"]][[codes[["CALL_TYPE_CODE"]][["SPECIES_CODE"]] == PACM_SPECIES_CODE]],
-      
-      ANALYSIS_GRANULARITY.missing = !is.na(ANALYSIS_GRANULARITY),
-      ANALYSIS_GRANULARITY.not_found = ANALYSIS_GRANULARITY %vin% codes[["ANALYSIS_GRANULARITY"]],
-      CALL_LIBRARY_ID.missing = !is.na(CALL_LIBRARY_ID),
-      CALL_LIBRARY_ID.not_found = CALL_LIBRARY_ID %vin% codes[["CALL_LIBRARY_ID"]][["CALL_LIBRARY_ID"]][[codes[["CALL_LIBRARY_ID"]][["SPECIES_CODE"]] == PACM_SPECIES_CODE]],
-      QC_PROCESSING.missing = !is.na(QC_PROCESSING),
-      QC_PROCESSING.not_found = QC_PROCESSING %in% codes[["QC_PROCESSING"]][["internal"]],
-      
-      MAX_MAHALANOBIS_DISTANCE.is_negative = nonnegative(MAX_MAHALANOBIS_DISTANCE)
+        LOWER_FREQUENCY_HZ.is_negative = is.na(LOWER_FREQUENCY_HZ) | in_range(LOWER_FREQUENCY_HZ, 0, Inf),
+        LOWER_FREQUENCY_HZ.lower_greater_than_upper = LOWER_FREQUENCY_HZ <= UPPER_FREQUENCY_HZ,
+        UPPER_FREQUENCY_HZ.is_negative = is.na(UPPER_FREQUENCY_HZ) | in_range(UPPER_FREQUENCY_HZ, 0, Inf),
+
+        DETECTION_LATITUDE.missing_or_nonnumeric = !is.na(DETECTION_LATITUDE),
+        DETECTION_LATITUDE.out_of_range = in_range(DETECTION_LATITUDE, -90, 90),
+        DETECTION_LONGITUDE.missing_or_nonnumeric = !is.na(DETECTION_LONGITUDE),
+        DETECTION_LONGITUDE.out_of_range = in_range(DETECTION_LONGITUDE, -180, 180),
+
+        PERPENDICULAR_DISTANCE_M.is_negative = is.na(PERPENDICULAR_DISTANCE_M) | in_range(PERPENDICULAR_DISTANCE_M, 0, Inf),
+        PERPENDICULAR_DISTANCE_ERROR_M.is_negative = is.na(PERPENDICULAR_DISTANCE_ERROR_M) | in_range(PERPENDICULAR_DISTANCE_ERROR_M, 0, Inf),
+        ANIMAL_DEPTH_ERROR.is_negative = is.na(ANIMAL_DEPTH_ERROR) | in_range(ANIMAL_DEPTH_ERROR, 0, Inf),
+        ANIMAL_DEPTH.is_negative = is.na(ANIMAL_DEPTH) | in_range(ANIMAL_DEPTH, 0, Inf),
+        N_SIGNALS_DEPTH_ESTIMATION.is_negative = is.na(N_SIGNALS_DEPTH_ESTIMATION) | in_range(N_SIGNALS_DEPTH_ESTIMATION, 0, Inf),
+
+        PACM_CALL_TYPE_CODE.missing = !is.na(PACM_CALL_TYPE_CODE),
+        PACM_CALL_TYPE_CODE.not_found_for_species = PACM_CALL_TYPE_CODE %vin% codes[["CALL_TYPE_CODE"]][["CALL_TYPE_CODE"]][[codes[["CALL_TYPE_CODE"]][["SPECIES_CODE"]] == PACM_SPECIES_CODE]],
+
+        ANALYSIS_GRANULARITY.missing = !is.na(ANALYSIS_GRANULARITY),
+        ANALYSIS_GRANULARITY.not_found = ANALYSIS_GRANULARITY %vin% codes[["ANALYSIS_GRANULARITY"]],
+        CALL_LIBRARY_ID.missing = !is.na(CALL_LIBRARY_ID),
+        CALL_LIBRARY_ID.not_found = CALL_LIBRARY_ID %vin% codes[["CALL_LIBRARY_ID"]][["CALL_LIBRARY_ID"]][[codes[["CALL_LIBRARY_ID"]][["SPECIES_CODE"]] == PACM_SPECIES_CODE]],
+        QC_PROCESSING.missing = !is.na(QC_PROCESSING),
+        QC_PROCESSING.not_found = QC_PROCESSING %in% codes[["QC_PROCESSING"]][["internal"]],
+
+        MAX_MAHALANOBIS_DISTANCE.is_negative = is.na(MAX_MAHALANOBIS_DISTANCE) | in_range(MAX_MAHALANOBIS_DISTANCE, 0, Inf)
+      )
     )
   )
-)
+}
 
 
 # transform ---------------------------------------------------------------
@@ -630,8 +619,8 @@ submission_is_valid <- function (x) {
 # submission -------------------------------------------------------
 
 
-load_submission <- function (id, type, db_tables) {
-  root_dir <- file.path(Sys.getenv("PACM_DATA_DIR"), type)
+load_submission <- function (id, type, db_tables, data_dir = Sys.getenv("PACM_DATA_DIR")) {
+  root_dir <- file.path(data_dir, type)
   stopifnot(dir.exists(root_dir))
   
   create_processing_dir(id, type)
@@ -662,6 +651,7 @@ load_submission <- function (id, type, db_tables) {
   )
   
   codes <- load_codes(db_tables)
+  rules <- pacm_rules()
   if (type == "external") {
     codes <- c(codes, list(UNIQUE_ID = db_tables$metadata$UNIQUE_ID))
     
@@ -669,7 +659,7 @@ load_submission <- function (id, type, db_tables) {
       id,
       files = file.path(dirs$raw, raw_files),
       pattern = "*_METADATA_*",
-      rules = pacm_rules$external$metadata, 
+      rules = rules$external$metadata, 
       codes = codes, 
       parse = parse_external_metadata,
       transform = transformers$metadata
@@ -686,7 +676,7 @@ load_submission <- function (id, type, db_tables) {
       id,
       files = file.path(dirs$raw, raw_files),
       pattern = "*_DETECTIONDATA_*",
-      rules = pacm_rules$external$detectiondata, 
+      rules = rules$external$detectiondata, 
       codes = codes, 
       parse = parse_external_detectiondata,
       transform = transformers$detectiondata,
@@ -707,7 +697,7 @@ load_submission <- function (id, type, db_tables) {
       id,
       files = file.path(dirs$raw, raw_files),
       pattern = "*_HEADER_*",
-      rules = pacm_rules$internal$header, 
+      rules = rules$internal$header, 
       codes = codes, 
       parse = parse_internal_header,
       transform = transformers$header
@@ -725,7 +715,7 @@ load_submission <- function (id, type, db_tables) {
       id,
       files = file.path(dirs$raw, raw_files),
       pattern = "*_DETAIL_*",
-      rules = pacm_rules$internal$detail, 
+      rules = rules$internal$detail, 
       codes = codes, 
       parse = parse_internal_detail,
       transform = transformers$detail,

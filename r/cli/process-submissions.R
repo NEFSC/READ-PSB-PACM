@@ -53,6 +53,9 @@ log_info("directory: {data_dir}")
 if (!dir.exists(data_dir)) {
   stop(glue("Data directory not found: {data_dir}"))
 }
+if (Sys.getenv("PACM_DATA_DIR") == "") {
+  Sys.setenv("PACM_DATA_DIR" = data_dir)
+}
 
 type <- argv$options$type
 log_info("type: {type}")
