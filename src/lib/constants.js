@@ -22,6 +22,10 @@ export const themes = [
     id: 'sei',
     label: 'Sei Whale'
   },
+  // {
+  //   id: 'minke',
+  //   label: 'Minke Whale'
+  // },
   {
     divider: true
   },

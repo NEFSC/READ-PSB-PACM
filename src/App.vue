@@ -182,14 +182,16 @@
       max-width="600"
       scrollable
       persistent>
-      <v-alert type="error" :value="true" prominent class="mb-0">
-        <div class="text-h6">Failed to Load Dataset</div>
-        <p class="body-1">
-          An error occurred fetching the dataset from the server.
-          Please refresh and try again.
-          If the problem continues, please contact us at <a href="mailto:nmfs.nec.pacmdata@noaa.gov">nmfs.nec.pacmdata@noaa.gov</a>.
-        </p>
-      </v-alert>
+      <div>
+        <v-alert type="error" :value="true" prominant class="mb-0">
+          <div class="text-h6">Failed to Load Dataset</div>
+          <p class="body-1 mb-0">
+            An error occurred fetching the dataset from the server.
+            Please refresh and try again.
+            If the problem continues, please contact us at <a href="mailto:nmfs.nec.pacmdata@noaa.gov" style="color:white">nmfs.nec.pacmdata@noaa.gov</a>.
+          </p>
+        </v-alert>
+      </div>
     </v-dialog>
 
     <v-tour name="tour" :steps="tour.steps" :options="tour.options" role="main">
