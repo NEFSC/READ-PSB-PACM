@@ -87,6 +87,11 @@
       <h2 class="text-h5 mb-2">Latest Updates</h2>
 
       <div class="text-subheading font-weight-bold text--secondary">
+        v1.1.5 | July 20, 2023
+      </div>
+      <p>Added new DFO, SEFSC datasets. Minor updates to About page and User Guide.</p>
+
+      <div class="text-subheading font-weight-bold text--secondary">
         v1.1.4 | March 22, 2023
       </div>
       <p>Updated contact email address to <a class="text-decoration-underline" href="mailto:nmfs.nec.pacmdata@noaa.gov">nmfs.nec.pacmdata@noaa.gov</a>. Fixed ESRI Ocean basemap.</p>
