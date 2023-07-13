@@ -55,13 +55,13 @@
 
       <h2 class="text-h5">Acoustic Recorders and Detections</h2>
       <p>
-        Species that are currently represented include the North Atlantic right whale, fin whale, humpback whale, sei whale, blue whale, sperm whale, beaked whale species, and Kogia species (dwarf/pygmy sperm whales). The specific call types used for each species along with other metadata related to the recording and detection analysis can be found by hovering over or clicking on each platform.
+        Species that are currently represented include the North Atlantic right whale, fin whale, humpback whale, sei whale, blue whale, sperm whale, harbor porpoise, beaked whale species, and Kogia species (dwarf/pygmy sperm whales). The specific call types used for each species along with other metadata related to the recording and detection analysis can be found by hovering over or clicking on each platform.
       </p>
       <p>
         Acoustic detections were recorded using stationary (bottom-mounted moorings, surface buoys) and mobile (autonomous gliders and towed arrays) platforms. Stationary platforms are represented using circles with varying sizes that represent the number of days with definite or possible acoustic detections at a fixed location. Mobile platforms are represented using track lines with squares indicating the specific locations where each detection was observed (for gliders, only the first detection of each day is shown). See the User Guide for more information about the map symbology and descriptions of different types of PAM platforms.
       </p>
       <p>
-        These acoustic detections only represent times when animals are calling; they do not capture time periods when animals are present but silent. Detections are from archival acoustic recorders and do not show recorders currently in the water (this is not a real-time tool). Differences in recorder detection ranges for each species are not accounted for; they can vary based on differences in instrumentation (i.e. recording hardware), environmental conditions (i.e. weather, bottom type, ambient sound levels), and anthropogenic sound levels.
+        These acoustic detections only represent times when animals are calling; they do not capture time periods when animals are present but silent.  Detections are from archival acoustic recorders and do not show recorders currently in the water (this is not a real-time tool). Differences in recorder detection ranges for each species are not accounted for; they can vary based on differences in instrumentation (i.e. recording hardware), environmental conditions (i.e. weather, bottom type, ambient sound levels), and anthropogenic sound levels.
       </p>
 
       <h2 class="text-h5">Data Permissions and Contributions</h2>
@@ -75,7 +75,7 @@
         <Citation></Citation>
       </p>
       <p>
-        For questions about contributing data to this project or any other inquiries, please contact <a class="text-decoration-underline" href="mailto:nmfs.nec.pacmdata@noaa.gov">nmfs.nec.pacmdata@noaa.gov</a>.
+        Data can be submitted by using the <a class="text-decoration-underline" href="https://www.fisheries.noaa.gov/resource/document/passive-acoustic-reporting-system-templates">Passive Acoustic Reporting System</a> templates. For questions about contributing data to this project or any other inquiries, please contact <a class="text-decoration-underline" href="mailto:nmfs.nec.pacmdata@noaa.gov">nmfs.nec.pacmdata@noaa.gov</a>.
       </p>
       <p>
         Further information about Passive Acoustic Monitoring can be found at the <a class="text-decoration-underline" href="https://www.fisheries.noaa.gov/new-england-mid-atlantic/endangered-species-conservation/passive-acoustic-research-atlantic-ocean" target="_blank">NOAA NEFSC Passive Acoustic Research Website</a>
@@ -89,7 +89,7 @@
       <div class="text-subheading font-weight-bold text--secondary">
         v1.1.5 | July 20, 2023
       </div>
-      <p>Added new DFO, SEFSC datasets. Minor updates to About page and User Guide.</p>
+      <p>Added new DFO, JASCO, SEFSC datasets. Minor updates to About page and User Guide.</p>
 
       <div class="text-subheading font-weight-bold text--secondary">
         v1.1.4 | March 22, 2023

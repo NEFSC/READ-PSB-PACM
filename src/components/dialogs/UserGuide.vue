@@ -170,7 +170,7 @@
                       For <em>gliders</em>, only the first definite acoustic detection of each day is shown on the map. Due to the large number of potential acoustic detections on any given day by a single glider, only one acoustic detection is shown to prevent overcrowding of red squares on the map.
                     </p>
                     <p>
-                      For <em>towed arrays</em>, multiple squares will be shown if there were more than one definite acoustic detections on any given day.
+                      For <em>towed arrays</em>, multiple squares will be shown if there were more than one definite acoustic detections on any given day given the large spatial distance covered.
                     </p>
                   </v-col>
                 </v-row>
@@ -350,7 +350,7 @@
                       What is a deployment?
                     </v-expansion-panel-header>
                     <v-expansion-panel-content class="text-body-2">
-                      In general, a single deployment contains the acoustic recordings collected by a single platform over a continuous period of time. For stationary platforms (bottom-mounted moorings, surface buoys), a deployment is the continuous period when a hydrophone was left at a fixed position over time and then subsequently recovered. For many stationary platforms, multiple deployments are collected within a close spatial proximity, sometimes at different depths. For gliders, a deployment represents the continuous period when a single glider travelled through the ocean collecting audio data. For towed arrays, a deployment corresponds to a single cruise of the research vessel. Towed array deployments may have multi-day gaps due to periods when the vessel returned to port or bad weather.
+                      In general, a single deployment contains the acoustic recordings collected by a single platform over a continuous period of time. For stationary platforms (bottom-mounted moorings, surface buoys), a deployment is the continuous period when a hydrophone was left at a fixed position over time and then subsequently recovered. For many stationary platforms, multiple deployments are collected within a close spatial proximity, sometimes at different depths. For gliders, a deployment represents the continuous period when a single glider traveled through the ocean collecting audio data. For towed arrays, a deployment corresponds to a single cruise of the research vessel. Towed array deployments may have multi-day gaps due to periods when the vessel returned to port or bad weather preventing the array from being deployed.
                     </v-expansion-panel-content>
                   </v-expansion-panel>
 
@@ -365,10 +365,19 @@
 
                   <v-expansion-panel>
                     <v-expansion-panel-header class="text-subtitle-1 font-weight-bold">
+                      What is considered a "Detection" from a towed array?
+                    </v-expansion-panel-header>
+                    <v-expansion-panel-content class="text-body-2">
+                      Towed arrays have the potential to span large distances over the course of a deployment. They also have the capacity to localize and track incoming signals if utilizing more than one hydrophone. However, all towed array "detections" are shown on the map as a single point, utilizing the ship's GPS position at the start of the detection, regardless of localization or group size information. Thus, it becomes important to note the level of analysis conducted, which, at this time, is of <strong>individuals</strong>. It should be noted that real-time detections will have greater uncertainty at the individual level than those analyzed in post-processing (captured under the metadata QAQC field).
+                    </v-expansion-panel-content>
+                  </v-expansion-panel>
+
+                  <v-expansion-panel>
+                    <v-expansion-panel-header class="text-subtitle-1 font-weight-bold">
                       What is a call type?
                     </v-expansion-panel-header>
                     <v-expansion-panel-content class="text-body-2">
-                      Most species produce more than one type of call which can be attributed to that species (for example, North Atlantic right whales produce upcalls, gunshots, and additional call types; many odontoceti species produce both whistles and echolocation clicks). These call types can be similar to one another, or vary greatly, often resulting with detectors built specifically for one call type. Sometimes, only one call type is analyzed for a species; other times, multiple call types are analyzed for a species. The metadata table shows you which call types have been analyzed and are marked as "Detected" for that species and specific recorder. Species use call types for different behaviours (i.e. blue whale arch/D calls are a feeding call, while AB calls denote song). The presence of different call types may show different seasonal presence depending on what call type was analyzed.
+                      Most species produce more than one type of call which can be attributed to that species (for example, North Atlantic right whales produce upcalls, gunshots, and additional call types; many odontoceti species produce both whistles and echolocation clicks). These call types can be similar to one another, or vary greatly, often resulting with detectors built specifically for one call type. Sometimes, only one call type is analyzed for a species; other times, multiple call types are analyzed for a species. The metadata table shows you which call types have been analyzed and are marked as "Detected" for that species and specific recorder. Species use call types for different behaviors (i.e. blue whale arch/D calls are a feeding call, while AB calls denote song). The presence of different call types may show different seasonal presence depending on what call type was analyzed.
                     </v-expansion-panel-content>
                   </v-expansion-panel>
 
@@ -395,7 +404,7 @@
                       Can I contribute my own passive acoustic detection data?
                     </v-expansion-panel-header>
                     <v-expansion-panel-content class="text-body-2">
-                      If you have passive acoustic data that you would like to contribute to this project, please contact <a href="mailto:nmfs.nec.pacmdata@noaa.gov">nmfs.nec.pacmdata@noaa.gov</a>.
+                      If you have passive acoustic data that you would like to contribute to this project, please download our submission templates from our <a href="https://www.fisheries.noaa.gov/resource/document/passive-acoustic-reporting-system-templates">website</a> and submit them to <a href="mailto:nmfs.nec.pacmdata@noaa.gov">nmfs.nec.pacmdata@noaa.gov</a>.
                     </v-expansion-panel-content>
                   </v-expansion-panel>
 
