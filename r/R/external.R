@@ -24,7 +24,7 @@ targets_external <- list(
     ) %>% 
       group_by(id) %>% 
       tar_group()
-  }, iteration = "group"),
+  }, iteration = "group", cue = tar_cue("always")),
   tar_target(external_submission_branches, {
       x <- load_external_submission(
         id = external_submission_groups$id, 

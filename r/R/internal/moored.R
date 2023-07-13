@@ -4,7 +4,13 @@ targets_moored <- list(
     x <- read_csv(moored_deployments_file, col_types = cols(.default = col_character())) %>%
       remove_empty(which = "rows") %>%
       clean_names() %>%
-      mutate(unique_id = coalesce(unique_id, paste0(project, "_", site_id)))
+      mutate(
+        unique_id = coalesce(unique_id, paste0(project, "_", site_id)),
+        monitoring_end_datetime = case_when(
+          project == "SIROVIC_BERMUDA_201306" ~ "3/14/2014 00:00",
+          TRUE ~ monitoring_end_datetime
+        )
+      )
     x_not_analyzed <- x %>% 
       select(project:unique_id) %>% 
       mutate(theme = "deployments", analyzed = FALSE)
