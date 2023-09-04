@@ -86,6 +86,7 @@ load_db_tables <- function () {
   log_info("fetching support tables from database")
   E_PACM_METADATA <- DBI::dbGetQuery(con, "SELECT * FROM PAGROUP.E_PACM_METADATA;")
   I_EQPMNT_DEPLOYMENT <- DBI::dbGetQuery(con, "SELECT * FROM PAGROUP.I_EQPMNT_DEPLOYMENT;")
+  I_RECORDING <- DBI::dbGetQuery(con, "SELECT * FROM PAGROUP.I_RECORDING;")
   S_CALL_LIBRARY <- DBI::dbGetQuery(con, "SELECT * FROM PAGROUP.S_CALL_LIBRARY;")
   S_SPECIES <- DBI::dbGetQuery(con, "SELECT * FROM PAGROUP.S_SPECIES;")
   S_CALL_TYPE <- DBI::dbGetQuery(con, "SELECT * FROM PAGROUP.S_CALL_TYPE;")
@@ -100,6 +101,7 @@ load_db_tables <- function () {
   list(
     metadata = as_tibble(E_PACM_METADATA),
     deployment = as_tibble(I_EQPMNT_DEPLOYMENT),
+    recording = as_tibble(I_RECORDING),
     species = as_tibble(S_SPECIES) %>% 
       select(SPECIES_ID, SPECIES_CODE = PACM_SPECIES_CODE) %>% 
       filter(!is.na(SPECIES_CODE)),
@@ -130,6 +132,7 @@ load_db_tables <- function () {
 # validation --------------------------------------------------------------
 
 load_codes <- function (db_tables) {
+  log_info("loading codes")
   list(
     STATIONARY_OR_MOBILE = toupper(c("Stationary", "Mobile")),
     PLATFORM_TYPE = toupper(
@@ -285,10 +288,13 @@ pacm_rules <- function () {
     ),
     internal = list(
       header = validate::validator(
-        DEPLOYMENT_ID.missing = !is.na(DEPLOYMENT_ID),
-        DEPLOYMENT_ID.not_found = DEPLOYMENT_ID %vin% codes[["DEPLOYMENT_ID"]],
-        DETECTION_ID.missing = !is.na(DETECTION_ID),
-        DETECTION_ID.duplicated = is_unique(DETECTION_ID),
+        # DEPLOYMENT_ID.missing = !is.na(DEPLOYMENT_ID),
+        # DEPLOYMENT_ID.not_found = DEPLOYMENT_ID %vin% codes[["DEPLOYMENT_ID"]],
+        RECORDING_ID.missing = !is.na(RECORDING_ID),
+        RECORDING_ID.not_found = RECORDING_ID %vin% codes[["RECORDING_ID"]],
+        
+        DETECTION_HEADER_ID.missing = !is.na(DETECTION_HEADER_ID),
+        DETECTION_HEADER_ID.duplicated = is_unique(DETECTION_HEADER_ID),
         
         DATA_POC.missing = !is.na(DATA_POC),
         DATA_POC.invalid_email = grepl(email_pattern, DATA_POC),
@@ -347,13 +353,21 @@ pacm_rules <- function () {
         PROTOCOL_REFERENCE.missing = !is.na(PROTOCOL_REFERENCE),
         DETECTOR_OUTPUT_FILENAME.missing = !is.na(DETECTOR_OUTPUT_FILENAME),
         SOFTWARE.missing = !is.na(SOFTWARE),
-        DETECTOR_SETTINGS_ID.not_found = is.na(DETECTOR_SETTINGS_ID) | DETECTOR_SETTINGS_ID %vin% codes[["DETECTOR_SETTINGS_ID"]]
+        DETECTOR_SETTINGS_ID.not_found = is.na(DETECTOR_SETTINGS_ID) | DETECTOR_SETTINGS_ID %vin% codes[["DETECTOR_SETTINGS_ID"]],
+        
+        ANALYSIS_GRANULARITY.missing = !is.na(ANALYSIS_GRANULARITY),
+        ANALYSIS_GRANULARITY.not_found = ANALYSIS_GRANULARITY %vin% codes[["ANALYSIS_GRANULARITY"]],
+        CALL_LIBRARY_ID.missing = !is.na(CALL_LIBRARY_ID),
+        CALL_LIBRARY_ID.not_found = CALL_LIBRARY_ID %vin% codes[["CALL_LIBRARY_ID"]][["CALL_LIBRARY_ID"]],
+        # CALL_LIBRARY_ID.not_found = CALL_LIBRARY_ID %vin% codes[["CALL_LIBRARY_ID"]][["CALL_LIBRARY_ID"]][[codes[["CALL_LIBRARY_ID"]][["SPECIES_CODE"]] == PACM_SPECIES_CODE]],
+        QC_PROCESSING.missing = !is.na(QC_PROCESSING),
+        QC_PROCESSING.not_found = QC_PROCESSING %in% codes[["QC_PROCESSING"]][["internal"]]
       ),
       detail = validate::validator(
-        DEPLOYMENT_ID.missing = !is.na(DEPLOYMENT_ID),
-        DEPLOYMENT_ID.not_found = DEPLOYMENT_ID %vin% codes[["DEPLOYMENT_ID"]],
-        DETECTION_ID.missing = !is.na(DETECTION_ID),
-        DETECTION_ID.not_found = DETECTION_ID %vin% codes[["DETECTION_ID"]],
+        # DEPLOYMENT_ID.missing = !is.na(DEPLOYMENT_ID),
+        # DEPLOYMENT_ID.not_found = DEPLOYMENT_ID %vin% codes[["DEPLOYMENT_ID"]],
+        DETECTION_HEADER_ID.missing = !is.na(DETECTION_HEADER_ID),
+        DETECTION_HEADER_ID.not_found = DETECTION_HEADER_ID %vin% codes[["DETECTION_HEADER_ID"]],
         
         ANALYSIS_PERIOD_START_DATETIME.missing = !is.na(ANALYSIS_PERIOD_START_DATETIME),
         ANALYSIS_PERIOD_START_DATETIME.outside_monitoring_period = in_range(
@@ -374,6 +388,7 @@ pacm_rules <- function () {
         
         PACM_SPECIES_CODE.missing = !is.na(PACM_SPECIES_CODE),
         PACM_SPECIES_CODE.not_found = PACM_SPECIES_CODE %vin% codes[["SPECIES_CODE"]],
+        PACM_SPECIES_CODE.call_library_not_found = PACM_SPECIES_CODE %vin% codes[["CALL_LIBRARY_ID"]][["PACM_SPECIES_CODE"]][[codes[["CALL_LIBRARY_ID"]][["CALL_LIBRARY_ID"]] == HEADER.CALL_LIBRARY_ID]],
         
         ACOUSTIC_PRESENCE.missing = !is.na(ACOUSTIC_PRESENCE),
         ACOUSTIC_PRESENCE.not_found = ACOUSTIC_PRESENCE %vin% codes[["ACOUSTIC_PRESENCE"]][["internal"]],
@@ -401,13 +416,6 @@ pacm_rules <- function () {
 
         PACM_CALL_TYPE_CODE.missing = !is.na(PACM_CALL_TYPE_CODE),
         PACM_CALL_TYPE_CODE.not_found_for_species = PACM_CALL_TYPE_CODE %vin% codes[["CALL_TYPE_CODE"]][["CALL_TYPE_CODE"]][[codes[["CALL_TYPE_CODE"]][["SPECIES_CODE"]] == PACM_SPECIES_CODE]],
-
-        ANALYSIS_GRANULARITY.missing = !is.na(ANALYSIS_GRANULARITY),
-        ANALYSIS_GRANULARITY.not_found = ANALYSIS_GRANULARITY %vin% codes[["ANALYSIS_GRANULARITY"]],
-        CALL_LIBRARY_ID.missing = !is.na(CALL_LIBRARY_ID),
-        CALL_LIBRARY_ID.not_found = CALL_LIBRARY_ID %vin% codes[["CALL_LIBRARY_ID"]][["CALL_LIBRARY_ID"]][[codes[["CALL_LIBRARY_ID"]][["SPECIES_CODE"]] == PACM_SPECIES_CODE]],
-        QC_PROCESSING.missing = !is.na(QC_PROCESSING),
-        QC_PROCESSING.not_found = QC_PROCESSING %in% codes[["QC_PROCESSING"]][["internal"]],
 
         MAX_MAHALANOBIS_DISTANCE.is_negative = is.na(MAX_MAHALANOBIS_DISTANCE) | in_range(MAX_MAHALANOBIS_DISTANCE, 0, Inf)
       )
@@ -534,8 +542,9 @@ parse_internal_header <- function (x) {
       ),
       across(
         c(
-          DEPLOYMENT_ID,
-          DETECTION_ID,
+          # DEPLOYMENT_ID,
+          RECORDING_ID,
+          DETECTION_HEADER_ID,
           ANALYSIS_SAMPLING_RATE_HZ,
           MIN_ANALYSIS_FREQUENCY_HZ,
           MAX_ANALYSIS_FREQUENCY_HZ,
@@ -562,23 +571,21 @@ parse_internal_detail <- function (x) {
       ),
       across(
         c(
-          DEPLOYMENT_ID,
-          DETECTION_ID,
+          # DEPLOYMENT_ID
+          DETECTION_HEADER_ID,
           ANALYSIS_PERIOD_EFFORT_SECONDS,
-          ANALYSIS_DETECTION_NUMBER,
           N_VALIDATED_DETECTIONS,
           N_TOTAL_DETECTIONS,
-          MIN_NUMBER_ANIMALS,
-          BEST_NUMBER_ANIMALS,
-          MAX_NUMBER_ANIMALS,
-          LOWER_FREQUENCY,
-          UPPER_FREQUENCY,
-          DETECTION_LATITUDE,
-          DETECTION_LONGITUDE,
-          PERPENDICULAR_DISTANCE_M,
-          PERPENDICULAR_DISTANCE_ERROR_M,
-          ANIMAL_DEPTH,
-          CALL_LIBRARY_ID,
+          # MIN_NUMBER_ANIMALS,
+          # BEST_NUMBER_ANIMALS,
+          # MAX_NUMBER_ANIMALS,
+          # LOWER_FREQUENCY,
+          # UPPER_FREQUENCY,
+          # DETECTION_LATITUDE,
+          # DETECTION_LONGITUDE,
+          # PERPENDICULAR_DISTANCE_M,
+          # PERPENDICULAR_DISTANCE_ERROR_M,
+          # ANIMAL_DEPTH,
           MAX_MAHALANOBIS_DISTANCE
         ),
         parse_number
@@ -692,7 +699,7 @@ load_submission <- function (id, type, db_tables, data_dir = Sys.getenv("PACM_DA
       )
     ))
   } else if (type == "internal") {
-    codes <- c(codes, list(DEPLOYMENT_ID = db_tables$deployment$DEPLOYMENT_ID))
+    codes <- c(codes, list(RECORDING_ID = db_tables$recording$RECORDING_ID))
     header <- load_submission_files(
       id,
       files = file.path(dirs$raw, raw_files),
@@ -703,12 +710,12 @@ load_submission <- function (id, type, db_tables, data_dir = Sys.getenv("PACM_DA
       transform = transformers$header
     )
     if (nrow(header) > 0) {
-      header_detection_ids <- unlist(map(header$parsed, \(x) x$DETECTION_ID))
-      codes[["DETECTION_ID"]] <- header_detection_ids
+      detection_header_ids <- unlist(map(header$parsed, \(x) x$DETECTION_HEADER_ID))
+      codes[["DETECTION_HEADER_ID"]] <- detection_header_ids
     }
     join_header <- bind_rows(header$parsed) %>% 
-      filter(!duplicated(DETECTION_ID)) %>% 
-      select(DEPLOYMENT_ID, DETECTION_ID, MONITORING_START_DATETIME, MONITORING_END_DATETIME) %>% 
+      filter(!duplicated(DETECTION_HEADER_ID)) %>% 
+      select(RECORDING_ID, DETECTION_HEADER_ID, MONITORING_START_DATETIME, MONITORING_END_DATETIME, CALL_LIBRARY_ID) %>% 
       rename_with(~ paste0("HEADER.", .x))
     
     detail <- load_submission_files(
@@ -720,7 +727,7 @@ load_submission <- function (id, type, db_tables, data_dir = Sys.getenv("PACM_DA
       parse = parse_internal_detail,
       transform = transformers$detail,
       join_data = join_header,
-      join_by = c("DEPLOYMENT_ID" = "HEADER.DEPLOYMENT_ID", "DETECTION_ID" = "HEADER.DETECTION_ID")
+      join_by = c("DETECTION_HEADER_ID" = "HEADER.DETECTION_HEADER_ID")
     )
     
     out <- c(out, list(
@@ -847,7 +854,7 @@ export_submission <- function (x) {
         write_csv(detectiondata_file, na = "", progress = FALSE)
     }
   } else if (x$type == "internal") {
-    if (nrow(x$header) > 0) {
+    if (nrow(x$data$header) > 0) {
       header_file <- file.path(import_dir, glue("{x$id}_HEADER.csv"))
       log_info("saving header file: {header_file}")
       import_files <- c(import_files, header_file)

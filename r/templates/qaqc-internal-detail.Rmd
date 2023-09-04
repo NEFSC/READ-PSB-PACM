@@ -9,7 +9,7 @@ detail_data <- detail_files %>%
   unnest(parsed)
 detail_valid <- sum(detail_files$n_errors) == 0
 detail_summary <- detail_data %>% 
-  group_by(filename, DEPLOYMENT_ID, DETECTION_ID, PACM_SPECIES_CODE) %>% 
+  group_by(filename, DETECTION_HEADER_ID, PACM_SPECIES_CODE) %>% 
   summarize(
     ANALYSIS_PERIOD_START_DATETIME = min(ANALYSIS_PERIOD_START_DATETIME),
     ANALYSIS_PERIOD_END_DATETIME = max(ANALYSIS_PERIOD_END_DATETIME),
@@ -64,7 +64,7 @@ knitr::kable(tabyl(detail_data, PACM_SPECIES_CODE, PACM_CALL_TYPE_CODE), caption
 
 ### Dataset
 
-Summary of each `DEPLOMENT_ID`, `DETECTION_ID`, and `PACM_SPECIES_CODE` including start/end of analysis period, number of detections (`ACOUSTIC_PRESENCE=1`) and total number of rows.
+Summary of each `DETECTION_HEADER_ID`, and `PACM_SPECIES_CODE` including start/end of analysis period, number of detections (`ACOUSTIC_PRESENCE=1`) and total number of rows.
 
 ```{r eval=has_detectiondata}
 datatable(detail_summary)

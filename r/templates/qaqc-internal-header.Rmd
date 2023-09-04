@@ -27,6 +27,8 @@ header_files %>%
 ```{r results="asis"}
 if (!header_valid) {
   cat('<div class="alert alert-danger">Header files contain', sum(header_files$n_errors), 'validation errors.</div>')
+} else {
+  cat('<div class="alert alert-success"><strong>No validation errors</strong></div>')
 }
 ```
 
@@ -56,7 +58,7 @@ header_errors %>%
 #| echo: false
 header_data %>% 
   ggplot() +
-  geom_segment(aes(x = MONITORING_START_DATETIME, xend = MONITORING_END_DATETIME, y = DEPLOYMENT_ID, yend = DEPLOYMENT_ID)) +
+  geom_segment(aes(x = MONITORING_START_DATETIME, xend = MONITORING_END_DATETIME, y = DETECTION_HEADER_ID, yend = DETECTION_HEADER_ID)) +
   labs(x = "MONITORING_START_DATETIME to MONITORING_END_DATETIME") +
   theme_bw() +
   theme(plot.margin = unit(c(5, 5, 5, 5), units = "mm"))

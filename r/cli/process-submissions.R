@@ -99,12 +99,14 @@ walk(ids, function (id) {
 # db_tables$metadata <- head(db_tables$metadata, 0) # remove existing metadata
 # codes <- load_codes(db_tables)
 
-# type <- "external"
-# id <- "JASCO_20230505"
+# type <- "internal"
+# id <- "DAVIS_20230901"
 
 # source("cli/functions.R")
+
 # process_submission(id, type, db_tables = db_tables, write_log = FALSE)
 # process_submission(id, type)
+
 # x <- load_submission(id, type, db_tables = db_tables)
 # qaqc_submission(x)
 # export_submission(x)
