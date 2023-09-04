@@ -864,6 +864,26 @@ export_submission <- function (x) {
         select(-row) %>% 
         write_csv(header_file, na = "", progress = FALSE)
     }
+    
+    if (nrow(x$data$detail) > 0) {
+      detail_file <- file.path(import_dir, glue("{x$id}_DETAIL.csv"))
+      log_info("saving detail file: {detail_file}")
+      import_files <- c(import_files, detail_file)
+      unnest(x$data$detail[, "parsed"]) %>% 
+        select(-row) %>% 
+        left_join(
+          x$db[["species"]],
+          by = c("PACM_SPECIES_CODE" = "SPECIES_CODE")
+        ) %>% 
+        relocate(SPECIES_ID, .after = PACM_SPECIES_CODE) %>% 
+        left_join(
+          x$db[["call_type"]],
+          by = c("PACM_CALL_TYPE_CODE" = "CALL_TYPE_CODE", "PACM_SPECIES_CODE" = "SPECIES_CODE")
+        ) %>% 
+        relocate(CALL_TYPE_ID, .after = PACM_CALL_TYPE_CODE) %>%
+        select(-PACM_SPECIES_CODE, -PACM_CALL_TYPE_CODE) %>%
+        write_csv(detail_file, na = "", progress = FALSE)
+    }
   }
   
   log_info("copying import files to global import folder")
