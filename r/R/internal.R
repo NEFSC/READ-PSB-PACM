@@ -3,12 +3,14 @@ targets_internal <- list(
     deployments <- bind_rows(
       towed$deployments,
       moored$deployments,
-      glider$deployments
+      glider$deployments,
+      nefsc_20230926$deployments
     )
     detections <- bind_rows(
       towed$detections,
       moored$detections,
-      glider$detections
+      glider$detections,
+      nefsc_20230926$detections
     )
     list(
       deployments = deployments,

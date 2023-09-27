@@ -40,6 +40,7 @@ list(
   targets_towed_tracks,
   targets_towed_detections,
   targets_towed,
+  targets_nefsc_20230926,
   targets_internal,
   
   targets_external,

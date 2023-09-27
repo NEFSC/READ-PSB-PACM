@@ -124,8 +124,8 @@ existing_dep_inv %>%
 new_dep_inv_not1607 <- id_rev_3 %>% 
   anti_join(db_inv_dep, by = c("DEPLOYMENT_ID", "INVENTORY_ID")) %>% 
   filter(INVENTORY_ID != 1607)
-nrow(existing_dep_in)
-existing_dep_in %>% 
+nrow(existing_dep_inv)
+existing_dep_inv %>% 
   select(DEPLOYMENT_ID, INVENTORY_ID) %>% 
   left_join(
     db_inv, by = "INVENTORY_ID"
@@ -207,7 +207,9 @@ db_inv_dep %>%
   left_join(
     db_inv, by = "INVENTORY_ID"
   ) %>% 
-  select(DEPLOYMENT_ID, INVENTORY_ID, MANUFACTURER, INVENTORY_TYPE_NAME)
+  select(DEPLOYMENT_ID, INVENTORY_ID, MANUFACTURER, INVENTORY_TYPE_NAME) %>% 
+  left_join(db$I_EQPMNT_DEPLOYMENT, by = "DEPLOYMENT_ID") %>% 
+  view()
 
 db_inv_dep_new %>% 
   left_join(
