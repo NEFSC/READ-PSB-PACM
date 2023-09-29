@@ -50,6 +50,10 @@ export const themes = [
     label: 'Harbor Porpoise'
   },
   {
+    id: 'dolphin',
+    label: 'Dolphin (Unidentified)'
+  },
+  {
     divider: true
   },
   {

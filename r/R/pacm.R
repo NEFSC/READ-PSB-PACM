@@ -20,9 +20,11 @@ targets_pacm <- list(
           "Song & Social" = "HWMIX",
           "Pulse Train" = "MWPT",
           "Narrow band high frequency click" = "NBHF CLICKS",
+          "Narrow band high frequency click" = "NBHF",
           "Usual click" = "SPUSC",
           "30-80Hz downsweep" = "SWDS",
-          "Upcall" = "UPCALL"
+          "Upcall" = "UPCALL",
+          "Dolphin clicks" = "ODCLICK",
         )
       )
     detections_all <- map_df(all_datasets, ~ .x$detections)

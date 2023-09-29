@@ -41,6 +41,7 @@ list(
   targets_towed_detections,
   targets_towed,
   targets_nefsc_20230926,
+  targets_nefsc_20230928,
   targets_internal,
   
   targets_external,
