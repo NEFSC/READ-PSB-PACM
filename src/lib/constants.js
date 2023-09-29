@@ -54,6 +54,10 @@ export const themes = [
     label: 'Dolphin (Unidentified)'
   },
   {
+    id: 'risso',
+    label: 'Risso\'s Dolphin'
+  },
+  {
     divider: true
   },
   {
