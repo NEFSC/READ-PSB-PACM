@@ -87,6 +87,11 @@
       <h2 class="text-h5 mb-2">Latest Updates</h2>
 
       <div class="text-subheading font-weight-bold text--secondary">
+        v1.1.6 | Sept 29, 2023
+      </div>
+      <p>Added FPOD datasets for Harbor Porpoise and Unidentified Dolphins.</p>
+
+      <div class="text-subheading font-weight-bold text--secondary">
         v1.1.5 | July 20, 2023
       </div>
       <p>Added new DFO, JASCO, SEFSC datasets. Minor updates to About page and User Guide.</p>
