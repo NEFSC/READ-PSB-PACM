@@ -16,3 +16,5 @@ data/templates/**/*.csv
 
 _targets
 .env
+
+notes/*/*

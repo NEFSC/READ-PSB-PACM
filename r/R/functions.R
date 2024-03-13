@@ -853,9 +853,18 @@ qaqc_dataset <- function (deployments, detections) {
   x_deployments <- tibble(deployments) %>% 
     select(-geometry)
   x_detections <- detections %>% 
+    rowwise() %>% 
     mutate(
-      n_locations = map_int(locations, ~ if_else(is.null(.), 0L, nrow(.)))
+      n_locations = {
+        if (is.null(locations)) {
+          n <- 0
+        } else {
+          n <- nrow(locations)
+        }
+        n
+      }
     ) %>% 
+    ungroup() %>% 
     left_join(
       x_deployments %>% 
         select(theme, id, deployment_type, platform_type),

@@ -35,6 +35,8 @@ list(
   # targets_refs,
   targets_gis,
   
+  targets_db,
+  
   targets_moored,
   targets_glider,
   targets_towed_tracks,
@@ -42,6 +44,8 @@ list(
   targets_towed,
   targets_nefsc_20230926,
   targets_nefsc_20230928,
+  targets_davis_20230901,
+  targets_davis_20231122,
   targets_internal,
   
   targets_external,

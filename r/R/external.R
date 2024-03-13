@@ -20,7 +20,7 @@ targets_external <- list(
   tar_target(external_db_tables, read_rds(external_db_tables_file)),
   tar_target(external_submission_groups, {
     tibble(
-      id = setdiff(list.dirs(external_dir, recursive = FALSE, full.names = FALSE), "_queue")
+      id = setdiff(list.dirs(external_dir, recursive = FALSE, full.names = FALSE), c("_queue", "_archive"))
     ) %>% 
       group_by(id) %>% 
       tar_group()
