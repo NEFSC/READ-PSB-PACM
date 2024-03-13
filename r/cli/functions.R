@@ -86,7 +86,12 @@ load_db_tables <- function () {
   log_info("fetching support tables from database")
   E_PACM_METADATA <- DBI::dbGetQuery(con, "SELECT * FROM PAGROUP.E_PACM_METADATA;")
   I_EQPMNT_DEPLOYMENT <- DBI::dbGetQuery(con, "SELECT * FROM PAGROUP.I_EQPMNT_DEPLOYMENT;")
+  I_EQPMNT_INVNTRY <- DBI::dbGetQuery(con, "SELECT * FROM PAGROUP.I_EQPMNT_INVNTRY;")
+  S_EQPMNT_INVNTRY_TYPE <- DBI::dbGetQuery(con, "SELECT * FROM PAGROUP.S_EQPMNT_INVNTRY_TYPE;")
+  I_INVENTORY_DEPLOYMENT <- DBI::dbGetQuery(con, "SELECT * FROM PAGROUP.I_INVENTORY_DEPLOYMENT;")
   I_RECORDING <- DBI::dbGetQuery(con, "SELECT * FROM PAGROUP.I_RECORDING;")
+  S_PROJECT <- DBI::dbGetQuery(con, "SELECT * FROM PAGROUP.S_PROJECT;")
+  S_SITE <- DBI::dbGetQuery(con, "SELECT * FROM PAGROUP.S_SITE;")
   S_CALL_LIBRARY <- DBI::dbGetQuery(con, "SELECT * FROM PAGROUP.S_CALL_LIBRARY;")
   S_SPECIES <- DBI::dbGetQuery(con, "SELECT * FROM PAGROUP.S_SPECIES;")
   S_CALL_TYPE <- DBI::dbGetQuery(con, "SELECT * FROM PAGROUP.S_CALL_TYPE;")
@@ -101,7 +106,12 @@ load_db_tables <- function () {
   list(
     metadata = as_tibble(E_PACM_METADATA),
     deployment = as_tibble(I_EQPMNT_DEPLOYMENT),
+    inventory = as_tibble(I_EQPMNT_INVNTRY),
+    inventory_type = as_tibble(S_EQPMNT_INVNTRY_TYPE),
+    inventory_deployment = as_tibble(I_INVENTORY_DEPLOYMENT),
     recording = as_tibble(I_RECORDING),
+    project = as_tibble(S_PROJECT),
+    site = as_tibble(S_SITE),
     species = as_tibble(S_SPECIES) %>% 
       select(SPECIES_ID, SPECIES_CODE = PACM_SPECIES_CODE) %>% 
       filter(!is.na(SPECIES_CODE)),
