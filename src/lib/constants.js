@@ -30,7 +30,7 @@ export const themes = [
     divider: true
   },
   {
-    header: 'Toothed Whales (Odontoceti)'
+    header: 'Toothed Whales, Porpoises and Dolphins (Odontoceti)'
   },
   {
     id: 'beaked',

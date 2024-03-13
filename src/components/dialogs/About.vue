@@ -55,7 +55,7 @@
 
       <h2 class="text-h5">Acoustic Recorders and Detections</h2>
       <p>
-        Species that are currently represented include the North Atlantic right whale, fin whale, humpback whale, sei whale, blue whale, sperm whale, harbor porpoise, beaked whale species, and Kogia species (dwarf/pygmy sperm whales). The specific call types used for each species along with other metadata related to the recording and detection analysis can be found by hovering over or clicking on each platform.
+        Species that are currently represented include the North Atlantic right whale, fin whale, humpback whale, sei whale, blue whale, sperm whale, harbor porpoise, beaked whale species, Kogia species (dwarf/pygmy sperm whales), and dolphins (Risso's and unidentified). The specific call types used for each species along with other metadata related to the recording and detection analysis can be found by hovering over or clicking on each platform.
       </p>
       <p>
         Acoustic detections were recorded using stationary (bottom-mounted moorings, surface buoys) and mobile (autonomous gliders and towed arrays) platforms. Stationary platforms are represented using circles with varying sizes that represent the number of days with definite or possible acoustic detections at a fixed location. Mobile platforms are represented using track lines with squares indicating the specific locations where each detection was observed (for gliders, only the first detection of each day is shown). See the User Guide for more information about the map symbology and descriptions of different types of PAM platforms.
@@ -87,37 +87,42 @@
       <h2 class="text-h5 mb-2">Latest Updates</h2>
 
       <div class="text-subheading font-weight-bold text--secondary">
-        v1.1.6 | Sept 29, 2023
+        v1.1.7 | Mar 13, 2024
+      </div>
+      <p>Added and updated SEFSC datasets from Gulf of Mexico for Beaked Whales, Kogia, Sperm Whales, and Dolphins.</p>
+
+      <div class="text-subheading font-weight-bold text--secondary">
+        v1.1.6 | Sep 29, 2023
       </div>
       <p>Added FPOD datasets for Harbor Porpoise and Dolphins (Unidentified), and new Beaked Whale and Dolphin datasets from SEFSC.</p>
 
       <div class="text-subheading font-weight-bold text--secondary">
-        v1.1.5 | July 20, 2023
+        v1.1.5 | Jul 20, 2023
       </div>
       <p>Added new DFO, JASCO, SEFSC datasets. Minor updates to About page and User Guide.</p>
 
       <div class="text-subheading font-weight-bold text--secondary">
-        v1.1.4 | March 22, 2023
+        v1.1.4 | Mar 22, 2023
       </div>
       <p>Updated contact email address to <a class="text-decoration-underline" href="mailto:nmfs.nec.pacmdata@noaa.gov">nmfs.nec.pacmdata@noaa.gov</a>. Fixed ESRI Ocean basemap.</p>
 
       <div class="text-subheading font-weight-bold text--secondary">
-        v1.1.3 | November 17, 2022
+        v1.1.3 | Nov 17, 2022
       </div>
       <p>Added nautical charts basemap, updated baleen whale datasets and active deployments.</p>
 
       <div class="text-subheading font-weight-bold text--secondary">
-        v1.1.2 | April 1, 2022
+        v1.1.2 | Apr 1, 2022
       </div>
       <p>Added wind energy areas layer to map overlays, latest updates to about. Updated NYSDEC baleen whale data.</p>
 
       <div class="text-subheading font-weight-bold text--secondary">
-        v1.1.1 | March 16, 2022
+        v1.1.1 | Mar 16, 2022
       </div>
       <p>Fixed bug when selecting deployments by bounding box.</p>
 
       <div class="text-subheading font-weight-bold text--secondary">
-        v1.1.0 | March 7, 2022
+        v1.1.0 | Mar 7, 2022
       </div>
       <p>
         Added advanced filters, map overlays with Lobster Management Areas layer, harbor porpoise to species list. Added/updated data from DFO, NYSDEC, NEFSC, Cornell Univ.
