@@ -89,7 +89,7 @@
       <div class="text-subheading font-weight-bold text--secondary">
         v1.1.6 | Sept 29, 2023
       </div>
-      <p>Added FPOD datasets for Harbor Porpoise and Unidentified Dolphins.</p>
+      <p>Added FPOD datasets for Harbor Porpoise and Dolphins (Unidentified), and new Beaked Whale and Dolphin datasets from SEFSC.</p>
 
       <div class="text-subheading font-weight-bold text--secondary">
         v1.1.5 | July 20, 2023
