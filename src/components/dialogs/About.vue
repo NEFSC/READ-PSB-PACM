@@ -87,6 +87,11 @@
       <h2 class="text-h5 mb-2">Latest Updates</h2>
 
       <div class="text-subheading font-weight-bold text--secondary">
+        v1.1.8 | Mar 22, 2024
+      </div>
+      <p>Updated SEFSC datasets for Gulf of Mexico (corrected lat/lon coordinates for 2020-2021 datasets).</p>
+
+      <div class="text-subheading font-weight-bold text--secondary">
         v1.1.7 | Mar 13, 2024
       </div>
       <p>Added and updated SEFSC datasets from Gulf of Mexico for Beaked Whales, Kogia, Sperm Whales, and Dolphins.</p>
