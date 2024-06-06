@@ -1,0 +1,16 @@
+services:
+  vue-app:
+    build:
+      context: .
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: npm run build
+
+  nginx:
+    build:
+      context: ./nginx
+    ports:
+      - "8080:80"
+    depends_on:
+      - vue-app
