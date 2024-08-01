@@ -14,7 +14,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['theme', 'deployments']),
+    ...mapGetters(['deployments']),
     map () {
       return this.$parent.map
     },
@@ -30,11 +30,6 @@ export default {
       return [...stations, ...points]
     }
   },
-  watch: {
-    theme () {
-      this.reset()
-    }
-  },
   mounted () {
     this.dim = xf.dimension(d => d.id)
 
@@ -48,10 +43,8 @@ export default {
         circle: false,
         marker: false,
         circlemarker: false
-        // rectangle: {}
       },
       edit: {
-        // edit: false,
         featureGroup: this.layer
       }
     })
