@@ -1,7 +1,7 @@
 targets_pacm <- list(
   tar_target(pacm_dir, "data/pacm"),
   tar_target(pacm_themes, {
-    platform_types <- c("mooring", "buoy", "slocum", "towed")
+    platform_types <- c("mooring", "buoy", "drifting_buoy", "slocum", "towed")
     
     all_datasets <- list(
       internal,

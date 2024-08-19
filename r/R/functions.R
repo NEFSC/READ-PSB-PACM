@@ -169,10 +169,23 @@ load_external_submission <- function (id, root_dir, db_tables) {
     join_by = c("UNIQUE_ID" = "METADATA.UNIQUE_ID")
   )
   
+  gpsdata <- load_submission_files(
+    id,
+    files = file.path(raw_dir, raw_files),
+    pattern = "*_GPSDATA_*",
+    rules = rules$gpsdata, 
+    codes = codes, 
+    parse = parse_external_gpsdata,
+    transform = transformers$gpsdata,
+    join_data = join_metadata,
+    join_by = c("UNIQUE_ID" = "METADATA.UNIQUE_ID")
+  )
+  
   list(
     id = id,
     metadata = metadata,
-    detectiondata = detectiondata
+    detectiondata = detectiondata,
+    gpsdata = gpsdata
   )
 }
 

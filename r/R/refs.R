@@ -45,7 +45,8 @@ targets_refs <- list(
       
       "kogia", "KOSP",
       "sperm", "PHMA",
-      "harbor", "PHPH"
+      "harbor", "PHPH",
+      "nbhf", "NBHF"
     )
   }),
   tar_target(refs, {

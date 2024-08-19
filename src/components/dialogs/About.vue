@@ -87,6 +87,11 @@
       <h2 class="text-h5 mb-2">Latest Updates</h2>
 
       <div class="text-subheading font-weight-bold text--secondary">
+        v1.1.9 | Aug 1, 2024
+      </div>
+      <p>Fixed user-defined spatial filter when switching species. Added SWFSC-SAEL_20240814 dataset.</p>
+
+      <div class="text-subheading font-weight-bold text--secondary">
         v1.1.8 | Mar 22, 2024
       </div>
       <p>Updated SEFSC datasets for Gulf of Mexico (corrected lat/lon coordinates for 2020-2021 datasets).</p>

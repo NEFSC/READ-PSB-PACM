@@ -536,6 +536,23 @@ parse_external_detectiondata <- function (x) {
     )
 }
 
+parse_external_gpsdata <- function (x) {
+  x %>% 
+    mutate(
+      across(
+        c(DATETIME),
+        ymd_hms
+      ),
+      across(
+        c(
+          LATITUDE,
+          LONGITUDE
+        ),
+        parse_number
+      )
+    )
+}
+
 parse_internal_header <- function (x) {
   x %>% 
     mutate(

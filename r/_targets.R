@@ -44,8 +44,8 @@ list(
   targets_towed,
   targets_nefsc_20230926,
   targets_nefsc_20230928,
-  targets_davis_20230901,
-  targets_davis_20231122,
+  # targets_davis_20230901,
+  # targets_davis_20231122,
   targets_internal,
   
   targets_external,

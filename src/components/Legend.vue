@@ -50,7 +50,7 @@
 
       <v-divider></v-divider>
 
-      <div class="mt-2 black--text" v-if="hasStation">
+      <div class="mt-2 black--text" v-if="hasStationary">
         <h3 class="subtitle-1 font-weight-medium">Stationary Platforms</h3>
 
         <!-- DEPLOYMENTS ONLY (# DAYS RECORDED) -->
@@ -122,16 +122,16 @@
         </div>
       </div>
 
-      <div class="mt-2 black--text" v-if="hasGlider">
-        <h3 class="subtitle-1 font-weight-medium">Gliders</h3>
+      <div class="mt-2 black--text" v-if="hasMobile">
+        <h3 class="subtitle-1 font-weight-medium">Mobile Platforms</h3>
         <svg width="200" height="85">
           <g transform="translate(27,10)">
             <rect y="-6" x="-6" width="12" height="12" stroke="white" stroke-opacity="0.5" :fill="detectionTypes[0].color" />
-            <text x="27" :y="0" class="pacm-legend-text">{{detectionTypes[0].label}} (Daily)</text>
+            <text x="27" :y="0" class="pacm-legend-text">{{detectionTypes[0].label}}</text>
           </g>
           <g transform="translate(27,30)">
             <rect y="-6" x="-6" width="12" height="12" stroke="white" stroke-opacity="0.5" :fill="detectionTypes[1].color" />
-            <text x="27" :y="0" class="pacm-legend-text">{{detectionTypes[1].label}} (Daily)</text>
+            <text x="27" :y="0" class="pacm-legend-text">{{detectionTypes[1].label}}</text>
           </g>
           <g transform="translate(27,55)">
             <line x1="-6" x2="6" y1="-6" y2="6" stroke="hsla(0, 0%, 30%, 0.75)" stroke-width="3px" />
@@ -144,7 +144,7 @@
         </svg>
       </div>
 
-      <div class="mt-2 black--text" v-if="hasTowed">
+      <!-- <div class="mt-2 black--text" v-if="hasTowed">
         <h3 class="subtitle-1 font-weight-medium">Towed Array</h3>
         <svg width="200" height="65">
           <g transform="translate(27,10)">
@@ -160,7 +160,7 @@
             <text x="27" :y="0" class="pacm-legend-text">Track (Not Analyzed)</text>
           </g>
         </svg>
-      </div>
+      </div> -->
     </v-card-text>
   </v-card>
 </template>
@@ -187,15 +187,15 @@ export default {
   },
   computed: {
     ...mapGetters(['deployments', 'theme']),
-    hasStation () {
+    hasStationary () {
       return this.deployments && this.deployments.some(d => d.properties.deployment_type === 'stationary')
     },
-    hasGlider () {
-      return this.deployments && this.deployments.some(d => d.properties.platform_type === 'slocum' || d.properties.platform_type === 'wave')
+    hasMobile () {
+      return this.deployments && this.deployments.some(d => d.properties.deployment_type === 'mobile')
     },
-    hasTowed () {
-      return this.deployments && this.deployments.some(d => d.properties.platform_type === 'towed')
-    },
+    // hasTowed () {
+    //   return this.deployments && this.deployments.some(d => d.properties.platform_type === 'towed')
+    // },
     normalizeEffort: {
       get () {
         return this.$store.state.normalizeEffort

@@ -38,20 +38,24 @@ export const themes = [
     showSpeciesFilter: true
   },
   {
-    id: 'kogia',
-    label: 'Kogia Species'
-  },
-  {
     id: 'sperm',
     label: 'Sperm Whale'
+  },
+  {
+    id: 'kogia',
+    label: 'Kogia Species'
   },
   {
     id: 'harbor',
     label: 'Harbor Porpoise'
   },
   {
+    id: 'nbhf',
+    label: 'Unidentified High-Frequency Species'
+  },
+  {
     id: 'dolphin',
-    label: 'Dolphin (Unidentified)'
+    label: 'Unidentified Dolphin'
   },
   {
     id: 'risso',
@@ -79,6 +83,10 @@ export const platformTypes = [
   {
     id: 'buoy',
     label: 'Surface Buoy'
+  },
+  {
+    id: 'drifting_buoy',
+    label: 'Drifting Buoy'
   },
   {
     id: 'slocum',

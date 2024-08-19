@@ -26,3 +26,4 @@ public/data/**/*.json
 .Rproj.user
 
 dev/
+*.tar.gz

@@ -10,7 +10,7 @@ export default [
     Detections are shown using different symbols for each type of monitoring platform:<br>
     <ul>
       <li><b>Stationary Platforms</b>: Bottom-mounted moorings and surface buoys are represented using circles. The size and color of each circle reflect the number days and type of detections observed.</li>
-      <li><b>Mobile Platforms</b>: Gliders and towed arrays are represented using lines for their tracks and and square symbols to indicate the specific locations where a detection was observed. For gliders, only the first detection of each day is shown on the map. For towed arrays, all detections are shown and may include more than one on a given day.</li>
+      <li><b>Mobile Platforms</b>: Drifting buoys, gliders and towed arrays are represented using lines for their tracks and and square symbols to indicate the specific locations where a detection was observed. For gliders, only the first detection of each day is shown on the map. For towed arrays, all detections are shown and may include more than one on a given day.</li>
     </ul><br>
 
     <i>Hover over a point to view a brief summary of that deployment. Click on a point or track line to view the complete metadata and a timeseries chart of daily detection results for the corresponding deployment.</i><br><br>
