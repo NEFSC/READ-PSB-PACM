@@ -323,8 +323,9 @@ targets_towed_detections <- list(
         theme = "beaked",
         species = fct_recode(
           species,
-          "Cuvier's" = "Cuvier",
-          "Cuvier's" = "Cuviers",
+          "Goose-beaked" = "Cuvier",
+          "Goose-beaked" = "Cuviers",
+          "Goose-beaked" = "Cuvier's",
           "Gervais'/True's" = "Mm/Me",
           "Gervais'/True's" = "MmMe.",
           "Gervais'/True's" = "MmMe",

@@ -22,10 +22,14 @@ export const themes = [
     id: 'sei',
     label: 'Sei Whale'
   },
-  // {
-  //   id: 'minke',
-  //   label: 'Minke Whale'
-  // },
+  {
+    id: 'minke',
+    label: 'Minke Whale'
+  },
+  {
+    id: 'gray',
+    label: 'Gray Whale'
+  },
   {
     divider: true
   },
@@ -60,6 +64,10 @@ export const themes = [
   {
     id: 'risso',
     label: 'Risso\'s Dolphin'
+  },
+  {
+    id: 'pwdo',
+    label: 'Pacific White-sided Dolphin'
   },
   {
     divider: true

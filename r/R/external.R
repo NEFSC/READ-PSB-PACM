@@ -145,6 +145,7 @@ targets_external <- list(
       "fin", "FIWH",
       "sei", "SEWH",
       "minke", "MIWH",
+      "gray", "GRWH",
       
       "beaked", "GEBW",
       "beaked", "GOBW",
@@ -157,6 +158,7 @@ targets_external <- list(
       "beaked", "BWMC",
       "beaked", "BW43",
       "beaked", "BWC",
+      "beaked", "UNME",
       
       "kogia", "UNKO",
       
@@ -164,6 +166,7 @@ targets_external <- list(
       
       "dolphin", "UNDO",
       "risso", "GRAM",
+      "pwdo", "PWDO",
       
       "pilot", "PIWH",
       
@@ -374,16 +377,17 @@ targets_external <- list(
         species = case_when(
           species_code == "BLBW" ~ "Blainville's",
           species_code == "GEBW" ~ "Gervais'",
-          species_code == "GOBW" ~ "Cuvier's",
+          species_code == "GOBW" ~ "Goose-beaked",
           species_code == "BWBB" ~ "Baird's",
           species_code == "BWMS" ~ "Stejneger's",
           species_code == "BWMC" ~ "Hubb's",
           species_code == "BW43" ~ "Unid. 43 kHz Beaked Whale",
           species_code == "BWC" ~ "Cross Seamount",
-          species_code == "MEME" ~ "Unid. Mesoplodon",
+          species_code == "MEME" ~ "Gervais'/True's",
+          species_code == "UNME" ~ "Unid. Mesoplodon",
           species_code == "NBWH" ~ "Northern Bottlenose",
           species_code == "SOBW" ~ "Sowerby's",
-          # species_code == "UNDO" ~ "Unid. Dolphin",
+          species_code == "UNDO" ~ "Unid. Dolphin",
           # species_code == "GRAM" ~ "Risso's Dolphin",
           TRUE ~ species_code
         )
@@ -445,7 +449,7 @@ targets_external <- list(
         locations = list({
           head(locations, 1) %>% 
             mutate(date = as_date(datetime)) %>% 
-            filter(presence == "y")
+            filter(presence %in% c("y", "m"))
         }),
         species_code = case_when(
           theme == "beaked" ~ species_code,
@@ -455,16 +459,17 @@ targets_external <- list(
         species = case_when(
           species_code == "BLBW" ~ "Blainville's",
           species_code == "GEBW" ~ "Gervais'",
-          species_code == "GOBW" ~ "Cuvier's",
+          species_code == "GOBW" ~ "Goose-beaked",
           species_code == "BWBB" ~ "Baird's",
           species_code == "BWMS" ~ "Stejneger's",
           species_code == "BWMC" ~ "Hubb's",
           species_code == "BW43" ~ "Unid. 43 kHz Beaked Whale",
           species_code == "BWC" ~ "Cross Seamount",
-          species_code == "MEME" ~ "Unid. Mesoplodon",
+          species_code == "MEME" ~ "Gervais'/True's",
+          species_code == "UNME" ~ "Unid. Mesoplodon",
           species_code == "NBWH" ~ "Northern Bottlenose",
           species_code == "SOBW" ~ "Sowerby's",
-          # species_code == "UNDO" ~ "Unid. Dolphin",
+          species_code == "UNDO" ~ "Unid. Dolphin",
           # species_code == "GRAM" ~ "Risso's Dolphin",
           TRUE ~ species_code
         )

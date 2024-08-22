@@ -55,7 +55,7 @@
 
       <h2 class="text-h5">Acoustic Recorders and Detections</h2>
       <p>
-        Species that are currently represented include the North Atlantic right whale, fin whale, humpback whale, sei whale, blue whale, sperm whale, harbor porpoise, beaked whale species, Kogia species (dwarf/pygmy sperm whales), and dolphins (Risso's and unidentified). The specific call types used for each species along with other metadata related to the recording and detection analysis can be found by hovering over or clicking on each platform.
+        Species that are currently represented include the North Atlantic right whale, fin whale, humpback whale, sei whale, blue whale, minke whale, gray whale, sperm whale, harbor porpoise, beaked whale species, Kogia species (dwarf/pygmy sperm whales), and dolphins (Risso's, Pacific white-sided and unidentified). The specific call types used for each species along with other metadata related to the recording and detection analysis can be found by hovering over or clicking on each platform.
       </p>
       <p>
         Acoustic detections were recorded using stationary (bottom-mounted moorings, surface buoys) and mobile (autonomous gliders and towed arrays) platforms. Stationary platforms are represented using circles with varying sizes that represent the number of days with definite or possible acoustic detections at a fixed location. Mobile platforms are represented using track lines with squares indicating the specific locations where each detection was observed (for gliders, only the first detection of each day is shown). See the User Guide for more information about the map symbology and descriptions of different types of PAM platforms.
@@ -87,7 +87,12 @@
       <h2 class="text-h5 mb-2">Latest Updates</h2>
 
       <div class="text-subheading font-weight-bold text--secondary">
-        v1.1.9 | Aug 1, 2024
+        v1.1.10 | Aug 21, 2024
+      </div>
+      <p>Added Gray Whale, Minke Whale, Pacific White-sided Dolphin. Re-labelled "Cuvier's Beaked Whale" to "Goose-beaked Whale." Added Unid. Mesoplodon (Beaked Whale Species) from SWFSC-SAEL_20240814.</p>
+
+      <div class="text-subheading font-weight-bold text--secondary">
+        v1.1.9 | Aug 19, 2024
       </div>
       <p>Fixed user-defined spatial filter when switching species. Added SWFSC-SAEL_20240814 dataset.</p>
 

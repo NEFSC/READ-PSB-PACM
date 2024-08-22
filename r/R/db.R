@@ -238,7 +238,7 @@ targets_datasets <- list(
           species == "HYAM" ~ "Northern Bottlenose",
           species == "MEBI" ~ "Sowerby's",
           species == "MMME" ~ "Unid. Mesoplodon",
-          species == "ZICA" ~ "Cuvier's",
+          species == "ZICA" ~ "Goose-beaked",
           TRUE ~ NA_character_
         ),
         presence = case_when(
