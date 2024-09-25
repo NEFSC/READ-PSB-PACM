@@ -57,6 +57,7 @@ read_raw_file <- function (filepath) {
     filepath, 
     col_types = cols(.default = col_character())
   ) %>% 
+    remove_empty("rows") %>% 
     mutate(
       row = row_number()
     ) %>% 

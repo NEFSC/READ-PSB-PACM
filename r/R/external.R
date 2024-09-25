@@ -293,6 +293,7 @@ targets_external <- list(
         platform_type = case_when(
           platform_type == "BOTTOM-MOUNTED" ~ "mooring",
           platform_type == "DRIFTING-BUOY" ~ "drifting_buoy",
+          platform_type == "SURFACE-BUOY" ~ "buoy",
           TRUE ~ platform_type
         )
       ) %>% 
