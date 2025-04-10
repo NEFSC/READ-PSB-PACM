@@ -1,0 +1,14 @@
+services:
+  pacm:
+    image: passiveacoustics/pacm:${PACM_VERSION}
+    container_name: pacm
+    restart: unless-stopped
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - ${SSL_CERT}:/etc/nginx/ssl/certs/ssl_certificate.crt:ro
+      - ${SSL_KEY}:/etc/nginx/ssl/private/ssl_certificate_key.key:ro
+      - ${SSL_DH}:/etc/nginx/ssl/dhparam.pem:ro
+    environment:
+      - NGINX_HOST=${NGINX_HOST}
