@@ -52,7 +52,7 @@
         <UserGuideDialog @close="closeGuide"></UserGuideDialog>
       </v-dialog>
 
-      <v-btn color="default" dark text @click="startTour" data-v-step="tour-button" v-if="!$vuetify.breakpoint.mobile" aria-label="start tour">
+      <v-btn color="default" dark text @click="startTour" data-v-step="tour-button" aria-label="start tour" :disabled="$vuetify.breakpoint.mobile">
         <v-icon :left="!$vuetify.breakpoint.mobile">mdi-cursor-default-click</v-icon>
         <span v-if="!$vuetify.breakpoint.mobile"> Tour</span>
       </v-btn>

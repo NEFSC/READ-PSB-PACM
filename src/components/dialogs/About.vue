@@ -12,7 +12,7 @@
       <v-list-item>
         <v-list-item-content>
           <v-list-item-title><h1 class="headline"><span v-if="!$vuetify.breakpoint.mobile">Welcome to the </span>Passive Acoustic Cetacean Map</h1></v-list-item-title>
-          <v-list-item-subtitle>by the <a href="https://www.nefsc.noaa.gov/psb/acoustics/index.html">NOAA Northeast Fisheries Science Center</a></v-list-item-subtitle>
+          <v-list-item-subtitle>by the <a href="https://www.fisheries.noaa.gov/new-england-mid-atlantic/endangered-species-conservation/passive-acoustic-research-northeast">NOAA Northeast Fisheries Science Center</a></v-list-item-subtitle>
         </v-list-item-content>
       </v-list-item>
       <v-img
@@ -27,11 +27,12 @@
       </p>
       <v-container class="mb-6">
         <v-row justify="space-around">
-          <v-col cols="12" md="4" class="text-center" v-if="!$vuetify.breakpoint.mobile">
-            <v-btn color="success darken-2" class="px-8 mx-0" x-large @click="$emit('close', { tour: true })" aria-label="take a tour">
+          <v-col cols="12" md="4" class="text-center">
+            <v-btn color="success darken-2" class="px-8 mx-0" x-large @click="$emit('close', { tour: true })" aria-label="take a tour" :disabled="$vuetify.breakpoint.mobile">
               <v-icon left>mdi-cursor-default-click</v-icon>
               Take A Tour
             </v-btn>
+            <div class="text-caption" v-if="$vuetify.breakpoint.mobile">Tour not available on mobile devices, see User Guide.</div>
           </v-col>
           <v-col cols="12" md="4" class="text-center">
             <v-btn color="success darken-2" class="px-8 mx-0" x-large @click="$emit('close', { guide: true })" aria-label="user guide">
@@ -78,13 +79,18 @@
         Data can be submitted by using the <a class="text-decoration-underline" href="https://www.fisheries.noaa.gov/resource/document/passive-acoustic-reporting-system-templates">Passive Acoustic Reporting System</a> templates. For questions about contributing data to this project or any other inquiries, please contact <a class="text-decoration-underline" href="mailto:nmfs.nec.pacmdata@noaa.gov">nmfs.nec.pacmdata@noaa.gov</a>.
       </p>
       <p>
-        Further information about Passive Acoustic Monitoring can be found at the <a class="text-decoration-underline" href="https://www.fisheries.noaa.gov/new-england-mid-atlantic/endangered-species-conservation/passive-acoustic-research-atlantic-ocean" target="_blank">NOAA NEFSC Passive Acoustic Research Website</a>
+        Further information about Passive Acoustic Monitoring can be found at the <a class="text-decoration-underline" href="https://www.fisheries.noaa.gov/new-england-mid-atlantic/endangered-species-conservation/passive-acoustic-research-northeast" target="_blank">NOAA NEFSC Passive Acoustic Research Website</a>
       </p>
       <p>
         PACM was designed and built by Walker Environmental Research LLC based on a map-based interface for PAM acoustic detection data developed by Hansen Johnson (Dalhousie University).
       </p>
 
       <h2 class="text-h5 mb-2">Latest Updates</h2>
+
+      <div class="text-subheading font-weight-bold text--secondary">
+        v1.1.11 | Apr 1, 2025
+      </div>
+      <p>Minor updates to About and User Guide pages.</p>
 
       <div class="text-subheading font-weight-bold text--secondary">
         v1.1.10 | Aug 21, 2024
