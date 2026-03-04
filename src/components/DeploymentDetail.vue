@@ -1,7 +1,10 @@
 <template>
   <v-card>
     <v-toolbar color="grey darken-2" dense dark>
-      <div class="subtitle-1 font-weight-bold">
+      <div v-if="isSiteView" class="subtitle-1 font-weight-bold">
+        Selected Site ({{ selectedDeployments.length }} deployments)
+      </div>
+      <div v-else class="subtitle-1 font-weight-bold">
         Selected Deployments
         ({{ index + 1 }} of {{ selectedDeployments.length }})
         <v-tooltip open-delay="500" bottom>
@@ -48,49 +51,124 @@
     <v-card-text
       :style="{ 'max-height': Math.round($vuetify.breakpoint.height * 0.6) + 'px', 'overflow-y': 'auto' }"
     >
-      <v-row>
+      <v-row v-if="isSiteView">
         <v-col xs="12" md="12" lg="12" xl="4">
           <v-simple-table dense>
             <tbody>
               <tr>
-                <td class="px-2 text-right" style="width:140px">Project:</td>
-                <td class="px-2 font-weight-bold">{{ selectedDeployment.properties.project }}</td>
-              </tr>
-              <tr v-if="deploymentType === 'station' || deploymentType === 'glider'">
-                <td class="px-2 text-right" style="width:140px">Site:</td>
-                <td class="px-2 font-weight-bold">{{ selectedDeployment.properties.site_id ? selectedDeployment.properties.site_id : 'N/A' }}</td>
+                <td class="px-2 text-right" style="width:150px">Organization:</td>
+                <td class="px-2 font-weight-bold">{{ siteMetadata.organizationCode }}</td>
               </tr>
               <tr>
-                <td class="px-2 text-right" style="width:140px">Platform Type:</td>
-                <td class="px-2 font-weight-bold">{{ platformTypesMap.get(selectedDeployment.properties.platform_type).label }}</td>
+                <td class="px-2 text-right" style="width:150px">Site:</td>
+                <td class="px-2 font-weight-bold">{{ siteMetadata.site }}</td>
+              </tr>
+              <tr>
+                <td class="px-2 text-right" style="width:150px">Project:</td>
+                <td class="px-2 font-weight-bold">{{ siteMetadata.project }}</td>
+              </tr>
+              <tr>
+                <td class="px-2 text-right" style="width:150px">Platform Type:</td>
+                <td class="px-2 font-weight-bold">{{ siteMetadata.platformType }}</td>
               </tr>
               <tr>
                 <td class="px-2 text-right">Recorder Type:</td>
-                <td class="px-2 font-weight-bold">{{ selectedDeployment.properties.instrument_type ? selectedDeployment.properties.instrument_type : 'N/A' }}</td>
+                <td class="px-2 font-weight-bold">{{ siteMetadata.instrumentType }}</td>
               </tr>
               <tr>
-                <td class="px-2 text-right">Sampling Rate:</td>
-                <td class="px-2 font-weight-bold">{{ selectedDeployment.properties.sampling_rate_hz ? (selectedDeployment.properties.sampling_rate_hz / 1000).toLocaleString() + ' kHz' : 'N/A' }}</td>
+                <td class="px-2 text-right">Sampling Rate (Hz):</td>
+                <td class="px-2 font-weight-bold">{{ siteMetadata.samplingRate }}</td>
               </tr>
               <tr v-if="!theme.deploymentsOnly">
                 <td class="px-2 text-right">Detection Method:</td>
-                <td class="px-2 font-weight-bold">{{ selectedDeployment.properties.detection_method ? selectedDeployment.properties.detection_method : 'N/A' }}</td>
+                <td class="px-2 font-weight-bold">{{ siteMetadata.detectionMethod }}</td>
               </tr>
               <tr v-if="!theme.deploymentsOnly">
-                <td class="px-2 text-right">QAQC:</td>
-                <td class="px-2 font-weight-bold">{{ selectedDeployment.properties.qc_data ? selectedDeployment.properties.qc_data : 'N/A'}}</td>
+                <td class="px-2 text-right">Analysis QAQC:</td>
+                <td class="px-2 font-weight-bold">{{ siteMetadata.qcData }}</td>
+              </tr>
+              <tr>
+                <td class="px-2 text-right">Recorder Depth:</td>
+                <td class="px-2 font-weight-bold">{{ siteMetadata.recorderDepth }}</td>
+              </tr>
+              <tr>
+                <td class="px-2 text-right">Water Depth:</td>
+                <td class="px-2 font-weight-bold">{{ siteMetadata.waterDepth }}</td>
+              </tr>
+              <tr>
+                <td class="px-2 text-right">Monitoring Period:</td>
+                <td class="px-2 font-weight-bold">{{ siteMetadata.monitoringStart }} to {{ siteMetadata.monitoringEnd }}</td>
+              </tr>
+              <tr>
+                <td class="px-2 text-right"># Deployments:</td>
+                <td class="px-2 font-weight-bold">{{ siteMetadata.nDeployments }}</td>
+              </tr>
+              <tr>
+                <td class="px-2 text-right">Point of Contact:</td>
+                <td class="px-2 font-weight-bold">{{ siteMetadata.dataPoc }}</td>
+              </tr>
+            </tbody>
+          </v-simple-table>
+        </v-col>
+
+        <v-col xs="12" md="12" lg="12" xl="8" v-if="!theme.deploymentsOnly" class="black--text">
+          <div class="heading font-weight-bold">Daily Detections</div>
+          <div class="subtitle-2 grey--text text--darken-1">Includes all detection data independent of filters</div>
+          <highcharts class="chart" :options="chart"></highcharts>
+        </v-col>
+      </v-row>
+
+      <v-row v-else>
+        <v-col xs="12" md="12" lg="12" xl="4">
+          <v-simple-table dense>
+            <tbody>
+              <tr>
+                <td class="px-2 text-right" style="width:150px">Organization:</td>
+                <td class="px-2 font-weight-bold">{{ selectedDeployment.organization_code }}</td>
+              </tr>
+              <tr>
+                <td class="px-2 text-right" style="width:150px">Deployment:</td>
+                <td class="px-2 font-weight-bold">{{ selectedDeployment.deployment_code }}</td>
+              </tr>
+              <tr>
+                <td class="px-2 text-right" style="width:150px">Project:</td>
+                <td class="px-2 font-weight-bold">{{ selectedDeployment.project }}</td>
+              </tr>
+              <tr v-if="deploymentType === 'station' || deploymentType === 'glider'">
+                <td class="px-2 text-right" style="width:150px">Site:</td>
+                <td class="px-2 font-weight-bold">{{ selectedDeployment.site ? selectedDeployment.site : 'N/A' }}</td>
+              </tr>
+              <tr>
+                <td class="px-2 text-right" style="width:150px">Platform Type:</td>
+                <td class="px-2 font-weight-bold">{{ selectedDeployment.platform_type || 'N/A' }}</td>
+              </tr>
+              <tr>
+                <td class="px-2 text-right">Recorder Type:</td>
+                <td class="px-2 font-weight-bold">{{ selectedDeployment.instrument_type || 'N/A' }}</td>
+              </tr>
+              <tr>
+                <td class="px-2 text-right">Sampling Rate (Hz):</td>
+                <td class="px-2 font-weight-bold">{{ selectedDeployment.sampling_rate_hz || 'N/A' }}</td>
+              </tr>
+              <tr v-if="!theme.deploymentsOnly">
+                <td class="px-2 text-right">Detection Method:</td>
+                <td class="px-2 font-weight-bold">{{ selectedDeployment.detection_method ? selectedDeployment.detection_method : 'N/A' }}</td>
+              </tr>
+              <tr v-if="!theme.deploymentsOnly">
+                <td class="px-2 text-right">Analysis QAQC:</td>
+                <td class="px-2 font-weight-bold">{{ selectedDeployment.qc_data ? selectedDeployment.qc_data : 'N/A'}}</td>
               </tr>
               <tr v-if="deploymentType === 'station'">
                 <td class="px-2 text-right">Recorder Depth:</td>
-                <td class="px-2 font-weight-bold">{{ selectedDeployment.properties.recorder_depth_meters ? `${(+selectedDeployment.properties.recorder_depth_meters).toFixed(0)} m` : 'N/A' }}</td>
+                <td class="px-2 font-weight-bold">{{ selectedDeployment.recorder_depth_meters ? `${(+selectedDeployment.recorder_depth_meters).toFixed(0)} m` : 'N/A' }}</td>
               </tr>
               <tr v-if="deploymentType === 'station'">
                 <td class="px-2 text-right">Water Depth: </td>
-                <td class="px-2 font-weight-bold">{{ selectedDeployment.properties.water_depth_meters ? `${(+selectedDeployment.properties.water_depth_meters).toFixed(0)} m` : 'N/A' }}</td>
+                <td class="px-2 font-weight-bold">{{ selectedDeployment.water_depth_meters ? `${(+selectedDeployment.water_depth_meters).toFixed(0)} m` : 'N/A' }}</td>
               </tr>
               <tr>
                 <td class="px-2 text-right">Deployed:</td>
-                <td class="px-2 font-weight-bold">{{ monitoringPeriod.start || 'N/A' }} to {{ monitoringPeriod.end || 'present' }}</td>
+                <td class="px-2 font-weight-bold">{{ monitoringPeriod.start || 'N/A' }} to {{ monitoringPeriod.end || 'N/A' }}</td>
               </tr>
               <tr>
                 <td class="px-2 text-right">Duration:</td>
@@ -98,11 +176,11 @@
               </tr>
               <tr>
                 <td class="px-2 text-right">Point of Contact:</td>
-                <td class="px-2 font-weight-bold">{{ selectedDeployment.properties.data_poc_name }} ({{ selectedDeployment.properties.data_poc_email }}), {{ selectedDeployment.properties.data_poc_affiliation }} </td>
+                <td class="px-2 font-weight-bold">{{ selectedDeployment.data_poc_name }} </td>
               </tr>
               <tr v-if="!theme.deploymentsOnly">
                 <td class="px-2 text-right">Protocol:</td>
-                <td class="px-2 font-weight-bold">{{ selectedDeployment.properties.protocol_reference }}</td>
+                <td class="px-2 font-weight-bold">{{ selectedDeployment.protocol_reference }}</td>
               </tr>
             </tbody>
           </v-simple-table>
@@ -123,16 +201,13 @@ import { mapActions, mapGetters } from 'vuex'
 import moment from 'moment'
 
 import { xf } from '@/lib/crossfilter'
-import { detectionTypes, detectionTypesMap, platformTypes } from '@/lib/constants'
+import { detectionTypes, detectionTypesMap } from '@/lib/constants'
 import { monitoringPeriodLabels } from '@/lib/tip'
-
-const platformTypesMap = new Map(platformTypes.map(d => [d.id, d]))
 
 export default {
   name: 'DeploymentDetail',
   data () {
     return {
-      platformTypesMap,
       detectionTypesMap,
       index: 0,
       chart: {
@@ -191,31 +266,71 @@ export default {
   },
   computed: {
     ...mapGetters(['selectedDeployments', 'theme']),
+    isSiteView () {
+      if (this.selectedDeployments.length < 1) return false
+      const isStationary = this.selectedDeployments.every(d => d.deployment_type === 'STATIONARY')
+      const siteId = this.selectedDeployments[0].site_id
+      return isStationary && siteId && this.selectedDeployments.every(d => d.site_id === siteId)
+    },
+    siteMetadata () {
+      if (!this.isSiteView) return null
+      const deps = this.selectedDeployments
+      const unique = (key) => {
+        const vals = [...new Set(deps.map(d => d[key]).filter(Boolean))]
+        return vals.length > 0 ? vals.join(', ') : 'N/A'
+      }
+      const range = (key, suffix) => {
+        const vals = deps.map(d => +d[key]).filter(v => isFinite(v))
+        if (vals.length === 0) return 'N/A'
+        const min = Math.min(...vals)
+        const max = Math.max(...vals)
+        return min === max ? `${min.toFixed(0)} ${suffix}` : `${min.toFixed(0)} to ${max.toFixed(0)} ${suffix}`
+      }
+      const starts = deps.map(d => moment.utc(d.monitoring_start_datetime)).filter(m => m.isValid())
+      const ends = deps.map(d => moment.utc(d.monitoring_end_datetime)).filter(m => m.isValid())
+      return {
+        organizationCode: unique('organization_code'),
+        site: deps[0].site || deps[0].site_id || 'N/A',
+        project: unique('project'),
+        platformType: unique('platform_type'),
+        instrumentType: unique('instrument_type'),
+        samplingRate: unique('sampling_rate_hz'),
+        detectionMethod: unique('detection_method'),
+        qcData: unique('qc_data'),
+        recorderDepth: range('recorder_depth_meters', 'm'),
+        waterDepth: range('water_depth_meters', 'm'),
+        monitoringStart: starts.length > 0 ? moment.min(starts).format('ll') : 'N/A',
+        monitoringEnd: ends.length > 0 ? moment.max(ends).format('ll') : 'N/A',
+        nDeployments: deps.length,
+        dataPoc: unique('data_poc_name')
+      }
+    },
     selectedDeployment () {
       return this.selectedDeployments.length > 0
         ? this.selectedDeployments[this.index]
         : null
     },
     deploymentType () {
-      if (this.selectedDeployment.properties.platform_type === 'mooring' || this.selectedDeployment.properties.platform_type === 'buoy') {
+      if (this.selectedDeployment.platform_type === 'mooring' || this.selectedDeployment.platform_type === 'buoy') {
         return 'station'
-      } else if (this.selectedDeployment.properties.platform_type === 'slocum' || this.selectedDeployment.properties.platform_type === 'wave') {
+      } else if (this.selectedDeployment.platform_type === 'slocum' || this.selectedDeployment.platform_type === 'wave') {
         return 'glider'
-      } else if (this.selectedDeployment.properties.platform_type === 'towed') {
+      } else if (this.selectedDeployment.platform_type === 'towed') {
         return 'towed'
       }
       return 'unknown'
     },
     monitoringPeriod () {
-      return monitoringPeriodLabels(this.selectedDeployment.properties)
+      return monitoringPeriodLabels(this.selectedDeployment)
     }
   },
   watch: {
     selectedDeployments () {
       this.index = 0
+      if (this.isSiteView) this.updateChart()
     },
     selectedDeployment () {
-      this.updateChart()
+      if (!this.isSiteView) this.updateChart()
     }
   },
   mounted () {
@@ -228,8 +343,44 @@ export default {
     },
     updateChart () {
       if (this.theme && this.theme.deploymentsOnly) return
-      const detections = xf.all().filter(d => d.id === this.selectedDeployment.id)
+
       const ids = detectionTypes.map(d => d.id)
+
+      if (this.isSiteView) {
+        const allIds = this.selectedDeployments.map(d => d.id)
+        const detections = xf.all().filter(d => allIds.includes(d.id))
+        const values = detections.map((d) => {
+          if (!d.presence) return null
+          const status = detectionTypes.find(s => s.id === d.presence)
+          return {
+            x: (new Date(d.date)).valueOf(),
+            y: ids.indexOf(d.presence),
+            label: status.label,
+            marker: {
+              fillColor: status.color
+            }
+          }
+        })
+        const starts = this.selectedDeployments
+          .map(d => moment.utc(d.analysis_start_date))
+          .filter(m => m.isValid())
+        const ends = this.selectedDeployments
+          .map(d => moment.utc(d.analysis_end_date))
+          .filter(m => m.isValid())
+        this.chart.xAxis.min = starts.length > 0
+          ? moment.min(starts).startOf('date').toDate().valueOf()
+          : undefined
+        this.chart.xAxis.max = ends.length > 0
+          ? moment.max(ends).startOf('date').toDate().valueOf()
+          : undefined
+        this.chart.series = [{
+          name: 'Result',
+          data: values
+        }]
+        return
+      }
+
+      const detections = xf.all().filter(d => d.id === this.selectedDeployment.id)
       const values = detections.map((d) => {
         if (!d.presence) {
           return null
@@ -245,13 +396,13 @@ export default {
         }
       })
       this.chart.xAxis.min = moment
-        .utc(this.selectedDeployment.properties.analysis_start_date)
+        .utc(this.selectedDeployment.analysis_start_date)
         .startOf('date').toDate().valueOf()
       this.chart.xAxis.max = moment
-        .utc(this.selectedDeployment.properties.analysis_end_date)
+        .utc(this.selectedDeployment.analysis_end_date)
         .startOf('date').toDate().valueOf()
       this.chart.series = [{
-        name: 'Detection',
+        name: 'Result',
         data: values
       }]
     }

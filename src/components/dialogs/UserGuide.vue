@@ -122,21 +122,6 @@
                       <v-col cols="2">
                         <v-img
                           class="mt-2"
-                          src="@/assets/img/guide/key/circle-gray.png"
-                          alt="Not analyzed icon for stationary platforms (gray circle)"
-                          max-height="100px"
-                          contain
-                        ></v-img>
-                      </v-col>
-                      <v-col cols="10">
-                        <div class="text-h6">Not Analyzed</div>
-                        <p>A gray circle indicates that none of the days within the selected time period have been analyzed yet at this platform.</p>
-                      </v-col>
-                    </v-row>
-                    <v-row align="start">
-                      <v-col cols="2">
-                        <v-img
-                          class="mt-2"
                           src="@/assets/img/guide/key/checkbox.png"
                           alt="Checkbox icon"
                           max-height="100px"

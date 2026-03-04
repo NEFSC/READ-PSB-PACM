@@ -21,9 +21,9 @@ export default {
     points () {
       if (!this.deployments) return []
       const stations = this.deployments
-        .filter(d => d.properties.deployment_type === 'stationary')
+        .filter(d => d.deployment_type === 'STATIONARY')
       const points = this.deployments
-        .filter(d => d.properties.deployment_type === 'mobile')
+        .filter(d => d.deployment_type === 'MOBILE')
         .map(d => d.trackDetections)
         .flat()
 

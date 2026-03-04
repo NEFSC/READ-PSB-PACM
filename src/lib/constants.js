@@ -85,28 +85,28 @@ export const themes = [
 
 export const platformTypes = [
   {
-    id: 'mooring',
-    label: 'Bottom-Mounted Mooring'
+    id: 'BOTTOM_MOUNTED_MOORING',
+    label: 'Bottom Mounted Mooring'
   },
   {
-    id: 'buoy',
-    label: 'Surface Buoy'
-  },
-  {
-    id: 'drifting_buoy',
+    id: 'DRIFTING_BUOY',
     label: 'Drifting Buoy'
   },
   {
-    id: 'slocum',
-    label: 'Glider (Slocum)'
+    id: 'ELECTRIC_GLIDER',
+    label: 'Electric Glider'
   },
   {
-    id: 'wave',
-    label: 'Glider (Wave)'
+    id: 'MOORED_SURFACE_BUOY',
+    label: 'Moored Surface Buoy'
   },
   {
-    id: 'towed',
+    id: 'TOWED_ARRAY',
     label: 'Towed Array'
+  },
+  {
+    id: 'WAVE_GLIDER',
+    label: 'Wave Glider'
   }
 ]
 export const platformTypesMap = new Map(platformTypes.map(d => [d.id, d]))
@@ -129,7 +129,7 @@ export const detectionTypes = [
   },
   {
     id: 'na',
-    label: 'Not Analyzed',
+    label: 'Not Available',
     color: '#666666'
   },
   {

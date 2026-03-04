@@ -5,7 +5,7 @@ Passive Acoustic Cetacean Map
 
 This repo contains the source code for the Passive Acoustic Cetacean Map (PACM) web application. The PACM application is an interactive data visualization tool for exploring historical observations of whales and other cetaceans based on passive acoustic montoring (PAM) data.
 
-Production URL: https://apps-nefsc.fisheries.noaa.gov/pacm/
+Production URL: https://passiveacoustics.fisheries.noaa.gov/pacm/
 
 ## Project Summary
 
@@ -22,6 +22,88 @@ Production URL: https://apps-nefsc.fisheries.noaa.gov/pacm/
 **Where do I get help?**: For help running or understanding the code in this repo, contact Jeff Walker (jeffrey.walker@noaa.gov). For questions about contributing data or other general questions about the project, contact Sofie Van Parijs (sofie.vanparijs@noaa.gov).
 
 **Who maintains this code?**: Ongoing maintenance of this code will be performed by Jeffrey D Walker, PhD ([Walker Environmental Research LLC](https://walkerenvres.com)) with approval from NEFSC.
+
+## Data File Schemas
+
+The data files shown on PACM are stored in `public/data/` with sub-folders organized by species/theme (e.g., `narw/`, `fin/`, `humpback/`, `deployments/`). Each sub-folder contains two files:
+
+### deployments.json
+
+GeoJSON FeatureCollection containing deployment metadata.
+
+```
+{
+  "type": "FeatureCollection",
+  "name": "deployments",
+  "crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+  "features": [...]
+}
+```
+
+**Feature Properties:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `project` | string | Project identifier |
+| `site_id` | string | Site identifier |
+| `latitude` | number | Latitude in decimal degrees |
+| `longitude` | number | Longitude in decimal degrees |
+| `monitoring_start_datetime` | string | ISO 8601 datetime for monitoring start |
+| `monitoring_end_datetime` | string | ISO 8601 datetime for monitoring end |
+| `platform_type` | string | Platform type (e.g., "mooring", "glider") |
+| `platform_id` | string\|null | Platform identifier |
+| `water_depth_meters` | number | Water depth in meters |
+| `recorder_depth_meters` | number | Recorder depth in meters |
+| `instrument_type` | string | Instrument type (e.g., "MARU") |
+| `instrument_id` | string | Instrument identifier |
+| `sampling_rate_hz` | number | Sampling rate in Hz |
+| `analysis_sampling_rate_hz` | number\|null | Analysis sampling rate in Hz |
+| `soundfiles_timezone` | string | Timezone of sound files (e.g., "GMT", "GMT-5") |
+| `duty_cycle_seconds` | string | Duty cycle (e.g., "continuous") |
+| `channel` | string | Recording channel number |
+| `qc_data` | string\|null | Quality control data |
+| `data_poc_name` | string | Data point-of-contact name |
+| `data_poc_affiliation` | string | Data POC affiliation |
+| `data_poc_email` | string | Data POC email |
+| `submitter_name` | string | Submitter name |
+| `submitter_affiliation` | string | Submitter affiliation |
+| `submitter_email` | string | Submitter email |
+| `submission_date` | string | Submission date (YYYY-MM-DD) |
+| `analyzed` | boolean\|null | Whether data was analyzed |
+| `call_type` | string\|null | Call type analyzed (e.g., "Upcall") |
+| `detection_method` | string\|null | Detection method (e.g., "LFDCS") |
+| `protocol_reference` | string\|null | Analysis protocol reference/DOI |
+| `analysis_start_date` | string\|null | Analysis start date (YYYY-MM-DD) |
+| `analysis_end_date` | string\|null | Analysis end date (YYYY-MM-DD) |
+| `deployment_type` | string | Deployment type ("stationary" or "mobile") |
+
+**Geometry:** Point with coordinates `[longitude, latitude]`
+
+### detections.csv
+
+CSV file containing daily detection records for each deployment.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | string | Deployment ID (matches feature `id` in deployments.json) |
+| `date` | string | Detection date (YYYY-MM-DD) |
+| `species` | string | Species code (may be empty) |
+| `presence` | string | Detection status: `y` (detected), `n` (not detected), `m` (maybe/possible), `d` (detected - deployments theme) |
+| `locations` | string | JSON array of location objects for mobile deployments, or `null` for stationary |
+
+**Locations array (for mobile/glider deployments):**
+
+```json
+[{
+  "analysis_period_start_datetime": "2016-07-25 21:05:42",
+  "analysis_period_end_datetime": "2016-07-25 21:20:42",
+  "analysis_period_effort_seconds": 900,
+  "latitude": 48.1961,
+  "longitude": -63.941,
+  "presence": "y",
+  "date": "2016-07-25"
+}]
+```
 
 ## Data Processing
 

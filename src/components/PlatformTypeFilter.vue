@@ -4,8 +4,8 @@
     :items="options"
     v-model="selected"
     label="Select Platform Type(s)"
-    item-text="label"
-    item-value="id"
+    item-text="name"
+    item-value="code"
     hide-details
     multiple
     chips
@@ -16,7 +16,6 @@
 <script>
 import * as dc from 'dc'
 import { xf } from '@/lib/crossfilter'
-import { platformTypes } from '@/lib/constants'
 import { mapGetters } from 'vuex'
 
 export default {
@@ -28,7 +27,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['theme', 'loading'])
+    ...mapGetters(['theme', 'loading', 'platformTypes'])
   },
   watch: {
     selected () {
@@ -47,12 +46,11 @@ export default {
   },
   methods: {
     reset () {
-      const datasetTypes = [...new Set(xf.all().map(d => d.platform_type))] // all types in dataset
-      this.options = platformTypes.filter(d => datasetTypes.includes(d.id))
-      this.selected = this.options.map(d => d.id)
+      const datasetTypes = new Set(xf.all().map(d => d.platform_type)) // all types in dataset
+      this.options = this.platformTypes.filter(d => datasetTypes.has(d.code))
+      this.selected = this.options.map(d => d.code)
     },
     setFilter () {
-      // console.log(`setFilter(${this.selected})`)
       if (!this.dim) return
 
       this.dim.filter(d => !d || this.selected.includes(d))

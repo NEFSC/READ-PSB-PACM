@@ -139,12 +139,17 @@
         <v-divider class="my-4"></v-divider>
 
         <v-alert
-          type="info"
-          color="grey darken-3"
+          color="blue-grey darken-3"
           border="left"
-          class="my-6 mb-4 py-1 mx-4 body-2"
-          v-if="theme.showSpeciesFilter">
-          For {{ theme.label }}, recorded days are counted separately for each species. If two species were detected on the same day, then that day would be counted twice in the charts below.
+          dense
+          class="mx-4 mb-2 body-2 align-center">
+          Selected period: {{ periodLabel }}
+          <v-tooltip right max-width="300" open-delay="300">
+            <template v-slot:activator="{ on }">
+              <v-icon small class="ml-1" v-on="on">mdi-information-outline</v-icon>
+            </template>
+            <span>The selected period is determined by the season and year filters below. When the season wraps across years (e.g., Oct 1 – Mar 31), the period begins at the start of the season in the first selected year (Oct 1, 2020) and ends at the end of the season in the last selected year (Mar 31, 2022). This avoids showing partial seasons at the beginning of the first year (Jan 1 - Mar 31, 2020) and end of the last year (Oct 1 - Dec 31, 2022).</span>
+          </v-tooltip>
         </v-alert>
 
         <v-list-item class="mt-0" data-v-step="season">
@@ -219,6 +224,7 @@
 
 <script>
 import { mapActions, mapGetters } from 'vuex'
+import moment from 'moment'
 
 import Map from '@/components/Map'
 import AboutDialog from '@/components/dialogs/About'
@@ -233,7 +239,7 @@ import DetectionFilter from '@/components/DetectionFilter'
 import DeploymentDetail from '@/components/DeploymentDetail'
 
 import evt from '@/lib/events'
-import { xf, deploymentGroup, deploymentMap } from '@/lib/crossfilter'
+import { xf, deploymentGroup, siteGroup, deploymentMap } from '@/lib/crossfilter'
 import { themes } from '@/lib/constants'
 import tour from '@/lib/tour'
 
@@ -267,12 +273,20 @@ export default {
           filtered: 0,
           total: 0,
           totals: {}
+        },
+        sites: {
+          filtered: 0,
+          total: 0
         }
       },
       dialogs: {
         about: false,
         guide: false,
         filters: false
+      },
+      period: {
+        season: { start: 1, end: 365 },
+        year: { start: null, end: null }
       },
       tour: {
         options: {
@@ -294,29 +308,56 @@ export default {
     },
     yAxisLabel () {
       return '# Days Recorded'
+    },
+    periodActive () {
+      const { season, year } = this.period
+      return season.start > season.end && year.start !== null && year.end !== null
+    },
+    periodLabel () {
+      const { season, year } = this.period
+      const fmt = doy => moment('2000-12-31').add(doy, 'days').format('MMM D')
+      const hasYear = year.start !== null && year.end !== null
+      const startDate = fmt(season.start)
+      const endDate = season.start > season.end && hasYear && year.start === year.end
+        ? 'Dec 31'
+        : fmt(season.end)
+      const startLabel = hasYear ? startDate + ', ' + year.start : startDate
+      const endLabel = hasYear ? endDate + ', ' + year.end : endDate
+      return startLabel + ' \u2013 ' + endLabel
     }
   },
   mounted () {
     this.init()
 
     evt.$on('xf:filtered', this.onFiltered)
+    evt.$on('period:season', (val) => { this.period.season = val; this.updatePeriodFilter() })
+    evt.$on('period:year', (val) => { this.period.year = val; this.updatePeriodFilter() })
   },
   beforeDestroy () {
     evt.$off('xf:filtered', this.onFiltered)
+    evt.$off('period:season')
+    evt.$off('period:year')
+    if (this.periodDim) { this.periodDim.filterAll(); this.periodDim.dispose() }
   },
   watch: {
     theme () {
+      if (this.periodDim) { this.periodDim.filterAll(); this.periodDim.dispose() }
+      this.periodDim = xf.dimension(d => d.datekey)
+      this.period.season = { start: 1, end: 365 }
+      this.period.year = { start: null, end: null }
       evt.$emit('reset:filters', 'app:loadData')
       this.counts.detections.total = xf.size()
       this.counts.deployments.total = this.$store.getters.deployments.length
+      this.counts.sites.total = this.$store.getters.sites ? this.$store.getters.sites.length : 0
       if (this.$route.path === '/' || !this.theme || this.$route.params.id !== this.theme.id) {
         this.$router.push({ path: this.theme.id || '/' })
       }
     }
   },
   methods: {
-    ...mapActions(['setTheme', 'selectDeployments']),
+    ...mapActions(['setTheme', 'selectDeployments', 'fetchReferences']),
     init () {
+      this.fetchReferences()
       if (this.$route.params.id) {
         this.dialogs.about = false
         const theme = themes.find(d => d.id === this.$route.params.id)
@@ -361,8 +402,24 @@ export default {
     updateCounts () {
       this.counts.detections.total = xf.size()
       this.counts.deployments.total = this.$store.getters.deployments.length
+      this.counts.sites.total = this.$store.getters.sites ? this.$store.getters.sites.length : 0
       this.counts.detections.filtered = xf.allFiltered().length
       this.counts.deployments.filtered = deploymentGroup.all().filter(d => d.value.total > 0).length
+      const siteIds = new Set((this.$store.getters.sites || []).map(d => d.site_id))
+      this.counts.sites.filtered = siteGroup.all().filter(d => siteIds.has(d.key) && d.value.total > 0).length
+    },
+    updatePeriodFilter () {
+      if (!this.periodDim) return
+      const { season, year } = this.period
+      if (season.start > season.end && year.start !== null && year.end !== null) {
+        const startKey = year.start * 1000 + season.start
+        const endKey = year.start < year.end
+          ? year.end * 1000 + season.end
+          : year.end * 1000 + 365
+        this.periodDim.filterRange([startKey, endKey + 0.5])
+      } else {
+        this.periodDim.filterAll()
+      }
     },
     startTour () {
       this.$tours.tour.start()

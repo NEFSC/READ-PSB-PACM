@@ -298,21 +298,16 @@ export default {
           .attr('display', null)
       }
       this.setFilter()
-      // this.$emit('update', [this.start.jday, this.end.jday])
     },
     setFilter: debounce(function () {
-      // console.log('SeasonFilter: setFilter')
-      // this.season.start = start
-      // this.season.end = end === 365 ? 366 : end
       const start = this.start.jday
       const end = this.end.jday
-      // const end = this.end.jday === 365 ? 366 : this.end.jday
       if (start <= end) {
         this.dim.filterRange([start, end + 0.01])
       } else {
         this.dim.filterFunction(d => d >= start || d <= end)
       }
-      // evt.$emit('render:map', 'setSeason')
+      evt.$emit('period:season', { start, end })
       dc.redrawAll()
     }, 1, true)
   }

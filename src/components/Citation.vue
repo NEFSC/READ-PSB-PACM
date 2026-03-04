@@ -1,6 +1,6 @@
 <template>
   <span>
-    Passive Acoustic Cetacean Map. {{ year }}. Woods Hole (MA): NOAA Northeast Fisheries Science Center v{{ version }} [accessed date]. https://apps-nefsc.fisheries.noaa.gov/pacm
+    Passive Acoustic Cetacean Map. {{ year }}. Woods Hole (MA): NOAA Northeast Fisheries Science Center v{{ version }} [accessed date]. https://passiveacoustics.fisheries.noaa.gov/pacm/
   </span>
 </template>
 

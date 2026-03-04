@@ -40,6 +40,13 @@
           </div>
         </div>
         <div>
+          <div class="font-weight-medium">Sites:</div>
+          <div class="ml-2">
+            {{ counts.sites.filtered.toLocaleString() }} of {{ counts.sites.total.toLocaleString() }}
+            ({{ counts.sites.total > 0 ? (counts.sites.filtered / counts.sites.total * 100).toFixed(0) : '0' }}%)
+          </div>
+        </div>
+        <div>
           <div class="font-weight-medium">Deployments:</div>
           <div class="ml-2">
             {{ counts.deployments.filtered.toLocaleString() }} of {{ counts.deployments.total.toLocaleString() }}
@@ -62,7 +69,7 @@
               <text x="27" :y="i * 20 + 20" class="pacm-legend-text">{{v.toLocaleString()}}</text>
             </g>
           </svg>
-          <svg width="200" height="35" v-else>
+          <svg width="200" height="25" v-else>
             <g transform="translate(27,10)">
               <circle cy="7" r="7" stroke="white" stroke-opacity="0.5" :fill="detectionTypes[4].color" />
               <text x="20" y="8" class="pacm-legend-text">Recorder</text>
@@ -117,14 +124,14 @@
           <v-checkbox class="ml-4 my-0 d-inline-block" hide-details dense label="Normalize by Effort" v-model="normalizeEffort"></v-checkbox>
         </div>
         <div v-if="theme.deploymentsOnly">
-          <v-divider class="mb-2"></v-divider>
+          <!-- <v-divider class="mb-2"></v-divider> -->
           <v-checkbox class="ml-4 my-0 d-inline-block" hide-details dense label="Scale by # Days" v-model="useSizeScale" style="height:30px;vertical-align:middle"></v-checkbox>
         </div>
       </div>
 
       <div class="mt-2 black--text" v-if="hasMobile">
         <h3 class="subtitle-1 font-weight-medium">Mobile Platforms</h3>
-        <svg width="200" height="85">
+        <svg width="200" height="85" v-if="!theme.deploymentsOnly">
           <g transform="translate(27,10)">
             <rect y="-6" x="-6" width="12" height="12" stroke="white" stroke-opacity="0.5" :fill="detectionTypes[0].color" />
             <text x="27" :y="0" class="pacm-legend-text">{{detectionTypes[0].label}}</text>
@@ -137,9 +144,11 @@
             <line x1="-6" x2="6" y1="-6" y2="6" stroke="hsla(0, 0%, 30%, 0.75)" stroke-width="3px" />
             <text x="27" :y="0" class="pacm-legend-text">Track</text>
           </g>
-          <g transform="translate(27,75)">
-            <line x1="-6" x2="6" y1="-6" y2="6" stroke="hsla(0, 0%, 30%, 0.75)" stroke-width="3px" stroke-dasharray="3 3" />
-            <text x="27" :y="0" class="pacm-legend-text">Track (Not Analyzed)</text>
+        </svg>
+        <svg width="200" height="30" v-else>
+          <g transform="translate(27,15)">
+            <line x1="-6" x2="6" y1="-6" y2="6" stroke="hsla(0, 0%, 30%, 0.75)" stroke-width="3px" />
+            <text x="27" :y="0" class="pacm-legend-text">Track</text>
           </g>
         </svg>
       </div>
@@ -154,10 +163,6 @@
           <g transform="translate(27,35)">
             <line x1="-6" x2="6" y1="-6" y2="6" stroke="hsla(0, 0%, 30%, 0.75)" stroke-width="3px" />
             <text x="27" :y="0" class="pacm-legend-text">Track</text>
-          </g>
-          <g transform="translate(27,55)">
-            <line x1="-6" x2="6" y1="-6" y2="6" stroke="hsla(0, 0%, 30%, 0.75)" stroke-width="3px" stroke-dasharray="3 3" />
-            <text x="27" :y="0" class="pacm-legend-text">Track (Not Analyzed)</text>
           </g>
         </svg>
       </div> -->
@@ -188,10 +193,10 @@ export default {
   computed: {
     ...mapGetters(['deployments', 'theme']),
     hasStationary () {
-      return this.deployments && this.deployments.some(d => d.properties.deployment_type === 'stationary')
+      return this.deployments && this.deployments.some(d => d.deployment_type === 'STATIONARY')
     },
     hasMobile () {
-      return this.deployments && this.deployments.some(d => d.properties.deployment_type === 'mobile')
+      return this.deployments && this.deployments.some(d => d.deployment_type === 'MOBILE')
     },
     // hasTowed () {
     //   return this.deployments && this.deployments.some(d => d.properties.platform_type === 'towed')

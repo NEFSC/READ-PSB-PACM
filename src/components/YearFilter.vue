@@ -321,13 +321,11 @@ export default {
       this.render()
     },
     reset () {
-      // console.log('YearFilter:reset()')
       this.start.value = this.x.domain()[0]
       this.end.value = this.x.domain()[1]
       this.render()
     },
     render () {
-      // console.log('YearFilter:render()')
       const handleStart = this.svg.select('.handle.start')
       handleStart.select('circle').attr('cx', this.x(this.start.value))
       handleStart.select('text').attr('x', this.x(this.start.value))
@@ -344,13 +342,13 @@ export default {
       // this.$emit('update', [this.start.jday, this.end.jday])
     },
     setFilter: debounce(function () {
-      // console.log('YearFilter:setFilter()')
       const start = this.start.value
       const end = this.end.value - 1
 
       this.filter = [start, end]
       this.dim.filterRange([start, end + 1])
 
+      evt.$emit('period:year', { start, end })
       dc.redrawAll()
     }, 1, true)
   }

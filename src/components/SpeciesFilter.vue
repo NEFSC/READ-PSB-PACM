@@ -4,8 +4,8 @@
     :items="options"
     v-model="selected"
     :label="`Select ${theme.label}`"
-    item-text="id"
-    item-value="id"
+    item-text="name"
+    item-value="code"
     hide-details
     multiple
     chips
@@ -15,7 +15,7 @@
 
 <script>
 import * as dc from 'dc'
-import { xf } from '@/lib/crossfilter'
+import { getRawDetections } from '@/lib/crossfilter'
 import { mapGetters } from 'vuex'
 
 export default {
@@ -27,38 +27,26 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['theme'])
+    ...mapGetters(['theme', 'species'])
   },
   watch: {
     selected () {
-      this.setFilter()
+      this.$store.dispatch('reloadSpeciesFilter', this.selected)
+        .then(() => dc.redrawAll())
     },
     theme () {
       this.reset()
     }
   },
   mounted () {
-    this.dim = xf.dimension(d => d.species)
     this.reset()
-  },
-  beforeDestroy () {
-    this.dim && this.dim.dispose()
   },
   methods: {
     reset () {
-      this.options = [...new Set(xf.all().filter(d => !!d.species).map(d => d.species))].sort().map(d => ({ id: d }))
-      this.selected = this.options.map(d => d.id)
-    },
-    setFilter () {
-      // console.log(`setFilter(${this.selected})`)
-      if (!this.dim) return
-
-      if (this.selected.length === this.options.length) {
-        this.dim.filterAll()
-      } else {
-        this.dim.filter(d => !d || this.selected.includes(d))
-      }
-      dc.redrawAll()
+      const raw = getRawDetections()
+      const speciesCodes = new Set(raw.map(d => d.species))
+      this.options = this.species.filter(d => speciesCodes.has(d.code))
+      this.selected = this.options.map(d => d.code)
     }
   }
 }
