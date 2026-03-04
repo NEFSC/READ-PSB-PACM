@@ -1,17 +1,27 @@
-import Vue from 'vue'
-import Vuetify from 'vuetify/lib'
+import 'vuetify/styles'
+import '@mdi/font/css/materialdesignicons.css'
+import { createVuetify } from 'vuetify'
+import { aliases, mdi } from 'vuetify/iconsets/mdi'
+import { h } from 'vue'
 
-import WhaleIcon from '@/components/WhaleIcon'
+import WhaleIcon from '@/components/WhaleIcon.vue'
 
-Vue.use(Vuetify)
+const customIcons = {
+  whale: WhaleIcon
+}
 
-export default new Vuetify({
+const custom = {
+  component: (props) =>
+    h(props.tag, [h(customIcons[props.icon], { class: 'v-icon__svg' })]),
+}
+
+export default createVuetify({
   icons: {
-    iconfont: 'mdi',
-    values: {
-      whale: {
-        component: WhaleIcon
-      }
+    defaultSet: 'mdi',
+    aliases,
+    sets: {
+      mdi,
+      custom
     }
   }
 })

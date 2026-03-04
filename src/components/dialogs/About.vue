@@ -2,7 +2,7 @@
   <v-card role="main" aria-label="about page">
     <div>
       <v-img
-        src="@/assets/img/noaa-logo.gif"
+        src="~/assets/img/noaa-logo.gif"
         height="54px"
         width="54px"
         style="float:right"
@@ -10,10 +10,8 @@
         alt="NOAA Logo">
       </v-img>
       <v-list-item>
-        <v-list-item-content>
-          <v-list-item-title><h1 class="headline"><span v-if="!$vuetify.breakpoint.mobile">Welcome to the </span>Passive Acoustic Cetacean Map</h1></v-list-item-title>
-          <v-list-item-subtitle>by the <a href="https://www.fisheries.noaa.gov/new-england-mid-atlantic/endangered-species-conservation/passive-acoustic-research-northeast">NOAA Northeast Fisheries Science Center</a></v-list-item-subtitle>
-        </v-list-item-content>
+        <v-list-item-title><h1 class="text-h6"><span v-if="!mobile">Welcome to the </span>Passive Acoustic Cetacean Map</h1></v-list-item-title>
+        <v-list-item-subtitle>by the <a href="https://www.fisheries.noaa.gov/new-england-mid-atlantic/endangered-species-conservation/passive-acoustic-research-northeast">NOAA Northeast Fisheries Science Center</a></v-list-item-subtitle>
       </v-list-item>
       <v-img
         src="@/assets/img/whale.jpg"
@@ -21,28 +19,28 @@
         alt="Whale Photo">
       </v-img>
     </div>
-    <v-card-text class="mt-8 body-2 grey--text text--darken-4">
-      <p class="font-weight-medium pb-0 body-1">
+    <v-card-text class="mt-8 text-body-2">
+      <p class="font-weight-medium pb-0 text-body-1">
         The Passive Acoustic Cetacean Map (PACM) shows when and where specific whale, dolphin, and other cetacean species were acoustically detected in the North Atlantic Ocean based on Passive Acoustic Monitoring (PAM).
       </p>
       <v-container class="mb-6">
         <v-row justify="space-around">
           <v-col cols="12" md="4" class="text-center">
-            <v-btn color="success darken-2" class="px-8 mx-0" x-large @click="$emit('close', { tour: true })" aria-label="take a tour" :disabled="$vuetify.breakpoint.mobile">
-              <v-icon left>mdi-cursor-default-click</v-icon>
+            <v-btn color="success-darken-2" class="px-8 mx-0" size="x-large" @click="$emit('close', { tour: true })" aria-label="take a tour" :disabled="mobile">
+              <v-icon start>mdi-cursor-default-click</v-icon>
               Take A Tour
             </v-btn>
-            <div class="text-caption" v-if="$vuetify.breakpoint.mobile">Tour not available on mobile devices, see User Guide.</div>
+            <div class="text-caption" v-if="mobile">Tour not available on mobile devices, see User Guide.</div>
           </v-col>
           <v-col cols="12" md="4" class="text-center">
-            <v-btn color="success darken-2" class="px-8 mx-0" x-large @click="$emit('close', { guide: true })" aria-label="user guide">
-              <v-icon left>mdi-book-open-variant</v-icon>
+            <v-btn color="success-darken-2" class="px-8 mx-0" size="x-large" @click="$emit('close', { guide: true })" aria-label="user guide">
+              <v-icon start>mdi-book-open-variant</v-icon>
               User Guide
             </v-btn>
           </v-col>
           <v-col cols="12" md="4" class="text-center">
-            <v-btn color="success darken-2" class="px-8 mx-0" x-large @click="$emit('close')" aria-label="get started">
-              <v-icon left>mdi-play-circle</v-icon>
+            <v-btn color="success-darken-2" class="px-8 mx-0" size="x-large" @click="$emit('close')" aria-label="get started">
+              <v-icon start>mdi-play-circle</v-icon>
               Get Started
             </v-btn>
           </v-col>
@@ -72,7 +70,7 @@
       <p>
         When using or referencing this data, please cite as:
       </p>
-      <p class="font-weight-bold ml-4 grey--text text--darken-2">
+      <p class="font-weight-bold ml-4 text-grey-darken-2">
         <Citation></Citation>
       </p>
       <p>
@@ -87,95 +85,100 @@
 
       <h2 class="text-h5 mb-2">Latest Updates</h2>
 
-      <div class="text-subheading font-weight-bold text--secondary">
+      <div class="text-subheading font-weight-bold text-secondary">
         v1.2.0 | Mar 4, 2026
       </div>
       <p>Major dataset updates from PARS submissions and Makara database. Deployments at the same site are now aggregated into a single site-level result. Seasonal filter now trims partial seasons when Start DOY > End DOY. Multi-species datasets (e.g., Beaked Whales) now aggregate detections across species by date to avoid double counting.</p>
 
-      <div class="text-subheading font-weight-bold text--secondary">
+      <div class="text-subheading font-weight-bold text-secondary">
         v1.1.11 | Apr 1, 2025
       </div>
       <p>Minor updates to About and User Guide pages.</p>
 
-      <div class="text-subheading font-weight-bold text--secondary">
+      <div class="text-subheading font-weight-bold text-secondary">
         v1.1.10 | Aug 21, 2024
       </div>
       <p>Added Gray Whale, Minke Whale, Pacific White-sided Dolphin. Re-labelled "Cuvier's Beaked Whale" to "Goose-beaked Whale." Added Unid. Mesoplodon (Beaked Whale Species) from SWFSC-SAEL_20240814.</p>
 
-      <div class="text-subheading font-weight-bold text--secondary">
+      <div class="text-subheading font-weight-bold text-secondary">
         v1.1.9 | Aug 19, 2024
       </div>
       <p>Fixed user-defined spatial filter when switching species. Added SWFSC-SAEL_20240814 dataset.</p>
 
-      <div class="text-subheading font-weight-bold text--secondary">
+      <div class="text-subheading font-weight-bold text-secondary">
         v1.1.8 | Mar 22, 2024
       </div>
       <p>Updated SEFSC datasets for Gulf of Mexico (corrected lat/lon coordinates for 2020-2021 datasets).</p>
 
-      <div class="text-subheading font-weight-bold text--secondary">
+      <div class="text-subheading font-weight-bold text-secondary">
         v1.1.7 | Mar 13, 2024
       </div>
       <p>Added and updated SEFSC datasets from Gulf of Mexico for Beaked Whales, Kogia, Sperm Whales, and Dolphins.</p>
 
-      <div class="text-subheading font-weight-bold text--secondary">
+      <div class="text-subheading font-weight-bold text-secondary">
         v1.1.6 | Sep 29, 2023
       </div>
       <p>Added FPOD datasets for Harbor Porpoise and Dolphins (Unidentified), and new Beaked Whale and Dolphin datasets from SEFSC.</p>
 
-      <div class="text-subheading font-weight-bold text--secondary">
+      <div class="text-subheading font-weight-bold text-secondary">
         v1.1.5 | Jul 20, 2023
       </div>
       <p>Added new DFO, JASCO, SEFSC datasets. Minor updates to About page and User Guide.</p>
 
-      <div class="text-subheading font-weight-bold text--secondary">
+      <div class="text-subheading font-weight-bold text-secondary">
         v1.1.4 | Mar 22, 2023
       </div>
       <p>Updated contact email address to <a class="text-decoration-underline" href="mailto:nmfs.nec.pacmdata@noaa.gov">nmfs.nec.pacmdata@noaa.gov</a>. Fixed ESRI Ocean basemap.</p>
 
-      <div class="text-subheading font-weight-bold text--secondary">
+      <div class="text-subheading font-weight-bold text-secondary">
         v1.1.3 | Nov 17, 2022
       </div>
       <p>Added nautical charts basemap, updated baleen whale datasets and active deployments.</p>
 
-      <div class="text-subheading font-weight-bold text--secondary">
+      <div class="text-subheading font-weight-bold text-secondary">
         v1.1.2 | Apr 1, 2022
       </div>
       <p>Added wind energy areas layer to map overlays, latest updates to about. Updated NYSDEC baleen whale data.</p>
 
-      <div class="text-subheading font-weight-bold text--secondary">
+      <div class="text-subheading font-weight-bold text-secondary">
         v1.1.1 | Mar 16, 2022
       </div>
       <p>Fixed bug when selecting deployments by bounding box.</p>
 
-      <div class="text-subheading font-weight-bold text--secondary">
+      <div class="text-subheading font-weight-bold text-secondary">
         v1.1.0 | Mar 7, 2022
       </div>
       <p>
         Added advanced filters, map overlays with Lobster Management Areas layer, harbor porpoise to species list. Added/updated data from DFO, NYSDEC, NEFSC, Cornell Univ.
       </p>
 
-      <div class="text-subheading font-weight-bold text--secondary">
+      <div class="text-subheading font-weight-bold text-secondary">
         v1.0.0 | May 27, 2021
       </div>
       <p class="mb-0">Initial release.</p>
     </v-card-text>
     <v-card-actions>
       <v-spacer></v-spacer>
-      <v-btn color="primary" text @click.native="$emit('close')" aria-label="close">Close</v-btn>
+      <v-btn color="primary" variant="text" @click="$emit('close')" aria-label="close">Close</v-btn>
     </v-card-actions>
   </v-card>
 </template>
 
 <script>
-import Citation from '@/components/Citation'
+import { useDisplay } from 'vuetify'
+import Citation from '@/components/Citation.vue'
 export default {
   name: 'About',
   components: {
     Citation
   },
+  setup () {
+    const { mobile } = useDisplay()
+    return { mobile }
+  },
   data () {
     return {
-      version: process.env.PACKAGE_VERSION
+      version: typeof PACKAGE_VERSION !== 'undefined' ? PACKAGE_VERSION : process.env.PACKAGE_VERSION
     }
   }
 }

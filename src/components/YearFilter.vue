@@ -1,14 +1,14 @@
 <template>
   <div class="pacm-year-filter">
-    <v-tooltip open-delay="500" right>
-      <template v-slot:activator="{ on }">
+    <v-tooltip :open-delay="500" location="end">
+      <template v-slot:activator="{ props }">
         <v-btn
           icon
-          x-small
+          size="x-small"
           class="mt-1 float-right"
           color="grey"
           @click="reset"
-          v-on="on"
+          v-bind="props"
           aria-label="reset"
         >
           <v-icon>mdi-sync</v-icon>
@@ -17,7 +17,7 @@
       <span>Reset</span>
     </v-tooltip>
 
-    <div class="subtitle-1 mb-2 font-weight-medium">
+    <div class="text-subtitle-1 mb-2 font-weight-medium">
       Years:
       <v-menu
         v-model="start.show"
@@ -26,12 +26,12 @@
         transition="scale-transition"
         offset-y
         min-width="200px">
-        <template v-slot:activator="{ on }">
-          <span class="pacm-filter-value" v-on="on">{{ filter[0] }}</span>
+        <template v-slot:activator="{ props }">
+          <span class="pacm-filter-value" v-bind="props">{{ filter[0] }}</span>
         </template>
         <v-card class="pa-1">
           <v-card-text>
-            <div class="subtitle-2">Start Year</div>
+            <div class="text-subtitle-2">Start Year</div>
             <v-text-field
               v-model="start.input"
               single-line
@@ -42,7 +42,7 @@
           </v-card-text>
           <v-card-actions class="pr-4">
             <v-spacer></v-spacer>
-            <v-btn color="primary" outlined @click="setStart" aria-label="done">Done</v-btn>
+            <v-btn color="primary" variant="outlined" @click="setStart" aria-label="done">Done</v-btn>
           </v-card-actions>
         </v-card>
       </v-menu>
@@ -54,12 +54,12 @@
         transition="scale-transition"
         offset-y
         min-width="200px">
-        <template v-slot:activator="{ on }">
-          <span class="pacm-filter-value" v-on="on">{{ filter[1] }}</span>
+        <template v-slot:activator="{ props }">
+          <span class="pacm-filter-value" v-bind="props">{{ filter[1] }}</span>
         </template>
         <v-card class="pa-1">
           <v-card-text>
-            <div class="subtitle-2">End Year</div>
+            <div class="text-subtitle-2">End Year</div>
             <v-text-field
               v-model="end.input"
               single-line
@@ -70,7 +70,7 @@
           </v-card-text>
           <v-card-actions class="pr-4">
             <v-spacer></v-spacer>
-            <v-btn color="primary" outlined @click="setEnd" aria-label="done">Done</v-btn>
+            <v-btn color="primary" variant="outlined" @click="setEnd" aria-label="done">Done</v-btn>
           </v-card-actions>
         </v-card>
       </v-menu>
@@ -87,7 +87,7 @@ import * as d3 from 'd3'
 import * as dc from 'dc'
 import debounce from 'debounce'
 
-import YearChart from '@/components/YearChart'
+import YearChart from '@/components/YearChart.vue'
 import evt from '@/lib/events'
 import { xf } from '@/lib/crossfilter'
 
@@ -278,14 +278,14 @@ export default {
       .attr('x', this.x(this.end.value))
       .attr('y', 22)
 
-    evt.$on('reset:filters', this.reset)
+    evt.on('reset:filters', this.reset)
   },
-  beforeDestroy () {
+  beforeUnmount () {
     if (this.dim) {
       this.dim.filterAll()
       this.dim.dispose()
     }
-    evt.$off('reset:filters', this.reset)
+    evt.off('reset:filters', this.reset)
   },
   methods: {
     setStart () {
@@ -348,7 +348,7 @@ export default {
       this.filter = [start, end]
       this.dim.filterRange([start, end + 1])
 
-      evt.$emit('period:year', { start, end })
+      evt.emit('period:year', { start, end })
       dc.redrawAll()
     }, 1, true)
   }

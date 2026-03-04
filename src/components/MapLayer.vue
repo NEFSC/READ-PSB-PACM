@@ -1,5 +1,6 @@
 <script>
-import { mapGetters, mapActions } from 'vuex'
+import { mapState, mapActions } from 'pinia'
+import { useStore } from '@/store'
 import L from 'leaflet'
 import * as d3 from 'd3'
 import d3Tip from 'd3-tip'
@@ -12,7 +13,7 @@ import { tipOffset, tipHtml } from '@/lib/tip'
 export default {
   name: 'MapLayer',
   computed: {
-    ...mapGetters(['theme', 'sites', 'tracks', 'deployments', 'selectedDeployments', 'normalizeEffort', 'useSizeScale']),
+    ...mapState(useStore, ['theme', 'sites', 'tracks', 'deployments', 'selectedDeployments', 'normalizeEffort', 'useSizeScale']),
     map () {
       return this.$parent.map
     },
@@ -75,19 +76,19 @@ export default {
     this.setBounds()
     this.draw()
 
-    evt.$on('map:zoom', this.draw)
-    evt.$on('xf:filtered', this.render)
+    evt.on('map:zoom', this.draw)
+    evt.on('xf:filtered', this.render)
     console.log('[MapLayer.mounted] event listeners registered')
   },
-  beforeDestroy () {
+  beforeUnmount () {
     this.container.selectAll('g').remove()
     d3.selectAll('.d3-tip.map').remove()
 
-    evt.$off('map:zoom', this.draw)
-    evt.$off('xf:filtered', this.render)
+    evt.off('map:zoom', this.draw)
+    evt.off('xf:filtered', this.render)
   },
   methods: {
-    ...mapActions(['selectDeployments']),
+    ...mapActions(useStore, ['selectDeployments']),
     isSelected (d) {
       return this.selectedDeployments.length > 0 && this.selectedDeployments.map(d => d.id).includes(d.id)
     },
@@ -396,7 +397,7 @@ export default {
           dep => dep.deployment_type === 'STATIONARY' && dep.site_id === d.site_id
         )
       } else if (type === 'deployment' || type === 'track' || type === 'point') {
-        deployment = this.$store.getters.deploymentById(d.id)
+        deployment = useStore().deploymentById(d.id)
       }
 
       const nearbyDeployments = this.findNearbyDeployments(d)
@@ -423,31 +424,31 @@ export default {
         .style('opacity', 0)
     }
   },
-  render: function (h) {
+  render () {
     return null
   }
 }
 </script>
 
 <style>
-.vue2leaflet-map svg path.track {
+.leaflet-container svg path.track {
   stroke-linecap: round;
   stroke-linejoin: round;
   fill: none;
   stroke: hsla(0, 0%, 30%, 0.8);
   stroke-width: 2px;
 }
-.vue2leaflet-map svg path.track.not-analyzed {
+.leaflet-container svg path.track.not-analyzed {
   stroke: hsla(0, 0%, 30%, 0.25);
   stroke-dasharray: 3 3;
 }
-.vue2leaflet-map svg path.track-overlay.selected {
+.leaflet-container svg path.track-overlay.selected {
   stroke: hsla(0, 90%, 39%, 0.5);
 }
-.vue2leaflet-map svg path.track:hover {
+.leaflet-container svg path.track:hover {
   stroke-width: 3px;
 }
-.vue2leaflet-map svg path.track-overlay {
+.leaflet-container svg path.track-overlay {
   stroke: hsla(0, 0%, 30%, 0.8);
   stroke-width: 5px;
   stroke-linecap: round;
@@ -458,10 +459,10 @@ export default {
   stroke: transparent;
   stroke-width: 5px;
 }
-.vue2leaflet-map svg path.track-overlay:hover {
+.leaflet-container svg path.track-overlay:hover {
   stroke: hsla(0, 0%, 30%, 1);
 }
-.vue2leaflet-map svg circle.site {
+.leaflet-container svg circle.site {
   cursor: pointer;
   pointer-events: auto;
   fill-opacity: 0.75;
@@ -469,17 +470,17 @@ export default {
   stroke-width: 1.5px;
   stroke: rgb(255, 255, 255);
 }
-.vue2leaflet-map svg circle.site.selected {
+.leaflet-container svg circle.site.selected {
   stroke: rgb(255, 0, 0);
   stroke-opacity: 1;
   stroke-width: 2px;
 }
-.vue2leaflet-map svg circle.site:hover {
+.leaflet-container svg circle.site:hover {
   fill-opacity: 1;
   stroke-opacity: 1;
   stroke-width: 3px;
 }
-.vue2leaflet-map svg circle.deployment {
+.leaflet-container svg circle.deployment {
   cursor: pointer;
   pointer-events: auto;
   fill-opacity: 0.75;
@@ -487,18 +488,18 @@ export default {
   stroke-width: 1.5px;
   stroke: rgb(255, 255, 255);
 }
-.vue2leaflet-map svg circle.deployment.selected {
+.leaflet-container svg circle.deployment.selected {
   stroke: rgb(255, 0, 0);
   stroke-opacity: 1;
   stroke-width: 2px;
 }
-.vue2leaflet-map svg circle.deployment:hover {
+.leaflet-container svg circle.deployment:hover {
   fill-opacity: 1;
   stroke-opacity: 1;
   stroke-width: 3px;
 }
 
-.vue2leaflet-map svg path.point {
+.leaflet-container svg path.point {
   cursor: pointer;
   pointer-events: auto;
   fill-opacity: 0.75;
@@ -506,12 +507,12 @@ export default {
   stroke-width: 1.5px;
   stroke: rgb(255, 255, 255);
 }
-.vue2leaflet-map svg path.point.selected {
+.leaflet-container svg path.point.selected {
   stroke: rgb(255, 0, 0);
   stroke-opacity: 1;
   stroke-width: 2px;
 }
-.vue2leaflet-map svg path.point:hover {
+.leaflet-container svg path.point:hover {
   fill-opacity: 1;
   stroke-opacity: 1;
   stroke-width: 3px;

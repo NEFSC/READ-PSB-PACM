@@ -1,5 +1,5 @@
-import Vue from 'vue'
+import mitt from 'mitt'
 
-const evt = new Vue()
+const evt = mitt()
 
 export default evt

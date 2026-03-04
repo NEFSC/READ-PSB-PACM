@@ -6,14 +6,15 @@
 <script>
 import * as d3 from 'd3'
 import * as dc from 'dc'
-import moment from 'moment'
+import dayjs from 'dayjs'
 import d3Tip from 'd3-tip'
 import pad from 'pad'
 
 import ChartMixin from '@/mixins/ChartMixin'
 import { xf } from '@/lib/crossfilter'
 import { detectionTypes, detectionTypesMap } from '@/lib/constants'
-import { mapGetters } from 'vuex'
+import { mapState } from 'pinia'
+import { useStore } from '@/store'
 
 const NDAY_PER_GROUP = 5
 
@@ -26,11 +27,11 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['theme'])
+    ...mapState(useStore, ['theme'])
   },
   mounted () {
     const dim = xf.dimension(d => {
-      return moment.utc('2001-01-01').add(d.doySeason, 'days').toDate()
+      return dayjs.utc('2001-01-01').add(d.doySeason, 'day').toDate()
     })
     const group = dim.group().reduce(
       (p, v) => {
@@ -53,7 +54,7 @@ export default {
       .direction('e')
       .html((event, d) => {
         const start = d.data.key
-        const end = moment.utc(start).add(NDAY_PER_GROUP - 1, 'days').toDate()
+        const end = dayjs.utc(start).add(NDAY_PER_GROUP - 1, 'day').toDate()
         const formatter = d3.timeFormat('%b %d')
         const header = `${formatter(start)} to ${formatter(end)}<br><br>`
 
@@ -112,7 +113,7 @@ export default {
     this.chart.yAxis().ticks(4)
     this.chart.render()
   },
-  beforeDestroy () {
+  beforeUnmount () {
     d3.selectAll('.d3-tip.season-chart').remove()
   }
 }

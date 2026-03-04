@@ -1,22 +1,23 @@
 <template>
   <v-select
-    outlined
+    variant="outlined"
     :items="options"
     v-model="selected"
     :label="`Select ${theme.label}`"
-    item-text="name"
+    item-title="name"
     item-value="code"
     hide-details
     multiple
     chips
-    deletable-chips
+    closable-chips
   ></v-select>
 </template>
 
 <script>
 import * as dc from 'dc'
 import { getRawDetections } from '@/lib/crossfilter'
-import { mapGetters } from 'vuex'
+import { mapState, mapActions } from 'pinia'
+import { useStore } from '@/store'
 
 export default {
   name: 'SpeciesFilter',
@@ -27,11 +28,11 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['theme', 'species'])
+    ...mapState(useStore, ['theme', 'species'])
   },
   watch: {
     selected () {
-      this.$store.dispatch('reloadSpeciesFilter', this.selected)
+      useStore().reloadSpeciesFilter(this.selected)
         .then(() => dc.redrawAll())
     },
     theme () {

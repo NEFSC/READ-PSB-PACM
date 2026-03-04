@@ -1,38 +1,35 @@
 <template>
   <v-app>
     <v-app-bar
-      app
-      color="light-blue darken-4"
-      clipped-left
-      dark
-      role="navigation">
-      <v-app-bar-nav-icon v-if="$vuetify.breakpoint.mobile" @click="drawer = !drawer"></v-app-bar-nav-icon>
-      <v-icon color="white" dark class="mr-4" v-if="!$vuetify.breakpoint.mobile">$whale</v-icon>
-      <h1>
-        <v-toolbar-title v-if="!$vuetify.breakpoint.mobile">
-          Passive Acoustic Cetacean Map <span style="font-size: 50%;" class="pl-1">v{{ version }}</span>
-        </v-toolbar-title>
-        <v-toolbar-title v-else class="font-weight-bold">PACM</v-toolbar-title>
-      </h1>
-
+      color="light-blue-darken-4"
+      role="navigation"
+    >
+      <template v-slot:prepend>
+        <v-app-bar-nav-icon v-if="mobile" @click="drawer = !drawer"></v-app-bar-nav-icon>
+      </template>
+      <v-app-bar-title>
+        <v-icon icon="custom:whale" class="mr-4"></v-icon>
+        <template v-if="mobile">PACM</template>
+        <template v-else>Passive Acoustic Cetacean Map <span style="font-size: 50%;" class="pl-1">v{{ version }}</span></template>
+      </v-app-bar-title>
+      
       <v-spacer></v-spacer>
 
       <v-dialog
         v-model="dialogs.about"
         max-width="1000"
         scrollable
-        :fullscreen="$vuetify.breakpoint.mobile">
-        <template v-slot:activator="{ on }">
+        :fullscreen="mobile">
+        <template v-slot:activator="{ props }">
           <v-btn
             color="default"
-            dark
-            text
-            v-on="on"
+            variant="text"
+            v-bind="props"
             data-v-step="about-button"
             aria-label="about page"
           >
-            <v-icon :left="!$vuetify.breakpoint.mobile">mdi-information-outline</v-icon>
-            <span v-if="!$vuetify.breakpoint.mobile"> About</span>
+            <v-icon :start="!mobile">mdi-information-outline</v-icon>
+            <span v-if="!mobile"> About</span>
           </v-btn>
         </template>
         <AboutDialog @close="closeAbout"></AboutDialog>
@@ -42,19 +39,19 @@
         v-model="dialogs.guide"
         max-width="1200"
         scrollable
-        :fullscreen="$vuetify.breakpoint.mobile">
-        <template v-slot:activator="{ on }">
-          <v-btn color="default" dark text v-on="on" data-v-step="user-guide-button" aria-label="user guide">
-            <v-icon :left="!$vuetify.breakpoint.mobile">mdi-book-open-variant</v-icon>
-            <span v-if="!$vuetify.breakpoint.mobile"> User Guide</span>
+        :fullscreen="mobile">
+        <template v-slot:activator="{ props }">
+          <v-btn color="default" variant="text" v-bind="props" data-v-step="user-guide-button" aria-label="user guide">
+            <v-icon :start="!mobile">mdi-book-open-variant</v-icon>
+            <span v-if="!mobile"> User Guide</span>
           </v-btn>
         </template>
         <UserGuideDialog @close="closeGuide"></UserGuideDialog>
       </v-dialog>
 
-      <v-btn color="default" dark text @click="startTour" data-v-step="tour-button" aria-label="start tour" :disabled="$vuetify.breakpoint.mobile">
-        <v-icon :left="!$vuetify.breakpoint.mobile">mdi-cursor-default-click</v-icon>
-        <span v-if="!$vuetify.breakpoint.mobile"> Tour</span>
+      <v-btn color="default" variant="text" @click="startTour" data-v-step="tour-button" aria-label="start tour" :disabled="mobile">
+        <v-icon :start="!mobile">mdi-cursor-default-click</v-icon>
+        <span v-if="!mobile"> Tour</span>
       </v-btn>
 
       <div>
@@ -63,27 +60,21 @@
     </v-app-bar>
 
     <v-navigation-drawer
-      app
-      dark
-      clipped
-      :permanent="!$vuetify.breakpoint.mobile"
-      color="blue-grey darken-4"
+      :permanent="!mobile"
+      color="blue-grey-darken-4"
+      theme="dark"
       width="500"
       v-model="drawer"
       role="complementary">
       <v-list class="mt-4 py-0">
-        <v-list-item v-if="$vuetify.breakpoint.mobile">
-          <v-list-item-content class="pb-0" >
-            <div class="d-flex">
-              <v-spacer></v-spacer>
-              <v-btn icon small class="float-right" color="grey" @click="drawer = !drawer" aria-label="close"><v-icon>mdi-close</v-icon></v-btn>
-            </div>
-          </v-list-item-content>
+        <v-list-item v-if="mobile">
+          <div class="d-flex">
+            <v-spacer></v-spacer>
+            <v-btn icon size="small" class="float-right" color="grey" @click="drawer = !drawer" aria-label="close"><v-icon>mdi-close</v-icon></v-btn>
+          </div>
         </v-list-item>
         <v-list-item class="my-1" data-v-step="theme">
-          <v-list-item-content>
-            <SelectTheme></SelectTheme>
-          </v-list-item-content>
+          <SelectTheme></SelectTheme>
         </v-list-item>
       </v-list>
       <v-list class="pa-4" v-if="loading">
@@ -96,23 +87,17 @@
             color="white"
             class="mr-4">
           </v-progress-circular>
-          <v-list-item-content>
-            <v-list-item-title class="title">Loading</v-list-item-title>
-          </v-list-item-content>
+          <v-list-item-title class="text-h6">Loading</v-list-item-title>
           <v-spacer></v-spacer>
         </v-list-item>
       </v-list>
       <v-list class="pt-0" v-else-if="theme">
         <v-list-item class="my-1" v-if="theme.showSpeciesFilter">
-          <v-list-item-content>
-            <SpeciesFilter></SpeciesFilter>
-          </v-list-item-content>
+          <SpeciesFilter></SpeciesFilter>
         </v-list-item>
 
         <v-list-item class="my-1" data-v-step="platform">
-          <v-list-item-content>
-            <PlatformTypeFilter></PlatformTypeFilter>
-          </v-list-item-content>
+          <PlatformTypeFilter></PlatformTypeFilter>
         </v-list-item>
 
         <div class="text-right mx-4">
@@ -121,13 +106,13 @@
             max-width="600"
             scrollable
             persistent
-            :fullscreen="$vuetify.breakpoint.mobile">
-            <template v-slot:activator="{ on }">
+            :fullscreen="mobile">
+            <template v-slot:activator="{ props }">
               <v-btn
                 color="default"
-                small
-                text
-                v-on="on"
+                size="small"
+                variant="text"
+                v-bind="props"
                 aria-label="advanced filters"
                 data-v-step="advanced"
               >Advanced Filters...</v-btn>
@@ -139,35 +124,31 @@
         <v-divider class="my-4"></v-divider>
 
         <v-alert
-          color="blue-grey darken-3"
-          border="left"
-          dense
-          class="mx-4 mb-2 body-2 align-center">
+          color="blue-grey-darken-3"
+          border="start"
+          density="compact"
+          class="mx-4 mb-2 text-body-2 align-center">
           Selected period: {{ periodLabel }}
-          <v-tooltip right max-width="300" open-delay="300">
-            <template v-slot:activator="{ on }">
-              <v-icon small class="ml-1" v-on="on">mdi-information-outline</v-icon>
+          <v-tooltip location="end" max-width="300" :open-delay="300">
+            <template v-slot:activator="{ props }">
+              <v-icon size="small" class="ml-1" v-bind="props">mdi-information-outline</v-icon>
             </template>
             <span>The selected period is determined by the season and year filters below. When the season wraps across years (e.g., Oct 1 – Mar 31), the period begins at the start of the season in the first selected year (Oct 1, 2020) and ends at the end of the season in the last selected year (Mar 31, 2022). This avoids showing partial seasons at the beginning of the first year (Jan 1 - Mar 31, 2020) and end of the last year (Oct 1 - Dec 31, 2022).</span>
           </v-tooltip>
         </v-alert>
 
         <v-list-item class="mt-0" data-v-step="season">
-          <v-list-item-content class="pt-1">
-            <SeasonFilter :y-axis-label="yAxisLabel"></SeasonFilter>
-          </v-list-item-content>
+          <SeasonFilter :y-axis-label="yAxisLabel"></SeasonFilter>
         </v-list-item>
 
         <v-list-item class="mt-2" data-v-step="year">
-          <v-list-item-content class="py-0">
-            <YearFilter :y-axis-label="yAxisLabel"></YearFilter>
-          </v-list-item-content>
+          <YearFilter :y-axis-label="yAxisLabel"></YearFilter>
         </v-list-item>
 
         <v-list-item class="mt-2" data-v-step="detection">
-          <v-list-item-content class="py-0" v-if="!theme.deploymentsOnly">
+          <div v-if="!theme.deploymentsOnly">
             <DetectionFilter :y-axis-label="yAxisLabel"></DetectionFilter>
-          </v-list-item-content>
+          </div>
         </v-list-item>
       </v-list>
     </v-navigation-drawer>
@@ -188,9 +169,9 @@
       scrollable
       persistent>
       <div>
-        <v-alert type="error" :value="true" prominant class="mb-0">
+        <v-alert type="error" prominent class="mb-0">
           <div class="text-h6">Failed to Load Dataset</div>
-          <p class="body-1 mb-0">
+          <p class="text-body-1 mb-0">
             An error occurred fetching the dataset from the server.
             Please refresh and try again.
             If the problem continues, please contact us at <a href="mailto:nmfs.nec.pacmdata@noaa.gov" style="color:white">nmfs.nec.pacmdata@noaa.gov</a>.
@@ -200,7 +181,7 @@
     </v-dialog>
 
     <v-tour name="tour" :steps="tour.steps" :options="tour.options" role="main">
-      <template slot-scope="tour">
+      <template v-slot="tour">
         <transition name="fade">
           <v-step
             v-if="tour.steps[tour.currentStep]"
@@ -223,20 +204,24 @@
 </template>
 
 <script>
-import { mapActions, mapGetters } from 'vuex'
-import moment from 'moment'
+import { mapState, mapActions } from 'pinia'
+import { useStore } from '@/store'
+import { useDisplay } from 'vuetify'
+import dayjs from 'dayjs'
 
-import Map from '@/components/Map'
-import AboutDialog from '@/components/dialogs/About'
-import FiltersDialog from '@/components/dialogs/Filters'
-import UserGuideDialog from '@/components/dialogs/UserGuide'
-import SelectTheme from '@/components/SelectTheme'
-import YearFilter from '@/components/YearFilter'
-import SpeciesFilter from '@/components/SpeciesFilter'
-import PlatformTypeFilter from '@/components/PlatformTypeFilter'
-import SeasonFilter from '@/components/SeasonFilter'
-import DetectionFilter from '@/components/DetectionFilter'
-import DeploymentDetail from '@/components/DeploymentDetail'
+
+import WhaleIcon from '@/components/WhaleIcon.vue'
+import Map from '@/components/Map.vue'
+import AboutDialog from '@/components/dialogs/About.vue'
+import FiltersDialog from '@/components/dialogs/Filters.vue'
+import UserGuideDialog from '@/components/dialogs/UserGuide.vue'
+import SelectTheme from '@/components/SelectTheme.vue'
+import YearFilter from '@/components/YearFilter.vue'
+import SpeciesFilter from '@/components/SpeciesFilter.vue'
+import PlatformTypeFilter from '@/components/PlatformTypeFilter.vue'
+import SeasonFilter from '@/components/SeasonFilter.vue'
+import DetectionFilter from '@/components/DetectionFilter.vue'
+import DeploymentDetail from '@/components/DeploymentDetail.vue'
 
 import evt from '@/lib/events'
 import { xf, deploymentGroup, siteGroup, deploymentMap } from '@/lib/crossfilter'
@@ -258,9 +243,13 @@ export default {
     DetectionFilter,
     DeploymentDetail
   },
+  setup () {
+    const { mobile, height } = useDisplay()
+    return { mobile, displayHeight: height }
+  },
   data () {
     return {
-      version: process.env.PACKAGE_VERSION,
+      version: typeof PACKAGE_VERSION !== 'undefined' ? PACKAGE_VERSION : process.env.PACKAGE_VERSION,
       themes,
       drawer: null,
       counts: {
@@ -302,9 +291,9 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['theme', 'loading', 'loadingFailed', 'selectedDeployments']),
+    ...mapState(useStore, ['theme', 'loading', 'loadingFailed', 'selectedDeployments', 'deployments', 'sites']),
     showDialog () {
-      return !!this.deployments.selected
+      return !!this.deployments?.selected
     },
     yAxisLabel () {
       return '# Days Recorded'
@@ -315,7 +304,7 @@ export default {
     },
     periodLabel () {
       const { season, year } = this.period
-      const fmt = doy => moment('2000-12-31').add(doy, 'days').format('MMM D')
+      const fmt = doy => dayjs('2000-12-31').add(doy, 'day').format('MMM D')
       const hasYear = year.start !== null && year.end !== null
       const startDate = fmt(season.start)
       const endDate = season.start > season.end && hasYear && year.start === year.end
@@ -329,14 +318,16 @@ export default {
   mounted () {
     this.init()
 
-    evt.$on('xf:filtered', this.onFiltered)
-    evt.$on('period:season', (val) => { this.period.season = val; this.updatePeriodFilter() })
-    evt.$on('period:year', (val) => { this.period.year = val; this.updatePeriodFilter() })
+    evt.on('xf:filtered', this.onFiltered)
+    this._onSeason = (val) => { this.period.season = val; this.updatePeriodFilter() }
+    this._onYear = (val) => { this.period.year = val; this.updatePeriodFilter() }
+    evt.on('period:season', this._onSeason)
+    evt.on('period:year', this._onYear)
   },
-  beforeDestroy () {
-    evt.$off('xf:filtered', this.onFiltered)
-    evt.$off('period:season')
-    evt.$off('period:year')
+  beforeUnmount () {
+    evt.off('xf:filtered', this.onFiltered)
+    evt.off('period:season', this._onSeason)
+    evt.off('period:year', this._onYear)
     if (this.periodDim) { this.periodDim.filterAll(); this.periodDim.dispose() }
   },
   watch: {
@@ -345,23 +336,27 @@ export default {
       this.periodDim = xf.dimension(d => d.datekey)
       this.period.season = { start: 1, end: 365 }
       this.period.year = { start: null, end: null }
-      evt.$emit('reset:filters', 'app:loadData')
+      evt.emit('reset:filters', 'app:loadData')
       this.counts.detections.total = xf.size()
-      this.counts.deployments.total = this.$store.getters.deployments.length
-      this.counts.sites.total = this.$store.getters.sites ? this.$store.getters.sites.length : 0
+      this.counts.deployments.total = this.deployments.length
+      this.counts.sites.total = this.sites ? this.sites.length : 0
       if (this.$route.path === '/' || !this.theme || this.$route.params.id !== this.theme.id) {
-        this.$router.push({ path: this.theme.id || '/' })
+        this.$router.push({ path: '/' + (this.theme.id || '') })
       }
     }
   },
   methods: {
-    ...mapActions(['setTheme', 'selectDeployments', 'fetchReferences']),
+    ...mapActions(useStore, ['setTheme', 'selectDeployments', 'fetchReferences']),
     init () {
       this.fetchReferences()
       if (this.$route.params.id) {
         this.dialogs.about = false
         const theme = themes.find(d => d.id === this.$route.params.id)
-        if (!theme) return this.$store.commit('SET_LOADING_FAILED', true)
+        if (!theme) {
+          const store = useStore()
+          store.loadingFailed = true
+          return
+        }
         this.setTheme(theme)
       } else {
         this.dialogs.about = true
@@ -389,7 +384,6 @@ export default {
       }
     },
     onFiltered () {
-      // unselect deployments that no longer have any filtered detections
       if (this.selectedDeployments.length > 0) {
         const deploymentCounts = this.selectedDeployments.map(d => ({ id: d.id, ...deploymentMap.get(d.id) }))
         const newSelection = deploymentCounts.filter(d => d.total > 0)
@@ -401,11 +395,11 @@ export default {
     },
     updateCounts () {
       this.counts.detections.total = xf.size()
-      this.counts.deployments.total = this.$store.getters.deployments.length
-      this.counts.sites.total = this.$store.getters.sites ? this.$store.getters.sites.length : 0
+      this.counts.deployments.total = this.deployments.length
+      this.counts.sites.total = this.sites ? this.sites.length : 0
       this.counts.detections.filtered = xf.allFiltered().length
       this.counts.deployments.filtered = deploymentGroup.all().filter(d => d.value.total > 0).length
-      const siteIds = new Set((this.$store.getters.sites || []).map(d => d.site_id))
+      const siteIds = new Set((this.sites || []).map(d => d.site_id))
       this.counts.sites.filtered = siteGroup.all().filter(d => siteIds.has(d.key) && d.value.total > 0).length
     },
     updatePeriodFilter () {

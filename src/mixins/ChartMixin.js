@@ -12,14 +12,14 @@ export default {
     }
   },
   mounted () {
-    evt.$on('reset:filters', this.reset)
+    evt.on('reset:filters', this.reset)
   },
-  beforeDestroy () {
+  beforeUnmount () {
     if (!this.chart) return
     this.chart.dimension().dispose()
     dc.chartRegistry.deregister(this.chart)
     dc.redrawAll()
-    evt.$off('reset:filters', this.reset)
+    evt.off('reset:filters', this.reset)
   },
   methods: {
     reset () {

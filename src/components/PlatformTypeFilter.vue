@@ -1,22 +1,23 @@
 <template>
   <v-select
-    outlined
+    variant="outlined"
     :items="options"
     v-model="selected"
     label="Select Platform Type(s)"
-    item-text="name"
+    item-title="name"
     item-value="code"
     hide-details
     multiple
     chips
-    deletable-chips
+    closable-chips
   ></v-select>
 </template>
 
 <script>
 import * as dc from 'dc'
 import { xf } from '@/lib/crossfilter'
-import { mapGetters } from 'vuex'
+import { mapState } from 'pinia'
+import { useStore } from '@/store'
 
 export default {
   name: 'PlatformTypeFilter',
@@ -27,7 +28,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['theme', 'loading', 'platformTypes'])
+    ...mapState(useStore, ['theme', 'loading', 'platformTypes'])
   },
   watch: {
     selected () {
@@ -41,7 +42,7 @@ export default {
     this.dim = xf.dimension(d => d.platform_type)
     this.reset()
   },
-  beforeDestroy () {
+  beforeUnmount () {
     this.dim && this.dim.dispose()
   },
   methods: {

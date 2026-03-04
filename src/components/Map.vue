@@ -1,6 +1,6 @@
 <template>
   <div style="height:100%">
-    <v-overlay :value="loading" style="z-index:10000">
+    <v-overlay :model-value="loading" style="z-index:10000">
       <v-progress-circular
         indeterminate
         size="64"
@@ -10,7 +10,7 @@
       ref="map"
       style="width:100%;height:100%"
       :center="[50, -20]"
-      :zoom="$vuetify.breakpoint.mobile ? 2 : 3"
+      :zoom="mobile ? 2 : 3"
       :options="{ zoomControl: false }"
       @zoomend="onZoom">
       <l-control-scale position="bottomleft"></l-control-scale>
@@ -24,22 +24,28 @@
 </template>
 
 <script>
-import { LMap, LControlScale, LControl } from 'vue2-leaflet'
+import { LMap, LControlScale, LControl } from '@vue-leaflet/vue-leaflet'
 import * as d3 from 'd3'
 import L from 'leaflet'
 
-import Legend from '@/components/Legend'
-import MapLayer from '@/components/MapLayer'
-import MapSelector from '@/components/MapSelector'
+import Legend from '@/components/Legend.vue'
+import MapLayer from '@/components/MapLayer.vue'
+import MapSelector from '@/components/MapSelector.vue'
 
 import ZoomMin from '@/lib/leaflet/L.Control.ZoomMin'
 import '@/lib/leaflet/L.Control.ZoomMin.css'
 import evt from '@/lib/events'
-import { mapGetters } from 'vuex'
+import { mapState } from 'pinia'
+import { useStore } from '@/store'
+import { useDisplay } from 'vuetify'
 
 export default {
   name: 'Map',
   props: ['points', 'counts'],
+  setup () {
+    const { mobile } = useDisplay()
+    return { mobile }
+  },
   data () {
     return {
       ready: false,
@@ -51,7 +57,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['loading', 'theme'])
+    ...mapState(useStore, ['loading', 'theme'])
   },
   components: {
     Legend,
@@ -64,7 +70,7 @@ export default {
     LControl
   },
   async mounted () {
-    this.map = this.$refs.map.mapObject
+    this.map = this.$refs.map.leafletObject
 
     this.zoomMinControl = new ZoomMin({ minBounds: this.map.getBounds() })
     this.map.addControl(this.zoomMinControl)
@@ -101,10 +107,10 @@ export default {
     this.container = this.svg.select('g')
     this.ready = true
 
-    evt.$on('map:setBounds', this.setBounds)
+    evt.on('map:setBounds', this.setBounds)
   },
-  beforeDestroy () {
-    evt.$off('map:setBounds', this.setBounds)
+  beforeUnmount () {
+    evt.off('map:setBounds', this.setBounds)
   },
   methods: {
     async createLobsterLayer () {
@@ -219,7 +225,7 @@ export default {
       this.zoomMinControl.options.minBounds = this.map.getBounds()
     },
     onZoom () {
-      evt.$emit('map:zoom', this.map.getZoom())
+      evt.emit('map:zoom', this.map.getZoom())
     }
   }
 }

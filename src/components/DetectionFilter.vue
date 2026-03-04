@@ -1,14 +1,14 @@
 <template>
   <div class="detection-filter">
-    <v-tooltip open-delay="500" right>
-      <template v-slot:activator="{ on }">
+    <v-tooltip :open-delay="500" location="end">
+      <template v-slot:activator="{ props }">
         <v-btn
           icon
-          x-small
+          size="x-small"
           class="mt-1 float-right"
           color="grey"
           @click="reset"
-          v-on="on"
+          v-bind="props"
           aria-label="reset"
         >
           <v-icon>mdi-sync</v-icon>
@@ -17,7 +17,7 @@
       <span>Reset</span>
     </v-tooltip>
 
-    <div class="subtitle-1 font-weight-medium">Detection Results</div>
+    <div class="text-subtitle-1 font-weight-medium">Detection Results</div>
     <div ref="chart"></div>
   </div>
 </template>
@@ -41,7 +41,6 @@ export default {
     }
   },
   mounted () {
-    // console.log('DetectionFilter mounted')
     const dim = xf.dimension(d => detectionTypesMap.get(d.presence).label)
     const group = dim.group().reduceCount()
 
@@ -55,7 +54,6 @@ export default {
       .domain(detectionTypes.map(d => d.label))
       .range(detectionTypes.map(d => d.color))
 
-    // const el = this.$el.appendChild(document.createElement('div'))
     const margins = { top: 20, right: 70, bottom: 40, left: 90 }
     this.chart = new dc.RowChart(this.$refs.chart)
       .width(450)
@@ -120,7 +118,7 @@ export default {
       this.chart.render()
     })
   },
-  beforeDestroy () {
+  beforeUnmount () {
     d3.selectAll('.d3-tip.detection-filter').remove()
     this.chart && this.chart.selectAll('circle.toggle').remove()
   },

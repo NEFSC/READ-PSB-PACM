@@ -1,5 +1,5 @@
 # BUILDER
-FROM node:16 AS builder
+FROM node:20 AS builder
 
 WORKDIR /app
 COPY package*.json ./
@@ -7,7 +7,6 @@ RUN npm install
 
 COPY . .
 
-RUN npx update-browserslist-db@latest
 RUN npm run build
 
 # SERVER

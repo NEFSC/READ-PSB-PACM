@@ -1,20 +1,20 @@
 <template>
   <v-card>
-    <v-toolbar color="grey darken-2" dense dark>
-      <div v-if="isSiteView" class="subtitle-1 font-weight-bold">
+    <v-toolbar color="grey-darken-2" density="compact">
+      <div v-if="isSiteView" class="text-subtitle-1 font-weight-bold">
         Selected Site ({{ selectedDeployments.length }} deployments)
       </div>
-      <div v-else class="subtitle-1 font-weight-bold">
+      <div v-else class="text-subtitle-1 font-weight-bold">
         Selected Deployments
         ({{ index + 1 }} of {{ selectedDeployments.length }})
-        <v-tooltip open-delay="500" bottom>
-          <template v-slot:activator="{ on }">
+        <v-tooltip :open-delay="500" location="bottom">
+          <template v-slot:activator="{ props }">
             <v-btn
               icon
-              small
+              size="small"
               :disabled="index === 0"
               @click="index -= 1"
-              v-on="on"
+              v-bind="props"
               aria-label="previous"
             >
               <v-icon>mdi-menu-left</v-icon>
@@ -22,14 +22,14 @@
           </template>
           <span>Previous</span>
         </v-tooltip>
-        <v-tooltip open-delay="500" bottom>
-          <template v-slot:activator="{ on }">
+        <v-tooltip :open-delay="500" location="bottom">
+          <template v-slot:activator="{ props }">
             <v-btn
               icon
-              small
+              size="small"
               :disabled="index === (selectedDeployments.length - 1)"
               @click="index += 1"
-              v-on="on"
+              v-bind="props"
               aria-label="next"
             >
               <v-icon>mdi-menu-right</v-icon>
@@ -39,21 +39,21 @@
         </v-tooltip>
       </div>
       <v-spacer></v-spacer>
-      <v-tooltip open-delay="500" bottom>
-        <template v-slot:activator="{ on }">
-          <v-btn icon small @click="close" v-on="on" aria-label="close">
-            <v-icon small>mdi-close</v-icon>
+      <v-tooltip :open-delay="500" location="bottom">
+        <template v-slot:activator="{ props }">
+          <v-btn icon size="small" @click="close" v-bind="props" aria-label="close">
+            <v-icon size="small">mdi-close</v-icon>
           </v-btn>
         </template>
         <span>Close</span>
       </v-tooltip>
     </v-toolbar>
     <v-card-text
-      :style="{ 'max-height': Math.round($vuetify.breakpoint.height * 0.6) + 'px', 'overflow-y': 'auto' }"
+      :style="{ 'max-height': Math.round(displayHeight * 0.6) + 'px', 'overflow-y': 'auto' }"
     >
       <v-row v-if="isSiteView">
         <v-col xs="12" md="12" lg="12" xl="4">
-          <v-simple-table dense>
+          <v-table density="compact">
             <tbody>
               <tr>
                 <td class="px-2 text-right" style="width:150px">Organization:</td>
@@ -108,19 +108,19 @@
                 <td class="px-2 font-weight-bold">{{ siteMetadata.dataPoc }}</td>
               </tr>
             </tbody>
-          </v-simple-table>
+          </v-table>
         </v-col>
 
-        <v-col xs="12" md="12" lg="12" xl="8" v-if="!theme.deploymentsOnly" class="black--text">
+        <v-col xs="12" md="12" lg="12" xl="8" v-if="!theme.deploymentsOnly" class="text-black">
           <div class="heading font-weight-bold">Daily Detections</div>
-          <div class="subtitle-2 grey--text text--darken-1">Includes all detection data independent of filters</div>
+          <div class="text-subtitle-2 text-grey-darken-1">Includes all detection data independent of filters</div>
           <highcharts class="chart" :options="chart"></highcharts>
         </v-col>
       </v-row>
 
       <v-row v-else>
         <v-col xs="12" md="12" lg="12" xl="4">
-          <v-simple-table dense>
+          <v-table density="compact">
             <tbody>
               <tr>
                 <td class="px-2 text-right" style="width:150px">Organization:</td>
@@ -183,12 +183,12 @@
                 <td class="px-2 font-weight-bold">{{ selectedDeployment.protocol_reference }}</td>
               </tr>
             </tbody>
-          </v-simple-table>
+          </v-table>
         </v-col>
 
-        <v-col xs="12" md="12" lg="12" xl="8" v-if="!theme.deploymentsOnly" class="black--text">
+        <v-col xs="12" md="12" lg="12" xl="8" v-if="!theme.deploymentsOnly" class="text-black">
           <div class="heading font-weight-bold">Daily Detections</div>
-          <div class="subtitle-2 grey--text text--darken-1">Includes all detection data independent of filters</div>
+          <div class="text-subtitle-2 text-grey-darken-1">Includes all detection data independent of filters</div>
           <highcharts class="chart" :options="chart"></highcharts>
         </v-col>
       </v-row>
@@ -197,8 +197,10 @@
 </template>
 
 <script>
-import { mapActions, mapGetters } from 'vuex'
-import moment from 'moment'
+import { mapState, mapActions } from 'pinia'
+import { useStore } from '@/store'
+import { useDisplay } from 'vuetify'
+import dayjs from 'dayjs'
 
 import { xf } from '@/lib/crossfilter'
 import { detectionTypes, detectionTypesMap } from '@/lib/constants'
@@ -206,6 +208,10 @@ import { monitoringPeriodLabels } from '@/lib/tip'
 
 export default {
   name: 'DeploymentDetail',
+  setup () {
+    const { height } = useDisplay()
+    return { displayHeight: height }
+  },
   data () {
     return {
       detectionTypesMap,
@@ -265,7 +271,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['selectedDeployments', 'theme']),
+    ...mapState(useStore, ['selectedDeployments', 'theme']),
     isSiteView () {
       if (this.selectedDeployments.length < 1) return false
       const isStationary = this.selectedDeployments.every(d => d.deployment_type === 'STATIONARY')
@@ -286,8 +292,8 @@ export default {
         const max = Math.max(...vals)
         return min === max ? `${min.toFixed(0)} ${suffix}` : `${min.toFixed(0)} to ${max.toFixed(0)} ${suffix}`
       }
-      const starts = deps.map(d => moment.utc(d.monitoring_start_datetime)).filter(m => m.isValid())
-      const ends = deps.map(d => moment.utc(d.monitoring_end_datetime)).filter(m => m.isValid())
+      const starts = deps.map(d => dayjs.utc(d.monitoring_start_datetime)).filter(m => m.isValid())
+      const ends = deps.map(d => dayjs.utc(d.monitoring_end_datetime)).filter(m => m.isValid())
       return {
         organizationCode: unique('organization_code'),
         site: deps[0].site || deps[0].site_id || 'N/A',
@@ -299,8 +305,8 @@ export default {
         qcData: unique('qc_data'),
         recorderDepth: range('recorder_depth_meters', 'm'),
         waterDepth: range('water_depth_meters', 'm'),
-        monitoringStart: starts.length > 0 ? moment.min(starts).format('ll') : 'N/A',
-        monitoringEnd: ends.length > 0 ? moment.max(ends).format('ll') : 'N/A',
+        monitoringStart: starts.length > 0 ? dayjs.min(starts).format('ll') : 'N/A',
+        monitoringEnd: ends.length > 0 ? dayjs.max(ends).format('ll') : 'N/A',
         nDeployments: deps.length,
         dataPoc: unique('data_poc_name')
       }
@@ -337,7 +343,7 @@ export default {
     this.updateChart()
   },
   methods: {
-    ...mapActions(['selectDeployments']),
+    ...mapActions(useStore, ['selectDeployments']),
     close () {
       this.selectDeployments()
     },
@@ -362,16 +368,16 @@ export default {
           }
         })
         const starts = this.selectedDeployments
-          .map(d => moment.utc(d.analysis_start_date))
+          .map(d => dayjs.utc(d.analysis_start_date))
           .filter(m => m.isValid())
         const ends = this.selectedDeployments
-          .map(d => moment.utc(d.analysis_end_date))
+          .map(d => dayjs.utc(d.analysis_end_date))
           .filter(m => m.isValid())
         this.chart.xAxis.min = starts.length > 0
-          ? moment.min(starts).startOf('date').toDate().valueOf()
+          ? dayjs.min(starts).startOf('date').toDate().valueOf()
           : undefined
         this.chart.xAxis.max = ends.length > 0
-          ? moment.max(ends).startOf('date').toDate().valueOf()
+          ? dayjs.max(ends).startOf('date').toDate().valueOf()
           : undefined
         this.chart.series = [{
           name: 'Result',
@@ -395,10 +401,10 @@ export default {
           }
         }
       })
-      this.chart.xAxis.min = moment
+      this.chart.xAxis.min = dayjs
         .utc(this.selectedDeployment.analysis_start_date)
         .startOf('date').toDate().valueOf()
-      this.chart.xAxis.max = moment
+      this.chart.xAxis.max = dayjs
         .utc(this.selectedDeployment.analysis_end_date)
         .startOf('date').toDate().valueOf()
       this.chart.series = [{

@@ -12,7 +12,8 @@ import pad from 'pad'
 import ChartMixin from '@/mixins/ChartMixin'
 import { xf } from '@/lib/crossfilter'
 import { detectionTypes, detectionTypesMap } from '@/lib/constants'
-import { mapGetters } from 'vuex'
+import { mapState } from 'pinia'
+import { useStore } from '@/store'
 
 export default {
   name: 'YearChart',
@@ -23,7 +24,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['theme'])
+    ...mapState(useStore, ['theme'])
   },
   watch: {
     theme () {
@@ -114,7 +115,7 @@ export default {
 
     this.updateChart()
   },
-  beforeDestroy () {
+  beforeUnmount () {
     d3.selectAll('.d3-tip.year-chart').remove()
   },
   methods: {

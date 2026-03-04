@@ -1,20 +1,20 @@
 <template>
   <v-card style="width:235px">
     <v-toolbar
-      dense
+      density="compact"
       class="text-subtitle-1 font-weight-medium"
-      color="grey lighten-2"
+      color="grey-lighten-2"
     >
       <h2 class="text-subtitle-1 font-weight-medium">Legend</h2>
       <v-spacer></v-spacer>
-      <v-tooltip open-delay="500" bottom>
-        <template v-slot:activator="{ on }">
+      <v-tooltip :open-delay="500" location="bottom">
+        <template v-slot:activator="{ props }">
           <v-btn
             icon
-            x-small
+            size="x-small"
             @click="collapse = !collapse"
             class="mr-n2"
-            v-on="on"
+            v-bind="props"
             aria-label="collapse"
           >
             <v-icon v-if="!collapse">mdi-arrow-up-drop-circle</v-icon>
@@ -28,10 +28,10 @@
 
     <v-card-text
       v-show="!collapse"
-      :style="{ 'max-height': ($vuetify.breakpoint.height - 145) + 'px', 'overflow-y': 'auto' }"
+      :style="{ 'max-height': (displayHeight - 145) + 'px', 'overflow-y': 'auto' }"
       data-v-step="legend"
     >
-      <div class="mb-2 black--text">
+      <div class="mb-2 text-black">
         <div>
           <div class="font-weight-medium">Recorded Days:</div>
           <div class="ml-2">
@@ -57,8 +57,8 @@
 
       <v-divider></v-divider>
 
-      <div class="mt-2 black--text" v-if="hasStationary">
-        <h3 class="subtitle-1 font-weight-medium">Stationary Platforms</h3>
+      <div class="mt-2 text-black" v-if="hasStationary">
+        <h3 class="text-subtitle-1 font-weight-medium">Stationary Platforms</h3>
 
         <!-- DEPLOYMENTS ONLY (# DAYS RECORDED) -->
         <div v-if="theme.deploymentsOnly">
@@ -121,16 +121,15 @@
 
         <!-- OPTIONS -->
         <div v-if="!theme.deploymentsOnly">
-          <v-checkbox class="ml-4 my-0 d-inline-block" hide-details dense label="Normalize by Effort" v-model="normalizeEffort"></v-checkbox>
+          <v-checkbox class="ml-4 my-0 d-inline-block" hide-details density="compact" label="Normalize by Effort" v-model="normalizeEffort"></v-checkbox>
         </div>
         <div v-if="theme.deploymentsOnly">
-          <!-- <v-divider class="mb-2"></v-divider> -->
-          <v-checkbox class="ml-4 my-0 d-inline-block" hide-details dense label="Scale by # Days" v-model="useSizeScale" style="height:30px;vertical-align:middle"></v-checkbox>
+          <v-checkbox class="ml-4 my-0 d-inline-block" hide-details density="compact" label="Scale by # Days" v-model="useSizeScale" style="height:30px;vertical-align:middle"></v-checkbox>
         </div>
       </div>
 
-      <div class="mt-2 black--text" v-if="hasMobile">
-        <h3 class="subtitle-1 font-weight-medium">Mobile Platforms</h3>
+      <div class="mt-2 text-black" v-if="hasMobile">
+        <h3 class="text-subtitle-1 font-weight-medium">Mobile Platforms</h3>
         <svg width="200" height="85" v-if="!theme.deploymentsOnly">
           <g transform="translate(27,10)">
             <rect y="-6" x="-6" width="12" height="12" stroke="white" stroke-opacity="0.5" :fill="detectionTypes[0].color" />
@@ -152,26 +151,14 @@
           </g>
         </svg>
       </div>
-
-      <!-- <div class="mt-2 black--text" v-if="hasTowed">
-        <h3 class="subtitle-1 font-weight-medium">Towed Array</h3>
-        <svg width="200" height="65">
-          <g transform="translate(27,10)">
-            <rect y="-6" x="-6" width="12" height="12" stroke="white" stroke-opacity="0.5" :fill="detectionTypes[0].color" />
-            <text x="27" :y="0" class="pacm-legend-text">Detection</text>
-          </g>
-          <g transform="translate(27,35)">
-            <line x1="-6" x2="6" y1="-6" y2="6" stroke="hsla(0, 0%, 30%, 0.75)" stroke-width="3px" />
-            <text x="27" :y="0" class="pacm-legend-text">Track</text>
-          </g>
-        </svg>
-      </div> -->
     </v-card-text>
   </v-card>
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
+import { mapState } from 'pinia'
+import { useStore } from '@/store'
+import { useDisplay } from 'vuetify'
 
 import { colorScale, sizeScale, sizeScaleUnit } from '@/lib/scales'
 import { detectionTypes } from '@/lib/constants'
@@ -179,6 +166,10 @@ import { detectionTypes } from '@/lib/constants'
 export default {
   name: 'Legend',
   props: ['counts'],
+  setup () {
+    const { mobile, height } = useDisplay()
+    return { isMobile: mobile, displayHeight: height }
+  },
   data () {
     return {
       collapse: false,
@@ -186,35 +177,32 @@ export default {
     }
   },
   mounted () {
-    if (this.$vuetify.breakpoint.mobile) {
+    if (this.isMobile) {
       this.collapse = true
     }
   },
   computed: {
-    ...mapGetters(['deployments', 'theme']),
+    ...mapState(useStore, ['deployments', 'theme']),
     hasStationary () {
       return this.deployments && this.deployments.some(d => d.deployment_type === 'STATIONARY')
     },
     hasMobile () {
       return this.deployments && this.deployments.some(d => d.deployment_type === 'MOBILE')
     },
-    // hasTowed () {
-    //   return this.deployments && this.deployments.some(d => d.properties.platform_type === 'towed')
-    // },
     normalizeEffort: {
       get () {
-        return this.$store.state.normalizeEffort
+        return useStore().normalizeEffort
       },
       set (value) {
-        this.$store.dispatch('setNormalizeEffort', value)
+        useStore().setNormalizeEffort(value)
       }
     },
     useSizeScale: {
       get () {
-        return this.$store.state.useSizeScale
+        return useStore().useSizeScale
       },
       set (value) {
-        this.$store.dispatch('setUseSizeScale', value)
+        useStore().setUseSizeScale(value)
       }
     }
   },

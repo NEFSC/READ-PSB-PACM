@@ -9,7 +9,7 @@ xf.onChange(debounce(function (eventType) {
   //   eventType
   // })
   if (eventType === 'filtered' || eventType === 'dataAdded') {
-    evt.$emit('xf:filtered')
+    evt.emit('xf:filtered')
   }
 }, 1))
 

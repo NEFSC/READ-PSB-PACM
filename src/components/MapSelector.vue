@@ -1,5 +1,6 @@
 <script>
-import { mapGetters } from 'vuex'
+import { mapState } from 'pinia'
+import { useStore } from '@/store'
 import L from 'leaflet'
 import * as dc from 'dc'
 
@@ -14,7 +15,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['deployments']),
+    ...mapState(useStore, ['deployments']),
     map () {
       return this.$parent.map
     },
@@ -54,7 +55,7 @@ export default {
     this.map.on('draw:edited', this.onEdit)
     this.map.on('draw:deleted', this.onDelete)
   },
-  beforeDestroy () {
+  beforeUnmount () {
     this.dim && this.dim.dispose()
 
     this.reset()
@@ -117,7 +118,7 @@ export default {
       dc.redrawAll()
     }
   },
-  render: function (h) {
+  render () {
     return null
   }
 }

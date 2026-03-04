@@ -1,14 +1,14 @@
 <template>
   <div class="pacm-season-filter">
-    <v-tooltip open-delay="500" right>
-      <template v-slot:activator="{ on }">
+    <v-tooltip :open-delay="500" location="end">
+      <template v-slot:activator="{ props }">
         <v-btn
           icon
-          x-small
+          size="x-small"
           class="mt-1 float-right"
           color="grey"
           @click="reset"
-          v-on="on"
+          v-bind="props"
           aria-label="reset"
         >
           <v-icon>mdi-sync</v-icon>
@@ -17,7 +17,7 @@
       <span>Reset</span>
     </v-tooltip>
 
-    <div class="subtitle-1 mb-2 font-weight-medium">
+    <div class="text-subtitle-1 mb-2 font-weight-medium">
       Season:
       <v-menu
         v-model="start.show"
@@ -26,12 +26,12 @@
         transition="scale-transition"
         offset-y
         min-width="290px">
-        <template v-slot:activator="{ on }">
-          <span class="pacm-filter-value" v-on="on">{{ start.jday | dayLabel }}</span>
+        <template v-slot:activator="{ props }">
+          <span class="pacm-filter-value" v-bind="props">{{ dayLabel(start.jday) }}</span>
         </template>
         <v-date-picker
           v-model="start.date"
-          @input="start.show = false">
+          @update:model-value="start.show = false">
           <template>
             <div class="text-center" style="width:100%">
               Select a start month and day<br>(year does not matter)
@@ -47,12 +47,12 @@
         transition="scale-transition"
         offset-y
         min-width="290px">
-        <template v-slot:activator="{ on }">
-          <span class="pacm-filter-value" v-on="on">{{ end.jday | dayLabel }}</span>
+        <template v-slot:activator="{ props }">
+          <span class="pacm-filter-value" v-bind="props">{{ dayLabel(end.jday) }}</span>
         </template>
         <v-date-picker
           v-model="end.date"
-          @input="end.show = false">
+          @update:model-value="end.show = false">
           <template>
             <div class="text-center" style="width:100%">
               Select a end month and day<br>(year does not matter)
@@ -71,10 +71,10 @@
 
 import * as d3 from 'd3'
 import * as dc from 'dc'
-import moment from 'moment'
+import dayjs from 'dayjs'
 import debounce from 'debounce'
 
-import SeasonChart from '@/components/SeasonChart'
+import SeasonChart from '@/components/SeasonChart.vue'
 import evt from '@/lib/events'
 import { xf } from '@/lib/crossfilter'
 
@@ -103,41 +103,36 @@ export default {
   },
   watch: {
     'start.date' (val) {
-      const m = moment(val)
+      let m = dayjs(val)
       if (val.endsWith('02-29')) {
-        m.add(1, 'day')
+        m = m.add(1, 'day')
         this.start.date = m.format('YYYY-MM-DD')
       }
       if (m.isLeapYear()) {
-        m.subtract(1, 'year')
+        m = m.subtract(1, 'year')
       }
       this.start.jday = m.dayOfYear()
       this.render()
     },
     'start.jday' (val) {
-      const m = moment('2000-12-31').add(val, 'days')
-      this.start.date = moment([this.start.date.substr(0, 4), m.month(), m.date()]).format('YYYY-MM-DD')
+      const m = dayjs('2000-12-31').add(val, 'day')
+      this.start.date = dayjs(new Date(+this.start.date.substr(0, 4), m.month(), m.date())).format('YYYY-MM-DD')
     },
     'end.date' (val) {
-      const m = moment(val)
+      let m = dayjs(val)
       if (val.endsWith('02-29')) {
-        m.add(1, 'day')
+        m = m.add(1, 'day')
         this.end.date = m.format('YYYY-MM-DD')
       }
       if (m.isLeapYear()) {
-        m.subtract(1, 'year')
+        m = m.subtract(1, 'year')
       }
       this.end.jday = m.dayOfYear()
       this.render()
     },
     'end.jday' (val) {
-      const m = moment('2000-12-31').add(val, 'days')
-      this.end.date = moment([this.end.date.substr(0, 4), m.month(), m.date()]).format('YYYY-MM-DD')
-    }
-  },
-  filters: {
-    dayLabel (value) {
-      return moment('2000-12-31').add(value, 'days').format('MMM D')
+      const m = dayjs('2000-12-31').add(val, 'day')
+      this.end.date = dayjs(new Date(+this.end.date.substr(0, 4), m.month(), m.date())).format('YYYY-MM-DD')
     }
   },
   mounted () {
@@ -256,16 +251,19 @@ export default {
       .attr('x', this.x(this.end.jday))
       .attr('y', 22)
 
-    evt.$on('reset:filters', this.reset)
+    evt.on('reset:filters', this.reset)
   },
-  beforeDestroy () {
+  beforeUnmount () {
     if (this.dim) {
       this.dim.filterAll()
       this.dim.dispose()
     }
-    evt.$off('reset:filters', this.reset)
+    evt.off('reset:filters', this.reset)
   },
   methods: {
+    dayLabel (value) {
+      return dayjs('2000-12-31').add(value, 'day').format('MMM D')
+    },
     reset () {
       this.start.jday = this.x.domain()[0]
       this.end.jday = this.x.domain()[1]
@@ -307,7 +305,7 @@ export default {
       } else {
         this.dim.filterFunction(d => d >= start || d <= end)
       }
-      evt.$emit('period:season', { start, end })
+      evt.emit('period:season', { start, end })
       dc.redrawAll()
     }, 1, true)
   }

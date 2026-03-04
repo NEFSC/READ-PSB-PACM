@@ -1,19 +1,20 @@
 <template>
   <v-select
-    outlined
+    variant="outlined"
     :items="options"
-    :value="theme"
+    :model-value="theme"
     label="Select a Species/Group"
-    item-text="label"
+    item-title="label"
     item-value="id"
     hide-details
     return-object
-    @input="setTheme"
+    @update:model-value="setTheme"
   ></v-select>
 </template>
 
 <script>
-import { mapGetters, mapActions } from 'vuex'
+import { mapState, mapActions } from 'pinia'
+import { useStore } from '@/store'
 import { themes } from '@/lib/constants'
 export default {
   name: 'SelectTheme',
@@ -23,10 +24,10 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['theme'])
+    ...mapState(useStore, ['theme'])
   },
   methods: {
-    ...mapActions(['setTheme'])
+    ...mapActions(useStore, ['setTheme'])
   }
 }
 </script>

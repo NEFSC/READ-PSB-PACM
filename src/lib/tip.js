@@ -1,5 +1,5 @@
 import { nest } from 'd3-collection'
-import moment from 'moment'
+import dayjs from 'dayjs'
 import pad from 'pad'
 
 import { xf, deploymentMap, siteMap } from '@/lib/crossfilter'
@@ -31,9 +31,9 @@ export function tipOffset (event, el) {
 }
 
 export function monitoringPeriodLabels (props) {
-  const start = moment.utc(props.monitoring_start_datetime).startOf('date')
-  const end = moment.utc(props.monitoring_end_datetime).startOf('date')
-  const duration = moment.duration(end.diff(start)).asDays() + 1
+  const start = dayjs.utc(props.monitoring_start_datetime).startOf('date')
+  const end = dayjs.utc(props.monitoring_end_datetime).startOf('date')
+  const duration = end.diff(start, 'day') + 1
   return {
     start: start.isValid() ? start.format('ll') : undefined,
     end: end.isValid() ? end.format('ll') : undefined,
@@ -110,10 +110,10 @@ const siteHtml = (d, siteDeployments) => {
 
   const deps = siteDeployments || []
 
-  const monitoringStarts = deps.map(dep => moment.utc(dep.monitoring_start_datetime)).filter(m => m.isValid())
-  const monitoringEnds = deps.map(dep => moment.utc(dep.monitoring_end_datetime)).filter(m => m.isValid())
-  const earliest = monitoringStarts.length > 0 ? moment.min(monitoringStarts).format('ll') : 'N/A'
-  const latest = monitoringEnds.length > 0 ? moment.max(monitoringEnds).format('ll') : 'N/A'
+  const monitoringStarts = deps.map(dep => dayjs.utc(dep.monitoring_start_datetime)).filter(m => m.isValid())
+  const monitoringEnds = deps.map(dep => dayjs.utc(dep.monitoring_end_datetime)).filter(m => m.isValid())
+  const earliest = monitoringStarts.length > 0 ? dayjs.min(monitoringStarts).format('ll') : 'N/A'
+  const latest = monitoringEnds.length > 0 ? dayjs.max(monitoringEnds).format('ll') : 'N/A'
 
   const metaHtml = htmlTable([
     ['Organization', `${orNa(d.organization_code)}`],
@@ -219,8 +219,8 @@ const trackHtml = (d, deployment) => {
 
 const towedPointHtml = (d, deployment) => {
   const detectionHtml = htmlTable([
-    ['Detection Start', `${moment.utc(d.analysis_period_start_datetime).format('ll LTS')}`],
-    ['Detection End', `${d.analysis_period_end_datetime ? moment.utc(d.analysis_period_end_datetime).format('ll LTS') : 'N/A'}`],
+    ['Detection Start', `${dayjs.utc(d.analysis_period_start_datetime).format('ll LTS')}`],
+    ['Detection End', `${d.analysis_period_end_datetime ? dayjs.utc(d.analysis_period_end_datetime).format('ll LTS') : 'N/A'}`],
     ['Duration', `${isFinite(d.analysis_period_effort_seconds) ? d.analysis_period_effort_seconds.toFixed(1) + ' sec' : 'N/A'}`],
     ['Position', `${d.latitude.toFixed(4)}, ${d.longitude.toFixed(4)}`],
     ['Detection', `${detectionTypesMap.get(d.presence).label}`]
@@ -237,7 +237,7 @@ const towedPointHtml = (d, deployment) => {
 
 const gliderPointHtml = (d, deployment) => {
   const detectionHtml = htmlTable([
-    ['Date', `${moment.utc(d.date).format('ll')}`],
+    ['Date', `${dayjs.utc(d.date).format('ll')}`],
     ['Position', `${d.latitude.toFixed(4)}, ${d.longitude.toFixed(4)}`],
     ['Detection', `${detectionTypesMap.get(d.presence).label}`]
     // [ 'Species', `${speciesTypesMap.get(deployment.species).label}` ]

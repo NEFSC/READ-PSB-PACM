@@ -1,11 +1,11 @@
 <template>
   <v-card role="main">
-    <v-card-title primary-title>
-      <h1 class="headline">User Guide</h1>
+    <v-card-title>
+      <h1 class="text-h6">User Guide</h1>
       <v-spacer></v-spacer>
-      <v-tooltip open-delay="500" bottom>
-        <template v-slot:activator="{ on }">
-          <v-btn icon small @click.native="$emit('close')" v-on="on" aria-label="close"><v-icon>mdi-close</v-icon></v-btn>
+      <v-tooltip :open-delay="500" location="bottom">
+        <template v-slot:activator="{ props }">
+          <v-btn icon size="small" @click="$emit('close')" v-bind="props" aria-label="close"><v-icon>mdi-close</v-icon></v-btn>
         </template>
         <span>Close</span>
       </v-tooltip>
@@ -14,37 +14,37 @@
     <v-card-text class="mt-8">
       <v-row>
         <v-col cols="12" md="3">
-          <v-tabs vertical v-model="tab">
-            <v-tab class="justify-start">
-              <v-icon left>
+          <v-tabs direction="vertical" v-model="tab">
+            <v-tab class="justify-start" value="video">
+              <v-icon start>
                 mdi-video
               </v-icon>
               Video
             </v-tab>
 
-            <v-tab class="justify-start">
-              <v-icon left>
+            <v-tab class="justify-start" value="mapkey">
+              <v-icon start>
                 mdi-map
               </v-icon>
               Map Key
             </v-tab>
 
-            <v-tab class="justify-start">
-              <v-icon left>
+            <v-tab class="justify-start" value="platforms">
+              <v-icon start>
                 mdi-microphone
               </v-icon>
               Platform Types
             </v-tab>
 
-            <v-tab class="justify-start">
-              <v-icon left>
+            <v-tab class="justify-start" value="faq">
+              <v-icon start>
                 mdi-help-circle
               </v-icon>
               FAQ
             </v-tab>
 
-            <v-tab class="justify-start">
-              <v-icon left>
+            <v-tab class="justify-start" value="citation">
+              <v-icon start>
                 mdi-pencil
               </v-icon>
               Citation
@@ -52,27 +52,27 @@
           </v-tabs>
         </v-col>
         <v-col cols="12" md="9">
-          <v-tabs-items v-model="tab">
+          <v-tabs-window v-model="tab">
             <!-- VIDEO -->
-            <v-tab-item>
+            <v-tabs-window-item value="video">
               <v-card flat>
-                <v-card-text class="body-1 black--text text-center">
+                <v-card-text class="text-body-1 text-black text-center">
                   <p>
                     To learn more about how to use PACM, please watch the following videos.<br>
-                    <span class="body-2 font-italic">(scroll down for Part 2 - Interactive Filtering)</span>
+                    <span class="text-body-2 font-italic">(scroll down for Part 2 - Interactive Filtering)</span>
                   </p>
                   <iframe aria-label="tutorial video part 1" src='//players.brightcove.net/659677166001/4b3c8a9e-7bf7-43dd-b693-2614cc1ed6b7_default/index.html?videoId=6263997740001' allowfullscreen frameborder=0 width="800" height="450"></iframe>
                   <iframe aria-label="tutorial video part 2" src='//players.brightcove.net/659677166001/4b3c8a9e-7bf7-43dd-b693-2614cc1ed6b7_default/index.html?videoId=6263997873001' allowfullscreen frameborder=0 width="800" height="450" class="mt-4"></iframe>
                 </v-card-text>
               </v-card>
-            </v-tab-item>
+            </v-tabs-window-item>
 
             <!-- MAP KEY -->
-            <v-tab-item>
+            <v-tabs-window-item value="mapkey">
               <v-card flat>
-                <v-card-text class="body-1 black--text">
+                <v-card-text class="text-body-1 text-black">
                   <div class="text-h5">Stationary Platforms (Bottom-Mounted Moorings and Surface Buoys)</div>
-                  <v-container fluid grid-list-xs>
+                  <v-container fluid>
                     <v-row align="start">
                       <v-col cols="2">
                         <v-img
@@ -246,12 +246,12 @@
                   </v-container>
                 </v-card-text>
               </v-card>
-            </v-tab-item>
+            </v-tabs-window-item>
 
             <!-- PLATFORMS -->
-            <v-tab-item>
+            <v-tabs-window-item value="platforms">
               <v-card flat>
-                <v-card-text class="body-1 black--text">
+                <v-card-text class="text-body-1 text-black">
                   <div class="text-h5">Stationary Platforms</div>
                   <v-container fluid>
                     <v-row>
@@ -319,97 +319,97 @@
                   </v-container>
                 </v-card-text>
               </v-card>
-            </v-tab-item>
+            </v-tabs-window-item>
 
             <!-- FAQ -->
-            <v-tab-item>
+            <v-tabs-window-item value="faq">
               <v-card flat>
-                <v-card-text class="body-1 black--text">
+                <v-card-text class="text-body-1 text-black">
                     <v-expansion-panels>
                       <v-expansion-panel>
-                        <v-expansion-panel-header class="text-subtitle-1 font-weight-bold">
+                        <v-expansion-panel-title class="text-subtitle-1 font-weight-bold">
                           What is passive acoustic monitoring?
-                        </v-expansion-panel-header>
-                        <v-expansion-panel-content class="text-body-2">
+                        </v-expansion-panel-title>
+                        <v-expansion-panel-text class="text-body-2">
                           Passive Acoustic Monitoring (PAM) is a non-invasive method that allows us to continuously monitor the ocean by recording sounds produced by marine animals and the surrounding environment. We use underwater microphones, called hydrophones, to record sound, which we use to understand which species are calling, or what other activities (i.e. anthropogenic activity, weather events) occur. We use a variety of computer programs that have been developed for different types of sounds; these help us identify when specific sounds (which can be attributed to species) occur in our data. For more information on the types of information PAM provides, and the projects we work on, see the <a href="https://www.fisheries.noaa.gov/new-england-mid-atlantic/endangered-species-conservation/passive-acoustic-research-atlantic-ocean" target="_blank">NOAA NEFSC Passive Acoustic Research Program Website</a>.
-                        </v-expansion-panel-content>
+                        </v-expansion-panel-text>
                       </v-expansion-panel>
 
                       <v-expansion-panel>
-                        <v-expansion-panel-header class="text-subtitle-1 font-weight-bold">
+                        <v-expansion-panel-title class="text-subtitle-1 font-weight-bold">
                           What is a deployment?
-                        </v-expansion-panel-header>
-                        <v-expansion-panel-content class="text-body-2">
+                        </v-expansion-panel-title>
+                        <v-expansion-panel-text class="text-body-2">
                           In general, a single deployment contains the acoustic recordings collected by a single platform over a continuous period of time. For stationary platforms (bottom-mounted moorings, surface buoys), a deployment is the continuous period when a hydrophone was left at a fixed position over time and then subsequently recovered. For many stationary platforms, multiple deployments are collected within a close spatial proximity, sometimes at different depths. For gliders, a deployment represents the continuous period when a single glider traveled through the ocean collecting audio data. For towed arrays, a deployment corresponds to a single cruise of the research vessel. Towed array deployments may have multi-day gaps due to periods when the vessel returned to port or bad weather preventing the array from being deployed.
-                        </v-expansion-panel-content>
+                        </v-expansion-panel-text>
                       </v-expansion-panel>
 
                       <v-expansion-panel>
-                        <v-expansion-panel-header class="text-subtitle-1 font-weight-bold">
+                        <v-expansion-panel-title class="text-subtitle-1 font-weight-bold">
                           What is the difference between "Detected" and "Possibly Detected"?
-                        </v-expansion-panel-header>
-                        <v-expansion-panel-content class="text-body-2">
+                        </v-expansion-panel-title>
+                        <v-expansion-panel-text class="text-body-2">
                           Detected indicates the species was acoustically detected, and verified, by the analysis' protocols. This means that the minimum number of species-specific call types were detected within a given time period (i.e. 24 hours). Sometimes, similar calls can be produced by multiple species, or the recordings have other sounds co-occurring (i.e. boat, or singing humpback whale), which can make it difficult to confirm the presence of the target species. Periods like these, when we cannot confirm with certainty that a species is present, are marked as "Possibly Detected."  The minimum requirements to mark a period as "Detected" differ between species, the detector used, and the analysis methods. More information on these methods can be found in the protocol references for each deployment, for each species (click on the stationary platform or track to bring up the details for the deployment). Periods marked as "Detected" represent the minimum presence of species for times when animals are calling; they do not capture time periods when animals are present but silent.
-                        </v-expansion-panel-content>
+                        </v-expansion-panel-text>
                       </v-expansion-panel>
 
                       <v-expansion-panel>
-                        <v-expansion-panel-header class="text-subtitle-1 font-weight-bold">
+                        <v-expansion-panel-title class="text-subtitle-1 font-weight-bold">
                           What is considered a "Detection" from a towed array?
-                        </v-expansion-panel-header>
-                        <v-expansion-panel-content class="text-body-2">
+                        </v-expansion-panel-title>
+                        <v-expansion-panel-text class="text-body-2">
                           Towed arrays have the potential to span large distances over the course of a deployment. They also have the capacity to localize and track incoming signals if utilizing more than one hydrophone. However, all towed array "detections" are shown on the map as a single point, utilizing the ship's GPS position at the start of the detection, regardless of localization or group size information. Thus, it becomes important to note the level of analysis conducted, which, at this time, is of <strong>individuals</strong>. It should be noted that real-time detections will have greater uncertainty at the individual level than those analyzed in post-processing (captured under the metadata QAQC field).
-                        </v-expansion-panel-content>
+                        </v-expansion-panel-text>
                       </v-expansion-panel>
 
                       <v-expansion-panel>
-                        <v-expansion-panel-header class="text-subtitle-1 font-weight-bold">
+                        <v-expansion-panel-title class="text-subtitle-1 font-weight-bold">
                           What is a call type?
-                        </v-expansion-panel-header>
-                        <v-expansion-panel-content class="text-body-2">
+                        </v-expansion-panel-title>
+                        <v-expansion-panel-text class="text-body-2">
                           Most species produce more than one type of call which can be attributed to that species (for example, North Atlantic right whales produce upcalls, gunshots, and additional call types; many odontoceti species produce both whistles and echolocation clicks). These call types can be similar to one another, or vary greatly, often resulting with detectors built specifically for one call type. Sometimes, only one call type is analyzed for a species; other times, multiple call types are analyzed for a species. The metadata table shows you which call types have been analyzed and are marked as "Detected" for that species and specific recorder. Species use call types for different behaviors (i.e. blue whale arch/D calls are a feeding call, while AB calls denote song). The presence of different call types may show different seasonal presence depending on what call type was analyzed.
-                        </v-expansion-panel-content>
+                        </v-expansion-panel-text>
                       </v-expansion-panel>
 
                       <v-expansion-panel>
-                        <v-expansion-panel-header class="text-subtitle-1 font-weight-bold">
+                        <v-expansion-panel-title class="text-subtitle-1 font-weight-bold">
                           Where did this dataset come from?
-                        </v-expansion-panel-header>
-                        <v-expansion-panel-content class="text-body-2">
+                        </v-expansion-panel-title>
+                        <v-expansion-panel-text class="text-body-2">
                           The full detections dataset was compiled by the NOAA NEFSC Passive Acoustic Research Program using acoustic data collected by many collaborators. Information on data ownership can be found in the details of each deployment (click on a stationary platform or track to bring up the details for a deployment).
-                        </v-expansion-panel-content>
+                        </v-expansion-panel-text>
                       </v-expansion-panel>
 
                       <v-expansion-panel>
-                        <v-expansion-panel-header class="text-subtitle-1 font-weight-bold">
+                        <v-expansion-panel-title class="text-subtitle-1 font-weight-bold">
                           Can I get a copy of this dataset?
-                        </v-expansion-panel-header>
-                        <v-expansion-panel-content class="text-body-2">
+                        </v-expansion-panel-title>
+                        <v-expansion-panel-text class="text-body-2">
                           The entire dataset is not publicly available. If you are interested in the data for a single deployment, you may reach out to the point of contact (POC), which is listed in the deployment details (click on a stationary platform or track to bring up the details for a deployment).
-                        </v-expansion-panel-content>
+                        </v-expansion-panel-text>
                       </v-expansion-panel>
 
                       <v-expansion-panel>
-                        <v-expansion-panel-header class="text-subtitle-1 font-weight-bold">
+                        <v-expansion-panel-title class="text-subtitle-1 font-weight-bold">
                           Can I contribute my own passive acoustic detection data?
-                        </v-expansion-panel-header>
-                        <v-expansion-panel-content class="text-body-2">
+                        </v-expansion-panel-title>
+                        <v-expansion-panel-text class="text-body-2">
                           If you have passive acoustic data that you would like to contribute to this project, please download our submission templates from our <a href="https://www.fisheries.noaa.gov/resource/document/passive-acoustic-reporting-system-templates">website</a> and submit them to <a href="mailto:nmfs.nec.pacmdata@noaa.gov">nmfs.nec.pacmdata@noaa.gov</a>.
-                        </v-expansion-panel-content>
+                        </v-expansion-panel-text>
                       </v-expansion-panel>
 
                       <v-expansion-panel>
-                        <v-expansion-panel-header class="text-subtitle-1 font-weight-bold">
+                        <v-expansion-panel-title class="text-subtitle-1 font-weight-bold">
                           How should I cite this website?
-                        </v-expansion-panel-header>
-                        <v-expansion-panel-content class="text-body-2">
+                        </v-expansion-panel-title>
+                        <v-expansion-panel-text class="text-body-2">
                           <p>
                             When using or referencing this data, please cite as:
                           </p>
-                          <p class="font-weight-bold grey--text text--darken-2">
+                          <p class="font-weight-bold text-grey-darken-2">
                             <Citation></Citation>
                           </p>
-                        </v-expansion-panel-content>
+                        </v-expansion-panel-text>
                       </v-expansion-panel>
                     </v-expansion-panels>
                     <p class="mt-4 text-center">
@@ -417,36 +417,35 @@
                     </p>
                 </v-card-text>
               </v-card>
-            </v-tab-item>
+            </v-tabs-window-item>
 
             <!-- CITATION -->
-            <v-tab-item>
+            <v-tabs-window-item value="citation">
               <v-card flat>
-                <v-card-text class="body-1 black--text">
+                <v-card-text class="text-body-1 text-black">
                   <p>
                     When using or referencing this dataset or website, please cite as:
                   </p>
-                  <p class="font-weight-bold grey--text text--darken-2">
+                  <p class="font-weight-bold text-grey-darken-2">
                     <Citation></Citation>
                   </p>
-                  <!-- TODO: UPDATE URL -->
                 </v-card-text>
               </v-card>
-            </v-tab-item>
-          </v-tabs-items>
+            </v-tabs-window-item>
+          </v-tabs-window>
         </v-col>
       </v-row>
 
     </v-card-text>
     <v-card-actions>
       <v-spacer></v-spacer>
-      <v-btn color="primary" text @click.native="$emit('close')" aria-label="close">Close</v-btn>
+      <v-btn color="primary" variant="text" @click="$emit('close')" aria-label="close">Close</v-btn>
     </v-card-actions>
   </v-card>
 </template>
 
 <script>
-import Citation from '@/components/Citation'
+import Citation from '@/components/Citation.vue'
 export default {
   name: 'Guide',
   components: {
@@ -454,7 +453,7 @@ export default {
   },
   data () {
     return {
-      tab: null
+      tab: 'video'
     }
   }
 }

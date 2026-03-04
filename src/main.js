@@ -1,26 +1,28 @@
-import Vue from 'vue'
+import { createApp } from 'vue'
+import { createPinia } from 'pinia'
 
 import App from './App.vue'
-import store from './store'
 import router from './router'
-
 import vuetify from './plugins/vuetify'
 
 import './plugins/dc'
 import './plugins/highcharts'
+import HighchartsVue from 'highcharts-vue'
 import './plugins/leaflet'
-import './plugins/moment'
+import './plugins/dayjs'
+import Vue3Tour from 'vue3-tour'
 import './plugins/vue-tour'
 
 import '@/assets/css/app.css'
 import '@/assets/css/dc.css'
 
-Vue.config.productionTip = false
-window.type = true // https://github.com/Leaflet/Leaflet.draw/issues/1026
+const app = createApp(App)
+const pinia = createPinia()
 
-new Vue({
-  store,
-  router,
-  vuetify,
-  render: h => h(App)
-}).$mount('#app')
+app.use(pinia)
+app.use(router)
+app.use(vuetify)
+app.use(HighchartsVue)
+app.use(Vue3Tour)
+
+app.mount('#app')

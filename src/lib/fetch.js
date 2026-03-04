@@ -1,5 +1,5 @@
 import axios from 'axios'
-import moment from 'moment'
+import dayjs from 'dayjs'
 import * as d3 from 'd3'
 
 export function fetchReferences () {
@@ -41,7 +41,7 @@ function fetchDetections (id) {
   return axios.get(`data/${id}/detections.csv`)
     .then(response => response.data)
     .then(csv => d3.csvParse(csv, (d, i) => {
-      const m = moment(d.date)
+      const m = dayjs(d.date)
 
       d.year = m.year()
 

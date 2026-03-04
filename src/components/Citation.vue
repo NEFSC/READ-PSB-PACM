@@ -10,7 +10,7 @@ export default {
   data () {
     return {
       year: (new Date()).getYear() + 1900,
-      version: process.env.PACKAGE_VERSION || 'Unknown'
+      version: typeof PACKAGE_VERSION !== 'undefined' ? PACKAGE_VERSION : (process.env.PACKAGE_VERSION || 'Unknown')
     }
   }
 }
