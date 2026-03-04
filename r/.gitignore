@@ -4,17 +4,12 @@ cellar/
 lock/
 python/
 staging/
+
 .Rproj.user
 .Rhistory
 
+data-raw/
 data/
 *.rds
-rmd/*.html
-data/qaqc/*.csv
-data/templates/**/*.xlsx
-data/templates/**/*.csv
 
-_targets
 .env
-
-notes/*/*
