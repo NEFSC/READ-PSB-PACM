@@ -113,7 +113,7 @@
 
         <v-col xs="12" md="12" lg="12" xl="8" v-if="!theme.deploymentsOnly" class="black--text">
           <div class="heading font-weight-bold">Daily Detections</div>
-          <div class="subtitle-2 grey--text text--darken-1">Includes all detection data independent of filters</div>
+          <div class="subtitle-2 grey--text text--darken-1">Includes all detection data independent of filters. Shaded periods indicate unmonitored gaps between deployments.</div>
           <highcharts class="chart" :options="chart"></highcharts>
         </v-col>
       </v-row>
@@ -373,6 +373,33 @@ export default {
         this.chart.xAxis.max = ends.length > 0
           ? moment.max(ends).startOf('date').toDate().valueOf()
           : undefined
+
+        // compute gaps between deployments for shaded plotBands
+        const intervals = this.selectedDeployments
+          .map(d => ({
+            start: moment.utc(d.analysis_start_date),
+            end: moment.utc(d.analysis_end_date)
+          }))
+          .filter(iv => iv.start.isValid() && iv.end.isValid())
+          .sort((a, b) => a.start.valueOf() - b.start.valueOf())
+        const plotBands = []
+        for (let i = 1; i < intervals.length; i++) {
+          const prevEnd = intervals[i - 1].end
+          const nextStart = intervals[i].start
+          if (prevEnd.isBefore(nextStart)) {
+            plotBands.push({
+              from: prevEnd.valueOf(),
+              to: nextStart.valueOf(),
+              color: 'rgba(0, 0, 0, 0.06)'
+              // label: {
+              //   text: 'Gap',
+              //   style: { color: '#999', fontSize: '10px' }
+              // }
+            })
+          }
+        }
+        this.chart.xAxis.plotBands = plotBands
+
         this.chart.series = [{
           name: 'Result',
           data: values
@@ -395,6 +422,7 @@ export default {
           }
         }
       })
+      this.chart.xAxis.plotBands = []
       this.chart.xAxis.min = moment
         .utc(this.selectedDeployment.analysis_start_date)
         .startOf('date').toDate().valueOf()
