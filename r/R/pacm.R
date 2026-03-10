@@ -15,7 +15,8 @@ create_theme <- function (data, species) {
           monitoring_end_datetime,
           platform_type,
           deployment_type,
-          water_depth_meters
+          water_depth_meters,
+          data_poc
         ),
       by = "deployment_id"
     ) |> 
@@ -24,7 +25,9 @@ create_theme <- function (data, species) {
       analysis_id,
       site_id,
       organization_code,
-      
+
+      data_poc,
+
       deployment_id,
       deployment_code,
       project,
@@ -112,9 +115,7 @@ targets_pacm <- list(
         "recorder_depth_meters",
         "instrument_type",
         "sampling_rate_hz",
-        "data_poc_name",
-        "data_poc_affiliation",
-        "data_poc_email"
+        "data_poc"
       ),
       analyses = c(
         "organization_code",
@@ -148,20 +149,48 @@ targets_pacm <- list(
     )
   }),
 
-  tar_target(pacm_data, {
-    x <- bind_rows(
+  tar_target(pacm_data_raw, {
+    bind_rows(
       makara = enframe(makara_pacm),
       towed = enframe(towed_pacm),
       submissions = enframe(subs_pacm),
       .id = "dataset"
     ) |> 
       pivot_wider()
+  }),
+
+  tar_target(pacm_exclude, {
+    tracks <- bind_rows(pacm_data_raw$tracks)
+
+    deployments_mobile <- bind_rows(pacm_data_raw$deployments) |> 
+      filter(deployment_type == "MOBILE")
+
+    # mobile deployments with missing tracks
+    deployments_mobile_missing_tracks <- deployments_mobile |> 
+      anti_join(tracks, by = c("deployment_id"))
+
+    stopifnot(
+      # no analyses so ok to drop
+      bind_rows(pacm_data_raw$analyses) |> 
+        filter(deployment_id %in% deployments_mobile_missing_tracks$deployment_id) |> 
+        nrow() == 0
+    )
+
+    list(
+      deployments = deployments_mobile_missing_tracks$deployment_id
+    )
+  }),
+
+  tar_target(pacm_data, {
+    deployments <- bind_rows(pacm_data_raw$deployments) |> 
+      filter(!deployment_id %in% pacm_exclude$deployments)
+    sites <- bind_rows(pacm_data_raw$sites) |> 
+      filter(site_id %in% deployments$site_id)
+    tracks <- bind_rows(pacm_data_raw$tracks) |> 
+      filter(deployment_id %in% deployments$deployment_id)
     
-    sites <- bind_rows(x$sites)
-    deployments <- bind_rows(x$deployments)
-    tracks <- bind_rows(x$tracks)
-    
-    analyses_data <- bind_rows(x$analyses) |> 
+    analyses_data <- bind_rows(pacm_data_raw$analyses) |> 
+      filter(deployment_id %in% deployments$deployment_id) |>
       mutate(
         detection_method = iconv(detection_method, "UTF-8", "UTF-8", sub = ""),
         detection_method = toupper(detection_method),
@@ -176,11 +205,28 @@ targets_pacm <- list(
           str_detect(detection_method, "MATLAB-BASED AUTOMATED DETECTOR ALGORITHM") ~ "MATLAB",
           str_detect(detection_method, "MATCHED-FILTER DATA-TEMPLATE DETECTION ALGORITHM") ~ "MATCHED_FILTER",
           TRUE ~ detection_method
-        )
+        ),
+        detections = map(detections, function (x) {
+          if (is.null(x)) {
+            return(NULL)
+          }
+          x |> 
+            mutate(
+              locations = map(locations, function (locs) {
+                if (is.null(locs)) {
+                  return(NULL)
+                }
+                locs |> 
+                  mutate(date = as_date(analysis_period_start_datetime)) |>
+                  slice_head(n = 1, by = date) |>
+                  select(-date)
+              })
+            )
+        })
       )
     
-    analyses_data |> 
-      tabyl(detection_method)
+    # analyses_data |> 
+    #   tabyl(detection_method)
     
     # fill analyses with non-detect on missing days
     analyses_fill <- analyses_data |> 
@@ -244,11 +290,10 @@ targets_pacm <- list(
 
       # analyses
       all(analyses$deployment_id %in% deployments$deployment_id),
-      all(map_int(analyses$detections, nrow) > 0)
+      all(map_int(analyses$detections, nrow) > 0),
 
       # mobile detections
-      # TODO: some mobile detections are still missing lat/lon
-      # all(!is.na(mobile_detections$latitude) & !is.na(mobile_detections$longitude))
+      all(!is.na(mobile_detections$latitude) & !is.na(mobile_detections$longitude))
     )
     
     list(
@@ -287,24 +332,6 @@ targets_pacm <- list(
       )
   }),
 
-  tar_target(pacm_qaqc, {
-    mobile_deployments <- pacm_data$deployments |> 
-      filter(deployment_type == "MOBILE")
-
-    # missing tracks
-    # TODO: locate missing tracks
-    mobile_deployments_missing_tracks <- mobile_deployments |> 
-      anti_join(pacm_data$tracks, by = c("deployment_id"))
-
-    if (nrow(mobile_deployments_missing_tracks) > 0) {
-      warning("Missing tracks for mobile deployments: ", paste(mobile_deployments_missing_tracks$deployment_id, collapse = ", "))
-    }
-
-    list(
-      mobile_deployments_missing_tracks = mobile_deployments_missing_tracks
-    )
-  }),
-
   tar_target(pacm_deployments, {
     deployments <- pacm_data$deployments |> 
       select(
@@ -324,9 +351,7 @@ targets_pacm <- list(
         recorder_depth_meters,
         instrument_type,
         sampling_rate_hz,
-        data_poc_name,
-        data_poc_affiliation,
-        data_poc_email
+        data_poc,
       ) |> 
       mutate(
         start = as_date(monitoring_start_datetime),
@@ -365,18 +390,44 @@ targets_pacm <- list(
   tar_target(pacm_themes_species, {
     x <- list(
       beaked = c(
+        "SOBW",
+        "UNBW",
+        "UNSBW",
+        "HUBW",
+        "BW53",
+        "CUBW",
+        "BLBW",
+        "LBWH",
+        "UBWA",
+        "STWH",
+        "BW39V",
+        "PEBW",
+        "BBWH",
+        "DEBW",
+        "BWC",
+        "STBWH",
+        "ANBW",
+        "SBWH",
+        "GTBW",
         "GEBW",
         "GOBW",
-        "BLBW",
         "MMME",
-        "SOBW",
-        "NBWH",
-        "BBWH",
-        "STBWH",
-        "HUBW",
         "BW43",
-        "BWC",
-        "UNME"
+        "BW29",
+        "TRBW",
+        "BW70",
+        "BWB",
+        "NBWH",
+        "BW41",
+        "HEBW",
+        "UNME",
+        "STTWH",
+        "BWG",
+        "SHBW",
+        "ARBW",
+        "BW58",
+        "PYBW",
+        "GBWH"
       ),
       blue = "BLWH",
       dolphin = "UNDO",
@@ -507,8 +558,8 @@ targets_pacm <- list(
 
   tar_target(pacm_ref_files, {
     imap_chr(pacm_ref, function (data, name) {
-      f <- file.path(pacm_dir, paste0(name, ".csv"))
-      write_csv(data, f)
+      f <- file.path(pacm_dir, paste0(name, ".json"))
+      jsonlite::write_json(data, f, auto_unbox = TRUE, pretty = TRUE)
       f
     })
   })

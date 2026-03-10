@@ -149,6 +149,7 @@ targets_subs <- list(
         organization_code = case_when(
           submission_id == "ORSTD_20251110_RevWindConstruction2024" ~ "ORSTED",
           submission_id == "ORSTD_20251110_RevWindConstruction2025" ~ "ORSTED",
+          str_starts(submission_id, "UCORN_") ~ "CORNELL",
           data_poc_affiliation == "Cornell University" ~ "CORNELL",
           data_poc_affiliation == "DFO Maritimes" ~ "DFOCA",
           data_poc_affiliation == "NYSDEC" ~ "NYDEC",
@@ -169,9 +170,7 @@ targets_subs <- list(
         recorder_depth_meters = as.character(recorder_depth_meters),
         instrument_type,
         sampling_rate_hz = format_number(sampling_rate_hz),
-        data_poc_name,
-        data_poc_affiliation,
-        data_poc_email
+        data_poc = if_else(is.na(data_poc_name), NA_character_, glue("{data_poc_name} <{data_poc_email}>"))
       )
     
     stopifnot(
@@ -285,14 +284,14 @@ targets_subs <- list(
       left_join(
         subs_deployments |> 
           select(
-            deployment_id, deployment_code,
+            organization_code, deployment_id, deployment_code,
             recorder_depth_meters, instrument_type, sampling_rate_hz, water_depth_meters,
             platform_type, deployment_type, site
           ),
         by = c("unique_id" = "deployment_code")
       ) |> 
       mutate(
-        organization_code = str_extract(submission_id, "^[^_]+"),
+        organization_code,
         deployment_code = unique_id,
         analysis_id = glue("{deployment_id}:{species}"),
         analysis_sampling_rate_hz = as.numeric(analysis_sampling_rate_hz),

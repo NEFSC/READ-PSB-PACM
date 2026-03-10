@@ -323,9 +323,7 @@ targets_makara <- list(
 
         # project
         project = project_code,
-        data_poc_name = project_contacts,
-        data_poc_affiliation = NA_character_,
-        data_poc_email = NA_character_,
+        data_poc = project_contacts,
 
         # deployment
         site,
@@ -620,8 +618,8 @@ targets_makara <- list(
       nest(track = c(datetime, latitude, longitude)) |> 
       mutate(
         interp = map(track, function (track) {
-          lat <- approxfun(track$datetime, y = track$latitude, rule = 1)
-          lon <- approxfun(track$datetime, y = track$longitude, rule = 1)
+          lat <- approxfun(track$datetime, y = track$latitude, rule = 2)
+          lon <- approxfun(track$datetime, y = track$longitude, rule = 2)
           list(lat = lat, lon = lon)
         })
       ) |> 
@@ -654,9 +652,14 @@ targets_makara <- list(
       )
     
     # remaining missing lat/lon
-    # x_filled |> 
-    #   filter(is.na(latitude) | is.na(longitude)) |> 
-    #   tabyl(analysis_id)
+    x_filled |> 
+      filter(is.na(latitude) | is.na(longitude)) |> 
+      left_join(
+        makara_analyses |> 
+          select(makara_analysis_id, makara_deployment_id, deployment_id),
+        by = c("analysis_id" = "makara_analysis_id")
+      ) |>
+      tabyl(makara_deployment_id)
 
     x_filled |> 
       select(-track_latitude, -track_longitude, -track_filled) |>

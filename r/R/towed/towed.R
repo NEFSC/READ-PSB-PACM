@@ -71,9 +71,13 @@ targets_towed <- list(
         platform_id = NA_character_,
         water_depth_meters = NA_real_,
         deployment_type = "MOBILE",
-        data_poc_name,
-        data_poc_affiliation,
-        data_poc_email,
+        data_poc = case_when(
+          data_poc_name == "Danielle Cholewiak, Annamaria DeAngelis" ~ "Danielle Cholewiak <danielle.cholewiak@noaa.gov>, Annamaria DeAngelis <annamaria.deangelis@noaa.gov>",
+          data_poc_name == "Melissa Soldevilla, Annamaria DeAngelis" ~ "Melissa Soldevilla <melissa.soldevilla@noaa.gov>, Annamaria DeAngelis <annamaria.deangelis@noaa.gov>",
+          TRUE ~ NA_character_
+        ),
+        # data_poc_affiliation,
+        # data_poc_email,
         
         # recording
         recording_code = glue("RECORDING_{floor(sampling_rate_hz / 1e3)}KHZ"),
@@ -156,9 +160,9 @@ targets_towed <- list(
         platform_id,
         deployment_type,
         water_depth_meters,
-        data_poc_name,
-        data_poc_affiliation,
-        data_poc_email,
+        data_poc
+        # data_poc_affiliation,
+        # data_poc_email,
       ) |> 
       left_join(
         towed_recordings |> 
