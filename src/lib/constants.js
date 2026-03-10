@@ -1,3 +1,6 @@
+import speciesData from './species.json'
+import platformTypesData from './platform_types.json'
+
 export const themes = [
   {
     header: 'Baleen Whales (Mysticeti)'
@@ -81,35 +84,11 @@ export const themes = [
     deploymentsOnly: true
   }
 ]
-// export const speciesTypesMap = new Map(speciesTypes.map(d => [d.id, d]))
 
-export const platformTypes = [
-  {
-    id: 'BOTTOM_MOUNTED_MOORING',
-    label: 'Bottom Mounted Mooring'
-  },
-  {
-    id: 'DRIFTING_BUOY',
-    label: 'Drifting Buoy'
-  },
-  {
-    id: 'ELECTRIC_GLIDER',
-    label: 'Electric Glider'
-  },
-  {
-    id: 'MOORED_SURFACE_BUOY',
-    label: 'Moored Surface Buoy'
-  },
-  {
-    id: 'TOWED_ARRAY',
-    label: 'Towed Array'
-  },
-  {
-    id: 'WAVE_GLIDER',
-    label: 'Wave Glider'
-  }
-]
-export const platformTypesMap = new Map(platformTypes.map(d => [d.id, d]))
+export const species = Object.freeze(speciesData)
+export const speciesMap = new Map(species.map(d => [d.code, d.name]))
+export const platformTypes = Object.freeze(platformTypesData)
+export const platformTypesMap = new Map(platformTypes.map(d => [d.code, d.name]))
 
 export const detectionTypes = [
   {

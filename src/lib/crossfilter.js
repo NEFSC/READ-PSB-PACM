@@ -3,14 +3,13 @@ import { debounce } from 'debounce'
 import evt from '@/lib/events'
 
 export const xf = crossfilter()
+window.xf = xf
 
 xf.onChange(debounce(function (eventType) {
-  // console.log('[xf.onChange] called', {
-  //   eventType
-  // })
-  if (eventType === 'filtered' || eventType === 'dataAdded') {
-    evt.$emit('xf:filtered')
-  }
+  console.log('[xf.onChange] called', {
+    eventType
+  })
+  evt.$emit(`xf:${eventType}`)
 }, 1))
 
 export const deploymentDim = xf.dimension(d => d.id)
@@ -74,7 +73,9 @@ export function setData (data) {
   })
   siteMap.clear()
   siteGroup.all().forEach(d => {
-    siteMap.set(d.key, d.value)
+    if (d.key !== '__none__') {
+      siteMap.set(d.key, d.value)
+    }
   })
 }
 
@@ -105,14 +106,19 @@ export function aggregateByDate (detections) {
   detections.forEach(d => {
     const key = d.id + '|' + d.date
     if (!groups.has(key)) {
-      groups.set(key, { record: d, counts: { y: 0, m: 0, n: 0, na: 0, d: 0 } })
+      groups.set(key, { record: d, counts: { y: 0, m: 0, n: 0, na: 0, d: 0 }, locations: [] })
     }
     const g = groups.get(key)
     g.counts[d.presence] = (g.counts[d.presence] || 0) + 1
+    if (d.locations) {
+      g.locations.push(...d.locations.map(l => ({ ...l, species: d.species })))
+    }
   })
+  console.log('[aggregateByDate] groups', groups.entries())
   return Array.from(groups.values()).map((g, i) => ({
     ...g.record,
     presence: effectivePresence(g.counts),
+    locations: g.locations || null,
     species: undefined,
     $index: i
   }))

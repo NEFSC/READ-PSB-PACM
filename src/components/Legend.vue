@@ -152,20 +152,6 @@
           </g>
         </svg>
       </div>
-
-      <!-- <div class="mt-2 black--text" v-if="hasTowed">
-        <h3 class="subtitle-1 font-weight-medium">Towed Array</h3>
-        <svg width="200" height="65">
-          <g transform="translate(27,10)">
-            <rect y="-6" x="-6" width="12" height="12" stroke="white" stroke-opacity="0.5" :fill="detectionTypes[0].color" />
-            <text x="27" :y="0" class="pacm-legend-text">Detection</text>
-          </g>
-          <g transform="translate(27,35)">
-            <line x1="-6" x2="6" y1="-6" y2="6" stroke="hsla(0, 0%, 30%, 0.75)" stroke-width="3px" />
-            <text x="27" :y="0" class="pacm-legend-text">Track</text>
-          </g>
-        </svg>
-      </div> -->
     </v-card-text>
   </v-card>
 </template>
@@ -198,9 +184,6 @@ export default {
     hasMobile () {
       return this.deployments && this.deployments.some(d => d.deployment_type === 'MOBILE')
     },
-    // hasTowed () {
-    //   return this.deployments && this.deployments.some(d => d.properties.platform_type === 'towed')
-    // },
     normalizeEffort: {
       get () {
         return this.$store.state.normalizeEffort

@@ -1,0 +1,26 @@
+[
+  {
+    "code": "BOTTOM_MOUNTED_MOORING",
+    "name": "Bottom Mounted Mooring"
+  },
+  {
+    "code": "DRIFTING_BUOY",
+    "name": "Drifting Buoy"
+  },
+  {
+    "code": "ELECTRIC_GLIDER",
+    "name": "Electric Glider"
+  },
+  {
+    "code": "MOORED_SURFACE_BUOY",
+    "name": "Moored Surface Buoy"
+  },
+  {
+    "code": "TOWED_ARRAY",
+    "name": "Towed Array"
+  },
+  {
+    "code": "WAVE_GLIDER",
+    "name": "Wave Glider"
+  }
+]

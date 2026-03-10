@@ -1,0 +1,1746 @@
+[
+  {
+    "code": "ABDU",
+    "name": "American Black Duck"
+  },
+  {
+    "code": "AC-J",
+    "name": "Subsonic Aircraft"
+  },
+  {
+    "code": "AC-P",
+    "name": "Propeller Aircraft"
+  },
+  {
+    "code": "AC-S",
+    "name": "Supersonic Aircraft"
+  },
+  {
+    "code": "AC-T",
+    "name": "Turboprop Aircraft"
+  },
+  {
+    "code": "AHDO",
+    "name": "Atlantic Humpback Dolphin"
+  },
+  {
+    "code": "AMAL",
+    "name": "American Alligator"
+  },
+  {
+    "code": "ANBW",
+    "name": "Andrew's Beaked Whale"
+  },
+  {
+    "code": "ANSH",
+    "name": "Angel Shark"
+  },
+  {
+    "code": "ARBW",
+    "name": "Arnoux's Beaked Whale"
+  },
+  {
+    "code": "ARDO",
+    "name": "Amazon River Dolphin (Boto)"
+  },
+  {
+    "code": "ARTE",
+    "name": "Arctic Tern"
+  },
+  {
+    "code": "ASDO",
+    "name": "Atlantic Spotted Dolphin"
+  },
+  {
+    "code": "ATBR",
+    "name": "Atlantic Brant"
+  },
+  {
+    "code": "ATCO",
+    "name": "Atlantic Cod"
+  },
+  {
+    "code": "ATPU",
+    "name": "Atlantic (Common) Puffin"
+  },
+  {
+    "code": "AUSDO",
+    "name": "Australian Snubfin Dolphin"
+  },
+  {
+    "code": "AUSH",
+    "name": "Audubon’s Shearwater"
+  },
+  {
+    "code": "BASH",
+    "name": "Basking Shark"
+  },
+  {
+    "code": "BBPL",
+    "name": "Black-Bellied Plover"
+  },
+  {
+    "code": "BBWH",
+    "name": "Baird's Beaked Whale"
+  },
+  {
+    "code": "BCPE",
+    "name": "Black-Capped Petrel"
+  },
+  {
+    "code": "BELU",
+    "name": "Beluga Whale"
+  },
+  {
+    "code": "BESE",
+    "name": "Bearded Seal"
+  },
+  {
+    "code": "BFTU",
+    "name": "Bluefin Tuna"
+  },
+  {
+    "code": "BHGU",
+    "name": "Common Black-Headed Gull"
+  },
+  {
+    "code": "BLBW",
+    "name": "Blainville's Beaked Whale"
+  },
+  {
+    "code": "BLDO",
+    "name": "Black Dolphin"
+  },
+  {
+    "code": "BLDR",
+    "name": "Black Drum"
+  },
+  {
+    "code": "BLFI",
+    "name": "Bluefish"
+  },
+  {
+    "code": "BLGR",
+    "name": "Black Grouper"
+  },
+  {
+    "code": "BLGU",
+    "name": "Black Guillemot"
+  },
+  {
+    "code": "BLKI",
+    "name": "Black-Legged Kittiwake"
+  },
+  {
+    "code": "BLSC",
+    "name": "Black Scoter"
+  },
+  {
+    "code": "BLSH",
+    "name": "Blue Shark"
+  },
+  {
+    "code": "BLTE",
+    "name": "Black Tern"
+  },
+  {
+    "code": "BLWH",
+    "name": "Blue Whale"
+  },
+  {
+    "code": "BODO",
+    "name": "Bottlenose Dolphin"
+  },
+  {
+    "code": "BODOCOCA",
+    "name": "Bottlenose Dolphin (Coastal CA)"
+  },
+  {
+    "code": "BODOOFCA",
+    "name": "Bottlenose Dolphin (Offshore CA)"
+  },
+  {
+    "code": "BOGR",
+    "name": "Unid Bottlenose/Risso's Dolphin"
+  },
+  {
+    "code": "BOGU",
+    "name": "Bonaparte’s Gull"
+  },
+  {
+    "code": "BOSP",
+    "name": "Unid Bottlenose/Spotted Dolphin"
+  },
+  {
+    "code": "BOWH",
+    "name": "Bowhead Whale"
+  },
+  {
+    "code": "BRDO",
+    "name": "Baiji River Dolphin"
+  },
+  {
+    "code": "BRNO",
+    "name": "Brown Noddy"
+  },
+  {
+    "code": "BRPE",
+    "name": "Brown Pelican"
+  },
+  {
+    "code": "BRTE",
+    "name": "Bridled Tern"
+  },
+  {
+    "code": "BRWH",
+    "name": "Bryde's Whale (Includes Eden's Whale)"
+  },
+  {
+    "code": "BSBA",
+    "name": "Black Sea Bass"
+  },
+  {
+    "code": "BSTP",
+    "name": "Band-Rumped Storm-Petrel"
+  },
+  {
+    "code": "BT-H",
+    "name": "Heavy Boat Traffic"
+  },
+  {
+    "code": "BT-L",
+    "name": "Light Boat Traffic"
+  },
+  {
+    "code": "BT-M",
+    "name": "Moderate Boat Traffic"
+  },
+  {
+    "code": "BTDR",
+    "name": "Dragger Boat"
+  },
+  {
+    "code": "BTFT",
+    "name": "Factory Trainer Boat"
+  },
+  {
+    "code": "BTOT",
+    "name": "Other Boat"
+  },
+  {
+    "code": "BUFF",
+    "name": "Bufflehead"
+  },
+  {
+    "code": "BUPO",
+    "name": "Burmeister's Porpoise"
+  },
+  {
+    "code": "BW29",
+    "name": "Unid Beaked Whale (BW29)"
+  },
+  {
+    "code": "BW41",
+    "name": "Unid Beaked Whale (BW41)"
+  },
+  {
+    "code": "BW53",
+    "name": "Unid Beaked Whale (BW53)"
+  },
+  {
+    "code": "BW58",
+    "name": "Unid Beaked Whale (BW58)"
+  },
+  {
+    "code": "BW70",
+    "name": "Unid Beaked Whale (BW70)"
+  },
+  {
+    "code": "BWB",
+    "name": "Beaked Whale Baja (BWB)"
+  },
+  {
+    "code": "BWC",
+    "name": "Cross Seamount Beaked Whale (BWC)"
+  },
+  {
+    "code": "BWG",
+    "name": "Gulf Of Mexico Beaked Whale (BWG)"
+  },
+  {
+    "code": "CABL",
+    "name": "Cable/Pipe Laying"
+  },
+  {
+    "code": "CAGO",
+    "name": "Canada Goose"
+  },
+  {
+    "code": "CASP",
+    "name": "Central American Spinner Dolphin"
+  },
+  {
+    "code": "CATE",
+    "name": "Caspian Tern"
+  },
+  {
+    "code": "BW43",
+    "name": "Unid Beaked Whale (BW43)"
+  },
+  {
+    "code": "CDRA",
+    "name": "Chilean Devil Ray"
+  },
+  {
+    "code": "CG-B",
+    "name": "Coast Guard, Buoy Tender"
+  },
+  {
+    "code": "CG-C",
+    "name": "Coast Guard, Cutter"
+  },
+  {
+    "code": "CG-S",
+    "name": "Coast Guard, Security Patrol Boat"
+  },
+  {
+    "code": "CG-U",
+    "name": "Coast Guard, Utility Boat"
+  },
+  {
+    "code": "CLDO",
+    "name": "Clymene Dolphin"
+  },
+  {
+    "code": "CNRA",
+    "name": "Cow-Nosed Ray"
+  },
+  {
+    "code": "CODO",
+    "name": "Commerson's Dolphin"
+  },
+  {
+    "code": "COEI",
+    "name": "Common Eider"
+  },
+  {
+    "code": "COLO",
+    "name": "Common Loon"
+  },
+  {
+    "code": "COMU",
+    "name": "Common Murre"
+  },
+  {
+    "code": "COSH",
+    "name": "Cory’s Shearwater"
+  },
+  {
+    "code": "COTE",
+    "name": "Common Tern"
+  },
+  {
+    "code": "CRSE",
+    "name": "Crabeater Seal"
+  },
+  {
+    "code": "CRSH",
+    "name": "Cruise Ship"
+  },
+  {
+    "code": "CSLI",
+    "name": "California Sea Lion"
+  },
+  {
+    "code": "DAPO",
+    "name": "Dall's Porpoise"
+  },
+  {
+    "code": "DCCO",
+    "name": "Double-Crested Cormorant"
+  },
+  {
+    "code": "DEBW",
+    "name": "Deraniyagala's Beaked Whale"
+  },
+  {
+    "code": "DESP",
+    "name": "Unid Common Dolphin"
+  },
+  {
+    "code": "DIVE",
+    "name": "Diver(S)"
+  },
+  {
+    "code": "DOVE",
+    "name": "Dovekie"
+  },
+  {
+    "code": "DOWI",
+    "name": "Dowitcher Sp."
+  },
+  {
+    "code": "DR-D",
+    "name": "Dredge, Dumping"
+  },
+  {
+    "code": "DR-T",
+    "name": "Dredge, In Transit"
+  },
+  {
+    "code": "DR-U",
+    "name": "Dredge, Unspecified"
+  },
+  {
+    "code": "DR-W",
+    "name": "Dredge, In Operation"
+  },
+  {
+    "code": "DSDO",
+    "name": "Dwarf Spinner Dolphin"
+  },
+  {
+    "code": "DSWH",
+    "name": "Dwarf Sperm Whale"
+  },
+  {
+    "code": "DU-GA",
+    "name": "Garbage Dumping"
+  },
+  {
+    "code": "DU-T",
+    "name": "Toxic Waste Dumping"
+  },
+  {
+    "code": "DUDO",
+    "name": "Dusky Dolphin"
+  },
+  {
+    "code": "DUSH",
+    "name": "Dusky Shark"
+  },
+  {
+    "code": "ECHO",
+    "name": "Echosounder"
+  },
+  {
+    "code": "ESDO",
+    "name": "Eastern Spinner Dolphin"
+  },
+  {
+    "code": "EXPL",
+    "name": "Explosion"
+  },
+  {
+    "code": "FE-H",
+    "name": "Ferry, High-Speed"
+  },
+  {
+    "code": "FE-S",
+    "name": "Ferry, Standard Type"
+  },
+  {
+    "code": "FE-U",
+    "name": "Ferry, Unspecified"
+  },
+  {
+    "code": "FIPO",
+    "name": "Finless Porpoise"
+  },
+  {
+    "code": "FIPOEA",
+    "name": "Finless Porpoise (East Asian)"
+  },
+  {
+    "code": "FIPOIP",
+    "name": "Finless Porpoise (Indo-Pacific)"
+  },
+  {
+    "code": "FIPOYA",
+    "name": "Finless Porpoise (Yangtze)"
+  },
+  {
+    "code": "FIWH",
+    "name": "Fin Whale"
+  },
+  {
+    "code": "FKWH",
+    "name": "False Killer Whale"
+  },
+  {
+    "code": "FLFI",
+    "name": "Flying Fish"
+  },
+  {
+    "code": "FOTE",
+    "name": "Forster’s Tern"
+  },
+  {
+    "code": "FRAN",
+    "name": "Franciscana"
+  },
+  {
+    "code": "FRDO",
+    "name": "Fraser's Dolphin"
+  },
+  {
+    "code": "FV-C",
+    "name": "Fishing Vessel, Lobster/Crab/Other Pot/Trap Fishery"
+  },
+  {
+    "code": "FV-D",
+    "name": "Fishing Vessel, Drift-Netter"
+  },
+  {
+    "code": "FV-F",
+    "name": "Fishing Vessel, Unspecified/Unknown Fixed Gear"
+  },
+  {
+    "code": "FV-G",
+    "name": "Fishing Vessel, Gill-Netter"
+  },
+  {
+    "code": "FV-H",
+    "name": "Fishing Vessel, Party (\"Head\") Boat"
+  },
+  {
+    "code": "FV-L",
+    "name": "Fishing Vessel, Long-Liner"
+  },
+  {
+    "code": "FV-P",
+    "name": "Fishing Vessel, Purse-Seiner"
+  },
+  {
+    "code": "FV-S",
+    "name": "Fishing Vessel, Shrimper"
+  },
+  {
+    "code": "FV-T",
+    "name": "Fishing Vessel, Trawler/Dragger"
+  },
+  {
+    "code": "FV-U",
+    "name": "Fishing Vessel, Unspecified Type"
+  },
+  {
+    "code": "FV-W",
+    "name": "Fishing Vessel, Whale-Watching"
+  },
+  {
+    "code": "FV-Z",
+    "name": "Fishing Vessel, Factory Trawler"
+  },
+  {
+    "code": "GBBG",
+    "name": "Great Black-Backed Gull"
+  },
+  {
+    "code": "GBWH",
+    "name": "Gray's Beaked Whale"
+  },
+  {
+    "code": "GEBW",
+    "name": "Gervais' Beaked Whale"
+  },
+  {
+    "code": "GHSH",
+    "name": "Great Hammerhead Shark"
+  },
+  {
+    "code": "GLGU",
+    "name": "Glaucous Gull"
+  },
+  {
+    "code": "GOBW",
+    "name": "Goose-Beaked Whale"
+  },
+  {
+    "code": "GRAM",
+    "name": "Risso's Dolphin"
+  },
+  {
+    "code": "GRCO",
+    "name": "Great Cormorant"
+  },
+  {
+    "code": "GRDO",
+    "name": "Ganges River Dolphin"
+  },
+  {
+    "code": "GRSC",
+    "name": "Greater Scaup"
+  },
+  {
+    "code": "GRSE",
+    "name": "Gray Seal"
+  },
+  {
+    "code": "GRSH",
+    "name": "Great Shearwater"
+  },
+  {
+    "code": "GRSK",
+    "name": "Great Skua"
+  },
+  {
+    "code": "GRTU",
+    "name": "Green Turtle"
+  },
+  {
+    "code": "GRUI",
+    "name": "Unid Fishing Gear"
+  },
+  {
+    "code": "GRWH",
+    "name": "Gray Whale"
+  },
+  {
+    "code": "GSDO",
+    "name": "Gray's Spinner Dolphin"
+  },
+  {
+    "code": "GTBW",
+    "name": "Ginkgo-Toothed Beaked Whale"
+  },
+  {
+    "code": "GUDO",
+    "name": "Guiana Dolphin (Costero)"
+  },
+  {
+    "code": "HADD",
+    "name": "Haddock"
+  },
+  {
+    "code": "HAPO",
+    "name": "Harbor Porpoise"
+  },
+  {
+    "code": "HASE",
+    "name": "Harbor Seal"
+  },
+  {
+    "code": "HATU",
+    "name": "Hawksbill Turtle"
+  },
+  {
+    "code": "HEADO",
+    "name": "Heaviside's Dolphin"
+  },
+  {
+    "code": "HEBW",
+    "name": "Hector's Beaked Whale"
+  },
+  {
+    "code": "HECDO",
+    "name": "Hector's Dolphin"
+  },
+  {
+    "code": "HELO",
+    "name": "Helicopter"
+  },
+  {
+    "code": "HERG",
+    "name": "Herring Gull"
+  },
+  {
+    "code": "HGSE",
+    "name": "Unid Harp/Gray Seal"
+  },
+  {
+    "code": "HHSH",
+    "name": "Hammerhead Shark"
+  },
+  {
+    "code": "HODO",
+    "name": "Hourglass Dolphin"
+  },
+  {
+    "code": "HOGR",
+    "name": "Horned Grebe"
+  },
+  {
+    "code": "HOSE",
+    "name": "Hooded Seal"
+  },
+  {
+    "code": "HPSE",
+    "name": "Harp Seal"
+  },
+  {
+    "code": "HSTU",
+    "name": "Hardshell Turtle"
+  },
+  {
+    "code": "HUBW",
+    "name": "Hubbs' Beaked Whale"
+  },
+  {
+    "code": "HUWH",
+    "name": "Humpback Whale"
+  },
+  {
+    "code": "ICGU",
+    "name": "Iceland Gull"
+  },
+  {
+    "code": "INRDO",
+    "name": "Indus River Dolphin"
+  },
+  {
+    "code": "IOBD",
+    "name": "Indian Ocean Bottlenose Dolphin"
+  },
+  {
+    "code": "IPHD",
+    "name": "Indo-Pacific Humpback Dolphin"
+  },
+  {
+    "code": "IRRDO",
+    "name": "Irrawaddy Dolphin"
+  },
+  {
+    "code": "JELL",
+    "name": "Unid Jellyfish"
+  },
+  {
+    "code": "JETS",
+    "name": "Personal Watercraft (\"Jet-Ski\")"
+  },
+  {
+    "code": "KAYK",
+    "name": "Kayak, Canoe, Rowboat"
+  },
+  {
+    "code": "KIWH",
+    "name": "Killer Whale"
+  },
+  {
+    "code": "KIWHAANT",
+    "name": "Killer Whale (Type A Antarctic)"
+  },
+  {
+    "code": "KIWHBANT",
+    "name": "Killer Whale (Type B Antarctic)"
+  },
+  {
+    "code": "KIWHCANT",
+    "name": "Killer Whale (Type C Antarctic)"
+  },
+  {
+    "code": "KIWHOF",
+    "name": "Killer Whale (Offshore)"
+  },
+  {
+    "code": "KIWHRE",
+    "name": "Killer Whale (Resident)"
+  },
+  {
+    "code": "KIWHTR",
+    "name": "Killer Whale (Transient)"
+  },
+  {
+    "code": "LABO",
+    "name": "Large Boat (41-250 Meters)"
+  },
+  {
+    "code": "LAGU",
+    "name": "Laughing Gull"
+  },
+  {
+    "code": "LBBG",
+    "name": "Lesser Black-Backed Gull"
+  },
+  {
+    "code": "LBCD",
+    "name": "Long-Beaked Common Dolphin"
+  },
+  {
+    "code": "LBWH",
+    "name": "Longman's Beaked Whale"
+  },
+  {
+    "code": "LE-V",
+    "name": "Law Enforcement/Security Patrol Vessel (Including Uscg)"
+  },
+  {
+    "code": "LESE",
+    "name": "Leopard Seal"
+  },
+  {
+    "code": "LESP",
+    "name": "Leach’s Storm-Petrel"
+  },
+  {
+    "code": "LETE",
+    "name": "Least Tern"
+  },
+  {
+    "code": "LETU",
+    "name": "Leatherback Turtle"
+  },
+  {
+    "code": "LFPW",
+    "name": "Pilot Whale (Long-Finned)"
+  },
+  {
+    "code": "LIGU",
+    "name": "Little Gull"
+  },
+  {
+    "code": "LMJE",
+    "name": "Lion's-Mane Jellyfish"
+  },
+  {
+    "code": "LMSH",
+    "name": "Long-Finned Mako Shark"
+  },
+  {
+    "code": "LOTU",
+    "name": "Loggerhead Turtle"
+  },
+  {
+    "code": "LTDU",
+    "name": "Long-Tailed Duck"
+  },
+  {
+    "code": "LTJA",
+    "name": "Long-Tailed Jaeger"
+  },
+  {
+    "code": "MABO",
+    "name": "Masked Booby"
+  },
+  {
+    "code": "MAGW",
+    "name": "Marbled Godwit"
+  },
+  {
+    "code": "MAHI",
+    "name": "Mahi-Mahi/Dolphin-Fish"
+  },
+  {
+    "code": "MALL",
+    "name": "Mallard"
+  },
+  {
+    "code": "MANA",
+    "name": "Manatee"
+  },
+  {
+    "code": "MARA",
+    "name": "Manta Ray"
+  },
+  {
+    "code": "MASH",
+    "name": "Manx Shearwater"
+  },
+  {
+    "code": "MEBO",
+    "name": "Medium Boat (7.1-40 Meters)"
+  },
+  {
+    "code": "MEPK",
+    "name": "Unid Melon-Headed/Pygmy Killer Whale"
+  },
+  {
+    "code": "METT",
+    "name": "Meteorological Tower"
+  },
+  {
+    "code": "MEWH",
+    "name": "Melon-Headed Whale"
+  },
+  {
+    "code": "MIWH",
+    "name": "Minke Whale (Common)"
+  },
+  {
+    "code": "MIWHAN",
+    "name": "Minke Whale (Antarctic)"
+  },
+  {
+    "code": "MKSH",
+    "name": "Mako Shark"
+  },
+  {
+    "code": "MMME",
+    "name": "Unid True's/Gervais' Beaked Whale"
+  },
+  {
+    "code": "MOBU",
+    "name": "Unid Mobulid Ray"
+  },
+  {
+    "code": "MULT",
+    "name": "Multiple Activities"
+  },
+  {
+    "code": "MV-B",
+    "name": "Tug And Barge"
+  },
+  {
+    "code": "MV-C",
+    "name": "Container Ship"
+  },
+  {
+    "code": "MV-L",
+    "name": "Merchant Vessel, Large"
+  },
+  {
+    "code": "MV-O",
+    "name": "Tanker"
+  },
+  {
+    "code": "MV-S",
+    "name": "Merchant Vessel, Small"
+  },
+  {
+    "code": "MV-T",
+    "name": "Tug Alone"
+  },
+  {
+    "code": "MV-U",
+    "name": "Merchant Vessel, Unspecified"
+  },
+  {
+    "code": "MY-L",
+    "name": "Motor Yacht, Large"
+  },
+  {
+    "code": "MY-S",
+    "name": "Motor Yacht, Small (But Larger Than Recv)"
+  },
+  {
+    "code": "NAGR",
+    "name": "Nassau Grouper"
+  },
+  {
+    "code": "NAWH",
+    "name": "Narwhal"
+  },
+  {
+    "code": "NBHF",
+    "name": "Unid. Narrow Band High Frequency Call"
+  },
+  {
+    "code": "NBWH",
+    "name": "Northern Bottlenose Whale"
+  },
+  {
+    "code": "NOFU",
+    "name": "Northern Fulmar"
+  },
+  {
+    "code": "NOGA",
+    "name": "Northern Gannet"
+  },
+  {
+    "code": "NPRW",
+    "name": "North Pacific Right Whale"
+  },
+  {
+    "code": "NRWD",
+    "name": "Northern Right Whale Dolphin"
+  },
+  {
+    "code": "NSCO",
+    "name": "North Sea Cod"
+  },
+  {
+    "code": "NV-L",
+    "name": "Naval Vessel, Large"
+  },
+  {
+    "code": "NV-S",
+    "name": "Naval Vessel, Small"
+  },
+  {
+    "code": "NV-U",
+    "name": "Submarine"
+  },
+  {
+    "code": "OBDO",
+    "name": "Offshore Bottlenose Dolphin"
+  },
+  {
+    "code": "OCSU",
+    "name": "Ocean Sunfish/Sharp-Tailed Mola"
+  },
+  {
+    "code": "OI-D",
+    "name": "Drilling Rig"
+  },
+  {
+    "code": "OI-L",
+    "name": "Drill Ship"
+  },
+  {
+    "code": "OI-P",
+    "name": "Production Platform"
+  },
+  {
+    "code": "OI-S",
+    "name": "Seismic (Exploration/Air-Guns)"
+  },
+  {
+    "code": "OMWH",
+    "name": "Omura's Whale"
+  },
+  {
+    "code": "ORTU",
+    "name": "Olive Ridley Sea Turtle"
+  },
+  {
+    "code": "OTBI",
+    "name": "Unid Billfish"
+  },
+  {
+    "code": "OTHE",
+    "name": "Other"
+  },
+  {
+    "code": "OW-B",
+    "name": "Oceanographic, Weather, Or Other Data Buoy"
+  },
+  {
+    "code": "PACO",
+    "name": "Pacific Cod"
+  },
+  {
+    "code": "PAJA",
+    "name": "Parasitic Jaeger"
+  },
+  {
+    "code": "PEBW",
+    "name": "Perrin's Beaked Whale"
+  },
+  {
+    "code": "PEDO",
+    "name": "Peale's Dolphin"
+  },
+  {
+    "code": "PEEP",
+    "name": "Unid Shorebird"
+  },
+  {
+    "code": "PIBO",
+    "name": "Pilot Boat"
+  },
+  {
+    "code": "PIDR",
+    "name": "Pile Driving"
+  },
+  {
+    "code": "PINN",
+    "name": "Unid Pinniped"
+  },
+  {
+    "code": "PIWH",
+    "name": "Unid Pilot Whale"
+  },
+  {
+    "code": "PLBA",
+    "name": "Playback"
+  },
+  {
+    "code": "PMOW",
+    "name": "Portuguese Man Of War"
+  },
+  {
+    "code": "POBE",
+    "name": "Polar Bear"
+  },
+  {
+    "code": "POJA",
+    "name": "Pomarine Jaeger"
+  },
+  {
+    "code": "PRWH",
+    "name": "Pygmy Right Whale"
+  },
+  {
+    "code": "PSDO",
+    "name": "Pantropical Spotted Dolphin"
+  },
+  {
+    "code": "PSWH",
+    "name": "Pygmy Sperm Whale"
+  },
+  {
+    "code": "PWDO",
+    "name": "Pacific White-Sided Dolphin"
+  },
+  {
+    "code": "PYBW",
+    "name": "Pygmy Beaked Whale"
+  },
+  {
+    "code": "PYKW",
+    "name": "Pygmy Killer Whale"
+  },
+  {
+    "code": "RAIN",
+    "name": "Rain"
+  },
+  {
+    "code": "RAZO",
+    "name": "Razorbill"
+  },
+  {
+    "code": "RBGU",
+    "name": "Ring-Billed Gull"
+  },
+  {
+    "code": "RBME",
+    "name": "Red-Breasted Merganser"
+  },
+  {
+    "code": "RBTR",
+    "name": "Red-Billed Tropicbird"
+  },
+  {
+    "code": "RCWH",
+    "name": "Rice's Whale"
+  },
+  {
+    "code": "RECV",
+    "name": "Recreational Vessel, Motorboat"
+  },
+  {
+    "code": "REGR",
+    "name": "Red Grouper"
+  },
+  {
+    "code": "REHI",
+    "name": "Red Hind"
+  },
+  {
+    "code": "REKN",
+    "name": "Red Knot"
+  },
+  {
+    "code": "REPH",
+    "name": "Red Phalarope"
+  },
+  {
+    "code": "RIBSE",
+    "name": "Ribbon Seal"
+  },
+  {
+    "code": "RISE",
+    "name": "Ringed Seal"
+  },
+  {
+    "code": "RITU",
+    "name": "Kemp's Ridley Turtle"
+  },
+  {
+    "code": "RIWH",
+    "name": "North Atlantic Right Whale"
+  },
+  {
+    "code": "RNPH",
+    "name": "Red-Necked Phalarope"
+  },
+  {
+    "code": "ROSE",
+    "name": "Ross Seal"
+  },
+  {
+    "code": "ROST",
+    "name": "Roseate Tern"
+  },
+  {
+    "code": "ROYT",
+    "name": "Royal Tern"
+  },
+  {
+    "code": "RTDO",
+    "name": "Rough-Toothed Dolphin"
+  },
+  {
+    "code": "RTLO",
+    "name": "Red-Throated Loon"
+  },
+  {
+    "code": "RUTS",
+    "name": "Ruddy Turnstone"
+  },
+  {
+    "code": "UNDS",
+    "name": "Unid Delphinus/Stenella Species"
+  },
+  {
+    "code": "RV-G",
+    "name": "Research Vessel, Geophysical/Seismic Profiling (With The Airgun\nArrays Deployed, Otherwise Use Rv-L)"
+  },
+  {
+    "code": "RV-L",
+    "name": "Research Vessel, Large"
+  },
+  {
+    "code": "RV-S",
+    "name": "Research Vessel, Small"
+  },
+  {
+    "code": "RV-U",
+    "name": "Research Vessel, Unspecified"
+  },
+  {
+    "code": "RV-W",
+    "name": "Wave Glider, Auv, Or Other Autonomous Sampler"
+  },
+  {
+    "code": "RWBL",
+    "name": "Red-Winged Blackbird"
+  },
+  {
+    "code": "SADO",
+    "name": "Short-Beaked Common Dolphin"
+  },
+  {
+    "code": "SAGU",
+    "name": "Sabine’s Gull"
+  },
+  {
+    "code": "SATE",
+    "name": "Sandwich Tern"
+  },
+  {
+    "code": "SBWH",
+    "name": "Southern Bottlenose Whale"
+  },
+  {
+    "code": "SCEE",
+    "name": "Striped Cusk Eel"
+  },
+  {
+    "code": "SCFI",
+    "name": "Fish School"
+  },
+  {
+    "code": "SCRA",
+    "name": "School Of Rays"
+  },
+  {
+    "code": "SDOG",
+    "name": "Spiny Dogfish"
+  },
+  {
+    "code": "SEWH",
+    "name": "Sei Whale"
+  },
+  {
+    "code": "SFPW",
+    "name": "Pilot Whale (Short-Finned)"
+  },
+  {
+    "code": "SHBW",
+    "name": "Shepherd's Beaked Whale"
+  },
+  {
+    "code": "SIPE",
+    "name": "Silver Perch"
+  },
+  {
+    "code": "SMBO",
+    "name": "Small Boat (<7 Meters)"
+  },
+  {
+    "code": "SMSH",
+    "name": "Short-Finned Mako Shark"
+  },
+  {
+    "code": "SNDO",
+    "name": "Spinner Dolphin"
+  },
+  {
+    "code": "SNSH",
+    "name": "Snapping Shrimp"
+  },
+  {
+    "code": "SOBW",
+    "name": "Sowerby's Beaked Whale"
+  },
+  {
+    "code": "SONO",
+    "name": "Sonobuoy Deployed"
+  },
+  {
+    "code": "SONR",
+    "name": "Sonar (In Use)"
+  },
+  {
+    "code": "SOSH",
+    "name": "Sooty Shearwater"
+  },
+  {
+    "code": "SOTE",
+    "name": "Sooty Tern"
+  },
+  {
+    "code": "SPDOOF",
+    "name": "Spotted Dolphin (Offshore)"
+  },
+  {
+    "code": "SPDOPA",
+    "name": "Coastal Spotted Dolphin (Pantropical Spotted Dolphin)"
+  },
+  {
+    "code": "SPFV",
+    "name": "Sport-Fishing Vessel"
+  },
+  {
+    "code": "SPPL",
+    "name": "Semipalmated Plover"
+  },
+  {
+    "code": "SPPO",
+    "name": "Spectacled Porpoise"
+  },
+  {
+    "code": "SPSE",
+    "name": "Large Spotted Seal"
+  },
+  {
+    "code": "SPSK",
+    "name": "South Polar Skua"
+  },
+  {
+    "code": "SPWH",
+    "name": "Sperm Whale"
+  },
+  {
+    "code": "SRWD",
+    "name": "Southern Right Whale Dolphin"
+  },
+  {
+    "code": "SRWH",
+    "name": "Southern Right Whale"
+  },
+  {
+    "code": "SSDO",
+    "name": "Southwestern Spinner Dolphin"
+  },
+  {
+    "code": "STBWH",
+    "name": "Stejneger's Beaked Whale"
+  },
+  {
+    "code": "STDO",
+    "name": "Striped Dolphin"
+  },
+  {
+    "code": "STTWH",
+    "name": "Strap-Toothed Beaked Whale"
+  },
+  {
+    "code": "STWH",
+    "name": "Spade-Toothed Beaked Whale"
+  },
+  {
+    "code": "SUSC",
+    "name": "Surf Scoter"
+  },
+  {
+    "code": "SV-L",
+    "name": "Sailing Vessel, Large (>50 Feet)"
+  },
+  {
+    "code": "SV-S",
+    "name": "Sailing Vessel, Small (<50 Feet)"
+  },
+  {
+    "code": "SV-U",
+    "name": "Sailing Vessel, Unspecified"
+  },
+  {
+    "code": "SWFI",
+    "name": "Swordfish"
+  },
+  {
+    "code": "SWIM",
+    "name": "Swimmer(s)"
+  },
+  {
+    "code": "TBMU",
+    "name": "Thick-Billed Murre"
+  },
+  {
+    "code": "THLI",
+    "name": "Thunder/Lightning"
+  },
+  {
+    "code": "THSH",
+    "name": "Thresher Shark"
+  },
+  {
+    "code": "TISH",
+    "name": "Tiger Shark"
+  },
+  {
+    "code": "TMSD",
+    "name": "Tres Marias Spinner Dolphin"
+  },
+  {
+    "code": "TOAD",
+    "name": "Toadfish Sp."
+  },
+  {
+    "code": "TRBW",
+    "name": "True's Beaked Whale"
+  },
+  {
+    "code": "TUDO",
+    "name": "Tucuxi Dolphin"
+  },
+  {
+    "code": "TUNS",
+    "name": "Unid Tuna"
+  },
+  {
+    "code": "UBWA",
+    "name": "Unnamed Beaked Whale"
+  },
+  {
+    "code": "UECASD",
+    "name": "Unid Eastern/Central American Spinner Dolphin"
+  },
+  {
+    "code": "UNAL",
+    "name": "Unid Alcid"
+  },
+  {
+    "code": "UNAN",
+    "name": "Unid Anthropogenic"
+  },
+  {
+    "code": "UNBA",
+    "name": "Unid Baleen Whale"
+  },
+  {
+    "code": "UNBD",
+    "name": "Unid Beaked Dolphin"
+  },
+  {
+    "code": "UNBF",
+    "name": "Unid Blackfish Species"
+  },
+  {
+    "code": "UNBI",
+    "name": "Unid Bird"
+  },
+  {
+    "code": "UNBS",
+    "name": "Unid Bryde's/Sei Whale"
+  },
+  {
+    "code": "UNBW",
+    "name": "Unid Beaked Whale"
+  },
+  {
+    "code": "UNCE",
+    "name": "Unid Cetacean"
+  },
+  {
+    "code": "UNCO",
+    "name": "Unid Cormorant"
+  },
+  {
+    "code": "UNCT",
+    "name": "Unid Crested Tern"
+  },
+  {
+    "code": "UNCW",
+    "name": "Unid Common/White-Sided Dolphin"
+  },
+  {
+    "code": "UNDO",
+    "name": "Unid Dolphin"
+  },
+  {
+    "code": "UNDU",
+    "name": "Unid Duck"
+  },
+  {
+    "code": "UNEN",
+    "name": "Unid Environmental"
+  },
+  {
+    "code": "UNFI",
+    "name": "Unid Fish"
+  },
+  {
+    "code": "UNFS",
+    "name": "Unid Fin/Sei Whale"
+  },
+  {
+    "code": "UNGO",
+    "name": "Unid Goose"
+  },
+  {
+    "code": "UNGU",
+    "name": "Unid Gull"
+  },
+  {
+    "code": "UNID",
+    "name": "Unid Animal"
+  },
+  {
+    "code": "UNJA",
+    "name": "Unid Jaeger"
+  },
+  {
+    "code": "UNK",
+    "name": "Unknown"
+  },
+  {
+    "code": "UNKO",
+    "name": "Unid Pygmy/Dwarf Sperm Whale"
+  },
+  {
+    "code": "UNLA",
+    "name": "Unid Large Alcid"
+  },
+  {
+    "code": "UNLAG",
+    "name": "Unid Lagenorhynchus"
+  },
+  {
+    "code": "UNLD",
+    "name": "Unid Large Dolphin"
+  },
+  {
+    "code": "UNLG",
+    "name": "Unid Larus Gull"
+  },
+  {
+    "code": "UNLO",
+    "name": "Unid Loon"
+  },
+  {
+    "code": "UNLS",
+    "name": "Unid Large Shearwater"
+  },
+  {
+    "code": "UNLW",
+    "name": "Unid Large Whale"
+  },
+  {
+    "code": "UNMD",
+    "name": "Unid Medium Delphinid"
+  },
+  {
+    "code": "UNME",
+    "name": "Unid Mesoplodon"
+  },
+  {
+    "code": "UNMER",
+    "name": "Unid Merganser"
+  },
+  {
+    "code": "UNMM",
+    "name": "Unid Marine Mammal"
+  },
+  {
+    "code": "UNMU",
+    "name": "Unid Murre"
+  },
+  {
+    "code": "UNMW",
+    "name": "Unid Medium Whale"
+  },
+  {
+    "code": "UNOFI",
+    "name": "Unid/Other Fish"
+  },
+  {
+    "code": "UNPD",
+    "name": "Unid Porpoise/Dolphin"
+  },
+  {
+    "code": "UNPH",
+    "name": "Unid Phalarope"
+  },
+  {
+    "code": "UNPL",
+    "name": "Unid Plover"
+  },
+  {
+    "code": "UNPO",
+    "name": "Unid Porpoise"
+  },
+  {
+    "code": "UNRA",
+    "name": "Unid/Other Ray"
+  },
+  {
+    "code": "UNRB",
+    "name": "Unid Risso's/Bottlenose Dolphin"
+  },
+  {
+    "code": "UNRO",
+    "name": "Unid Rorqual"
+  },
+  {
+    "code": "UNSA",
+    "name": "Unid Small Alcid"
+  },
+  {
+    "code": "UNSB",
+    "name": "Unid Small Blackfish"
+  },
+  {
+    "code": "UNSBW",
+    "name": "Unid Small Beaked Whale"
+  },
+  {
+    "code": "UNSC",
+    "name": "Unid Spinner/Clymene Dolphin"
+  },
+  {
+    "code": "UNSCO",
+    "name": "Unid Scoter/Scaup"
+  },
+  {
+    "code": "UNSE",
+    "name": "Unid Seal"
+  },
+  {
+    "code": "UNSH",
+    "name": "Unid/Other Shark"
+  },
+  {
+    "code": "UNSHW",
+    "name": "Unid Shearwater"
+  },
+  {
+    "code": "UNSK",
+    "name": "Unid Skua"
+  },
+  {
+    "code": "UNSP",
+    "name": "Unid Storm-Petrel"
+  },
+  {
+    "code": "UNSPDO",
+    "name": "Unid Spotted Dolphin"
+  },
+  {
+    "code": "UNSS",
+    "name": "Unid Small Shearwater"
+  },
+  {
+    "code": "UNST",
+    "name": "Unid Stenella Sp."
+  },
+  {
+    "code": "UNSW",
+    "name": "Unid Small Whale"
+  },
+  {
+    "code": "UNTE",
+    "name": "Unid Tern"
+  },
+  {
+    "code": "UNTU",
+    "name": "Unid Turtle"
+  },
+  {
+    "code": "UNTW",
+    "name": "Unid Odontocete"
+  },
+  {
+    "code": "UNVE",
+    "name": "Unid Boat/Vessel"
+  },
+  {
+    "code": "UNWH",
+    "name": "Unid Whale (Size Unknown)"
+  },
+  {
+    "code": "VAQU",
+    "name": "Vaquita"
+  },
+  {
+    "code": "WALR",
+    "name": "Walrus"
+  },
+  {
+    "code": "WBDO",
+    "name": "White-Beaked Dolphin"
+  },
+  {
+    "code": "WBSDO",
+    "name": "Whitebelly Spinner Dolphin"
+  },
+  {
+    "code": "WESE",
+    "name": "Weddell Seal"
+  },
+  {
+    "code": "WFSP",
+    "name": "White-Faced Storm-Petrel"
+  },
+  {
+    "code": "WHAL",
+    "name": "Whale-Watching Vessel"
+  },
+  {
+    "code": "WHIM",
+    "name": "Whimbrel"
+  },
+  {
+    "code": "WHMA",
+    "name": "White Marlin"
+  },
+  {
+    "code": "WHSH",
+    "name": "Whale Shark"
+  },
+  {
+    "code": "WIND",
+    "name": "Wind"
+  },
+  {
+    "code": "WISP",
+    "name": "Wilson’s Storm-Petrel"
+  },
+  {
+    "code": "WSDO",
+    "name": "Atlantic White-Sided Dolphin"
+  },
+  {
+    "code": "WTSH",
+    "name": "White Shark"
+  },
+  {
+    "code": "WTTR",
+    "name": "White-Tailed Tropicbird"
+  },
+  {
+    "code": "WWSC",
+    "name": "White-Winged Scoter"
+  },
+  {
+    "code": "YEGR",
+    "name": "Yellowfin Grouper"
+  },
+  {
+    "code": "YFTU",
+    "name": "Yellowfin Tuna"
+  },
+  {
+    "code": "ZOOP",
+    "name": "Zooplankton Patches"
+  },
+  {
+    "code": "BW39V",
+    "name": "BW39V"
+  },
+  {
+    "code": "CUBW",
+    "name": "Cuvier's Beaked Whale"
+  }
+]

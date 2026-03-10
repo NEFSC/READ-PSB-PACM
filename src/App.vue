@@ -239,7 +239,7 @@ import DetectionFilter from '@/components/DetectionFilter'
 import DeploymentDetail from '@/components/DeploymentDetail'
 
 import evt from '@/lib/events'
-import { xf, deploymentGroup, siteGroup, deploymentMap } from '@/lib/crossfilter'
+import { xf, deploymentGroup, siteGroup, siteMap, deploymentMap } from '@/lib/crossfilter'
 import { themes } from '@/lib/constants'
 import tour from '@/lib/tour'
 
@@ -347,8 +347,8 @@ export default {
       this.period.year = { start: null, end: null }
       evt.$emit('reset:filters', 'app:loadData')
       this.counts.detections.total = xf.size()
-      this.counts.deployments.total = this.$store.getters.deployments.length
-      this.counts.sites.total = this.$store.getters.sites ? this.$store.getters.sites.length : 0
+      this.counts.deployments.total = deploymentGroup.size()
+      this.counts.sites.total = siteMap.size
       if (this.$route.path === '/' || !this.theme || this.$route.params.id !== this.theme.id) {
         this.$router.push({ path: this.theme.id || '/' })
       }
@@ -400,13 +400,13 @@ export default {
       this.updateCounts()
     },
     updateCounts () {
-      this.counts.detections.total = xf.size()
-      this.counts.deployments.total = this.$store.getters.deployments.length
-      this.counts.sites.total = this.$store.getters.sites ? this.$store.getters.sites.length : 0
-      this.counts.detections.filtered = xf.allFiltered().length
-      this.counts.deployments.filtered = deploymentGroup.all().filter(d => d.value.total > 0).length
+      this.counts.sites.total = siteMap.size
       const siteIds = new Set((this.$store.getters.sites || []).map(d => d.site_id))
       this.counts.sites.filtered = siteGroup.all().filter(d => siteIds.has(d.key) && d.value.total > 0).length
+      this.counts.deployments.total = deploymentGroup.size()
+      this.counts.deployments.filtered = deploymentGroup.all().filter(d => d.value.total > 0).length
+      this.counts.detections.total = xf.size()
+      this.counts.detections.filtered = xf.allFiltered().length
     },
     updatePeriodFilter () {
       if (!this.periodDim) return

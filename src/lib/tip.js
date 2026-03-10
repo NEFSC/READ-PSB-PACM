@@ -3,7 +3,7 @@ import moment from 'moment'
 import pad from 'pad'
 
 import { xf, deploymentMap, siteMap } from '@/lib/crossfilter'
-import { detectionTypes, detectionTypesMap } from '@/lib/constants'
+import { detectionTypes, detectionTypesMap, speciesMap } from '@/lib/constants'
 
 const orNa = (value) => value || 'N/A'
 
@@ -98,7 +98,7 @@ const numericRange = (deployments, key, suffix) => {
   return `${min.toFixed(0)} to ${max.toFixed(0)} ${suffix}`
 }
 
-const siteHtml = (d, siteDeployments) => {
+const siteHtml = (d, siteDeployments, deploymentsOnly) => {
   const filteredValues = siteMap.get(d.site_id) || { y: 0, n: 0, m: 0, na: 0, d: 0, total: 0 }
 
   const allDetections = xf.all().filter(det => det.site_id === d.site_id)
@@ -115,22 +115,30 @@ const siteHtml = (d, siteDeployments) => {
   const earliest = monitoringStarts.length > 0 ? moment.min(monitoringStarts).format('ll') : 'N/A'
   const latest = monitoringEnds.length > 0 ? moment.max(monitoringEnds).format('ll') : 'N/A'
 
-  const metaHtml = htmlTable([
+  let metaHtml = [
     ['Organization', `${orNa(d.organization_code)}`],
     ['Site', `${orNa(d.site)}`],
-    // ['Coordinates', `${d.site_latitude.toFixed(4)}, ${d.site_longitude.toFixed(4)}`],
     ['Project', uniqueStrings(deps, 'project')],
     ['Platform Type', uniqueStrings(deps, 'platform_type')],
     ['Recorder Type', uniqueStrings(deps, 'instrument_type')],
-    ['Sampling Rate (Hz)', uniqueStrings(deps, 'sampling_rate_hz')],
-    ['Detection Method', uniqueStrings(deps, 'detection_method')],
-    // ['Call Types', uniqueStrings(deps, 'call_type')],
-    ['Analysis QAQC', uniqueStrings(deps, 'qc_data')],
+    ['Sampling Rate', uniqueStrings(deps, 'sampling_rate_hz') + ' Hz'],
     ['Recorder Depth', numericRange(deps, 'recorder_depth_meters', 'm')],
     ['Water Depth', numericRange(deps, 'water_depth_meters', 'm')],
     ['Monitoring Period', `${earliest} to ${latest}`],
     ['# Deployments', `${deps.length}`]
-  ])
+  ]
+
+  if (!deploymentsOnly) {
+    metaHtml.push(['Detection Method', uniqueStrings(deps, 'detection_method')])
+    metaHtml.push(['Analysis QAQC', uniqueStrings(deps, 'qc_data')])
+    metaHtml = htmlTable(metaHtml)
+  } else {
+    return `
+    Stationary Platform<br><br>
+
+    ${htmlTable(metaHtml)}
+    `
+  }
 
   const detectionHtml = detectionTableFromValues(filteredValues, allValues)
 
@@ -147,28 +155,33 @@ const siteHtml = (d, siteDeployments) => {
   `
 }
 
-const deploymentHtml = (d, deployment) => {
+const deploymentHtml = (d, deployment, deploymentsOnly) => {
   const props = deployment
   const monitoring = monitoringPeriodLabels(props)
 
-  const metaHtml = htmlTable([
+  let metaHtml = [
     ['Organization', `${orNa(d.organization_code)}`],
     ['Deployment', `${orNa(d.deployment_code)}`],
-    // ['Site', `${orNa(props.site)}`],
-    // ['Coordinates', `${d.latitude.toFixed(4)}, ${d.longitude.toFixed(4)}`],
     ['Project', `${props.project}`],
     ['Platform Type', `${orNa(props.platform_type)}`],
     ['Recorder Type', `${orNa(props.instrument_type)}`],
-    ['Sampling Rate (Hz)', `${props.sampling_rate_hz ? (props.sampling_rate_hz / 1000).toLocaleString() + ' kHz' : 'N/A'}`],
-    ['Detection Method', `${orNa(props.detection_method)}`],
-    // ['Call Type', `${orNa(props.call_type)}`],
-    ['Analysis QAQC', `${orNa(props.qc_data)}`],
+    ['Sampling Rate', props.sampling_rate_hz ? `${props.sampling_rate_hz} Hz` : 'N/A'],
     ['Recorder Depth', props.recorder_depth_meters ? `${(+props.recorder_depth_meters).toFixed(0)} m` : 'N/A'],
     ['Water Depth', props.water_depth_meters ? `${(+props.water_depth_meters).toFixed(0)} m` : 'N/A'],
     ['Monitoring Period', `${orNa(monitoring.start)} to ${orNa(monitoring.end)}`],
-    // ['Duration', `${monitoring.duration ? monitoring.duration + ' days' : 'N/A'} `]
     ['# Deployments', 1]
-  ])
+  ]
+  if (!deploymentsOnly) {
+    metaHtml.push(['Detection Method', `${orNa(props.detection_method)}`])
+    metaHtml.push(['Analysis QAQC', `${orNa(props.qc_data)}`])
+    metaHtml = htmlTable(metaHtml)
+  } else {
+    return `
+    Stationary Platform<br><br>
+
+    ${htmlTable(metaHtml)}
+    `
+  }
   const detectionHtml = detectionTableHtml(deployment)
 
   return `
@@ -184,24 +197,31 @@ const deploymentHtml = (d, deployment) => {
   `
 }
 
-const trackHtml = (d, deployment) => {
+const trackHtml = (d, deployment, deploymentsOnly) => {
   const props = deployment
   const monitoring = monitoringPeriodLabels(props)
 
-  const trackHtml = htmlTable([
+  let trackHtml = [
     ['Project', `${props.project}`],
     ['Site', `${orNa(props.site)}`],
     ['Platform Type', `${orNa(props.platform_type)}`],
     ['Recorder Type', `${orNa(props.instrument_type)}`],
-    // ['Sampling Rate', `${props.sampling_rate_hz ? (props.sampling_rate_hz / 1000).toLocaleString() + ' kHz' : 'N/A'}`],
-    ['Sampling Rates (Hz)', `${orNa(props.sampling_rate_hz)}`],
-    ['Detection Method', `${orNa(props.detection_method)}`],
-    // ['Call Type', `${orNa(props.call_type)}`],
-    ['Analysis QAQC', `${orNa(props.qc_data)}`],
+    ['Sampling Rate', `${orNa(props.sampling_rate_hz)} Hz`],
     ['Deployed', `${orNa(monitoring.start)} to ${orNa(monitoring.end)}`],
     ['Duration', `${monitoring.duration ? monitoring.duration + ' days' : 'N/A'} `]
-  ])
+  ]
 
+  if (!deploymentsOnly) {
+    trackHtml.push(['Detection Method', `${orNa(props.detection_method)}`])
+    trackHtml.push(['Analysis QAQC', `${orNa(props.qc_data)}`])
+    trackHtml = htmlTable(trackHtml)
+  } else {
+    return `
+      Mobile Platform<br><br>
+
+      ${htmlTable(trackHtml)}
+    `
+  }
   const detectionHtml = detectionTableHtml(deployment)
 
   return `
@@ -217,30 +237,15 @@ const trackHtml = (d, deployment) => {
   `
 }
 
-const towedPointHtml = (d, deployment) => {
+const mobilePointHtml = (d, deployment, deploymentsOnly) => {
+  if (deploymentsOnly) {
+    return trackHtml(d, deployment, deploymentsOnly)
+  }
   const detectionHtml = htmlTable([
-    ['Detection Start', `${moment.utc(d.analysis_period_start_datetime).format('ll LTS')}`],
-    ['Detection End', `${d.analysis_period_end_datetime ? moment.utc(d.analysis_period_end_datetime).format('ll LTS') : 'N/A'}`],
-    ['Duration', `${isFinite(d.analysis_period_effort_seconds) ? d.analysis_period_effort_seconds.toFixed(1) + ' sec' : 'N/A'}`],
+    ['Date', `${moment.utc(d.analysis_period_start_datetime).format('ll')}`],
     ['Position', `${d.latitude.toFixed(4)}, ${d.longitude.toFixed(4)}`],
-    ['Detection', `${detectionTypesMap.get(d.presence).label}`]
-  ])
-  return `
-    ${trackHtml(d, deployment)}<br><br>
-
-    <hr><br>
-
-    Highlighted Detection<br><br>
-    ${detectionHtml}
-  `
-}
-
-const gliderPointHtml = (d, deployment) => {
-  const detectionHtml = htmlTable([
-    ['Date', `${moment.utc(d.date).format('ll')}`],
-    ['Position', `${d.latitude.toFixed(4)}, ${d.longitude.toFixed(4)}`],
-    ['Detection', `${detectionTypesMap.get(d.presence).label}`]
-    // [ 'Species', `${speciesTypesMap.get(deployment.species).label}` ]
+    ['Detection', `${detectionTypesMap.get(d.presence).label}`],
+    ['Species', `${speciesMap.get(d.species)}`]
   ])
   return `
     ${trackHtml(d, deployment)}<br><br>
@@ -252,9 +257,16 @@ const gliderPointHtml = (d, deployment) => {
   `
 }
 
-export function tipHtml (d, deployment, nNearby, type, siteDeployments) {
+export function tipHtml (d, deployment, nNearby, type, siteDeployments, deploymentsOnly) {
+  console.log('[tipHtml] called', {
+    d,
+    deployment,
+    nNearby,
+    type,
+    siteDeployments
+  })
   if (type === 'site') {
-    let html = siteHtml(d, siteDeployments)
+    let html = siteHtml(d, siteDeployments, deploymentsOnly)
     if (nNearby > 1) {
       html += `<br><br><hr><br>Warning: There are ${nNearby} other sites near this location.<br>Zoom in to better distinguish them.`
     } else if (nNearby === 1) {
@@ -264,20 +276,16 @@ export function tipHtml (d, deployment, nNearby, type, siteDeployments) {
   }
 
   if (type === 'track') {
-    return trackHtml(d, deployment)
+    return trackHtml(d, deployment, deploymentsOnly)
   }
 
   let html
   if (type === 'deployment') {
-    html = deploymentHtml(d, deployment)
+    html = deploymentHtml(d, deployment, deploymentsOnly)
   } else if (type === 'point') {
-    if (deployment.platform_type === 'towed') {
-      html = towedPointHtml(d, deployment)
-    } else {
-      html = gliderPointHtml(d, deployment)
-    }
+    html = mobilePointHtml(d, deployment, deploymentsOnly)
   } else {
-    html = deploymentHtml(d, deployment)
+    html = deploymentHtml(d, deployment, deploymentsOnly)
   }
 
   if (nNearby > 1) {

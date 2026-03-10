@@ -4,7 +4,7 @@ import Vuex from 'vuex'
 import { nest } from 'd3-collection'
 // import { timeDay } from 'd3'
 
-import { fetchData, fetchReferences } from '@/lib/fetch'
+import { fetchData } from '@/lib/fetch'
 import { setData, setRawDetections, getRawDetections, aggregateByDate } from '@/lib/crossfilter'
 
 Vue.use(Vuex)
@@ -17,8 +17,6 @@ export default new Vuex.Store({
     deployments: null,
     sites: null,
     tracks: null,
-    species: null,
-    platformTypes: null,
     selectedDeployments: [],
     normalizeEffort: false,
     useSizeScale: true
@@ -34,9 +32,7 @@ export default new Vuex.Store({
     deploymentById: state => id => state.deployments.find(d => d.id === id),
     selectedDeployments: state => state.selectedDeployments,
     normalizeEffort: state => state.normalizeEffort,
-    useSizeScale: state => state.useSizeScale,
-    species: state => state.species,
-    platformTypes: state => state.platformTypes
+    useSizeScale: state => state.useSizeScale
   },
   mutations: {
     SET_LOADING (state, loading) {
@@ -70,23 +66,9 @@ export default new Vuex.Store({
     },
     SET_USE_SIZE_SCALE (state, useSizeScale) {
       state.useSizeScale = useSizeScale
-    },
-    SET_SPECIES (state, species) {
-      state.species = Object.freeze(species)
-    },
-    SET_PLATFORM_TYPES (state, platformTypes) {
-      state.platformTypes = Object.freeze(platformTypes)
     }
   },
   actions: {
-    fetchReferences ({ commit }) {
-      return fetchReferences()
-        .then(references => {
-          console.log('references', references)
-          commit('SET_SPECIES', references.species)
-          commit('SET_PLATFORM_TYPES', references.platformTypes)
-        })
-    },
     setTheme ({ commit, state }, theme) {
       if (state.theme && state.theme.id === theme.id) {
         return Promise.resolve(state.theme)
@@ -97,10 +79,9 @@ export default new Vuex.Store({
       return fetchData(theme)
         .then(([sites, tracks, deployments, detections]) => {
           const deploymentsMap = Object.fromEntries(deployments.map(d => [d.id, d]))
-
           detections.forEach((d, i) => {
             d.$index = i
-            d.site_id = deploymentsMap[d.id].site_id || deploymentsMap[d.id].id // TODO: confirm deployments without sites can be shown by id
+            d.site_id = deploymentsMap[d.id].site_id || '__none__'
             d.platform_type = deploymentsMap[d.id].platform_type
             d.organization_code = deploymentsMap[d.id].organization_code || 'UNKNOWN'
             d.instrument_type = deploymentsMap[d.id].instrument_type || 'UNKNOWN'
@@ -118,6 +99,7 @@ export default new Vuex.Store({
               ? d.locations.map(l => ({
                 $index: d.$index,
                 id: d.id,
+                species: d.species,
                 presence: d.presence,
                 ...l
               }))
@@ -167,24 +149,31 @@ export default new Vuex.Store({
       commit('SET_USE_SIZE_SCALE', useSizeScale)
     },
     reloadSpeciesFilter ({ state }, selectedSpecies) {
+      console.log('[reloadSpeciesFilter] called', { selectedSpecies })
       const raw = getRawDetections()
       const filtered = selectedSpecies && selectedSpecies.length > 0
         ? raw.filter(d => selectedSpecies.includes(d.species))
         : raw
       const aggregated = aggregateByDate(filtered)
       aggregated.forEach((d, i) => { d.$index = i })
+      console.log('[reloadSpeciesFilter] aggregated', aggregated[0])
 
       const trackDetections = aggregated.map(d =>
         d.locations
           ? d.locations.map(l => ({
-            $index: d.$index, id: d.id, presence: d.presence, ...l
+            $index: d.$index,
+            id: d.id,
+            presence: d.presence,
+            ...l
           }))
           : []
       ).flat()
+      console.log('[reloadSpeciesFilter] trackDetections', trackDetections[0])
       const trackNest = nest().key(d => d.id).map(trackDetections)
       state.deployments.forEach(d => {
         d.trackDetections = trackNest.get(d.id) || []
       })
+      window.deployments = state.deployments
 
       setData(aggregated)
     }

@@ -41,7 +41,7 @@ export default {
     }
   },
   mounted () {
-    // console.log('DetectionFilter mounted')
+    console.log('[DetectionFilter.mounted] called')
     const dim = xf.dimension(d => detectionTypesMap.get(d.presence).label)
     const group = dim.group().reduceCount()
 
@@ -68,6 +68,7 @@ export default {
       .ordering(d => detectionTypes.map(d => d.label).indexOf(d.key))
       .colors(colorScale)
       .on('postRender', () => {
+        console.log('[postRender] called')
         if (this.chart.svg().selectAll('.x-axis-label').nodes().length > 0) return
         const textSelection = this.chart.svg()
           .append('text')
@@ -127,6 +128,9 @@ export default {
   methods: {
     renderToggles () {
       if (!this.chart) return
+      console.log('[renderToggles] called', {
+        'chart.hasFilter()': this.chart.hasFilter()
+      })
       this.chart.selectAll('circle.toggle')
         .classed('on', d => !this.chart.hasFilter() || this.chart.hasFilter(d.key))
     },

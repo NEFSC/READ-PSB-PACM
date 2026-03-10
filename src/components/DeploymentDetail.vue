@@ -56,19 +56,19 @@
           <v-simple-table dense>
             <tbody>
               <tr>
-                <td class="px-2 text-right" style="width:150px">Organization:</td>
+                <td class="px-2 text-right" style="width:140px">Organization:</td>
                 <td class="px-2 font-weight-bold">{{ siteMetadata.organizationCode }}</td>
               </tr>
               <tr>
-                <td class="px-2 text-right" style="width:150px">Site:</td>
+                <td class="px-2 text-right" style="width:140px">Site:</td>
                 <td class="px-2 font-weight-bold">{{ siteMetadata.site }}</td>
               </tr>
               <tr>
-                <td class="px-2 text-right" style="width:150px">Project:</td>
+                <td class="px-2 text-right" style="width:140px">Project:</td>
                 <td class="px-2 font-weight-bold">{{ siteMetadata.project }}</td>
               </tr>
               <tr>
-                <td class="px-2 text-right" style="width:150px">Platform Type:</td>
+                <td class="px-2 text-right" style="width:140px">Platform Type:</td>
                 <td class="px-2 font-weight-bold">{{ siteMetadata.platformType }}</td>
               </tr>
               <tr>
@@ -76,8 +76,8 @@
                 <td class="px-2 font-weight-bold">{{ siteMetadata.instrumentType }}</td>
               </tr>
               <tr>
-                <td class="px-2 text-right">Sampling Rate (Hz):</td>
-                <td class="px-2 font-weight-bold">{{ siteMetadata.samplingRate }}</td>
+                <td class="px-2 text-right">Sampling Rate:</td>
+                <td class="px-2 font-weight-bold">{{ siteMetadata.samplingRate }} Hz</td>
               </tr>
               <tr v-if="!theme.deploymentsOnly">
                 <td class="px-2 text-right">Detection Method:</td>
@@ -113,7 +113,7 @@
 
         <v-col xs="12" md="12" lg="12" xl="8" v-if="!theme.deploymentsOnly" class="black--text">
           <div class="heading font-weight-bold">Daily Detections</div>
-          <div class="subtitle-2 grey--text text--darken-1">Includes all detection data independent of filters. Shaded periods indicate unmonitored gaps between deployments.</div>
+          <div class="subtitle-2 grey--text text--darken-1">Shaded periods indicate unmonitored gaps between deployments.</div>
           <highcharts class="chart" :options="chart"></highcharts>
         </v-col>
       </v-row>
@@ -123,23 +123,23 @@
           <v-simple-table dense>
             <tbody>
               <tr>
-                <td class="px-2 text-right" style="width:150px">Organization:</td>
+                <td class="px-2 text-right" style="width:140px">Organization:</td>
                 <td class="px-2 font-weight-bold">{{ selectedDeployment.organization_code }}</td>
               </tr>
               <tr>
-                <td class="px-2 text-right" style="width:150px">Deployment:</td>
+                <td class="px-2 text-right" style="width:140px">Deployment:</td>
                 <td class="px-2 font-weight-bold">{{ selectedDeployment.deployment_code }}</td>
               </tr>
               <tr>
-                <td class="px-2 text-right" style="width:150px">Project:</td>
+                <td class="px-2 text-right" style="width:140px">Project:</td>
                 <td class="px-2 font-weight-bold">{{ selectedDeployment.project }}</td>
               </tr>
               <tr v-if="deploymentType === 'station' || deploymentType === 'glider'">
-                <td class="px-2 text-right" style="width:150px">Site:</td>
+                <td class="px-2 text-right" style="width:140px">Site:</td>
                 <td class="px-2 font-weight-bold">{{ selectedDeployment.site ? selectedDeployment.site : 'N/A' }}</td>
               </tr>
               <tr>
-                <td class="px-2 text-right" style="width:150px">Platform Type:</td>
+                <td class="px-2 text-right" style="width:140px">Platform Type:</td>
                 <td class="px-2 font-weight-bold">{{ selectedDeployment.platform_type || 'N/A' }}</td>
               </tr>
               <tr>
@@ -147,8 +147,8 @@
                 <td class="px-2 font-weight-bold">{{ selectedDeployment.instrument_type || 'N/A' }}</td>
               </tr>
               <tr>
-                <td class="px-2 text-right">Sampling Rate (Hz):</td>
-                <td class="px-2 font-weight-bold">{{ selectedDeployment.sampling_rate_hz || 'N/A' }}</td>
+                <td class="px-2 text-right">Sampling Rate:</td>
+                <td class="px-2 font-weight-bold">{{ selectedDeployment.sampling_rate_hz + ' Hz' || 'N/A' }}</td>
               </tr>
               <tr v-if="!theme.deploymentsOnly">
                 <td class="px-2 text-right">Detection Method:</td>
@@ -158,11 +158,11 @@
                 <td class="px-2 text-right">Analysis QAQC:</td>
                 <td class="px-2 font-weight-bold">{{ selectedDeployment.qc_data ? selectedDeployment.qc_data : 'N/A'}}</td>
               </tr>
-              <tr v-if="deploymentType === 'station'">
+              <tr v-if="selectedDeployment.deployment_type === 'STATIONARY'">
                 <td class="px-2 text-right">Recorder Depth:</td>
                 <td class="px-2 font-weight-bold">{{ selectedDeployment.recorder_depth_meters ? `${(+selectedDeployment.recorder_depth_meters).toFixed(0)} m` : 'N/A' }}</td>
               </tr>
-              <tr v-if="deploymentType === 'station'">
+              <tr v-if="selectedDeployment.deployment_type === 'STATIONARY'">
                 <td class="px-2 text-right">Water Depth: </td>
                 <td class="px-2 font-weight-bold">{{ selectedDeployment.water_depth_meters ? `${(+selectedDeployment.water_depth_meters).toFixed(0)} m` : 'N/A' }}</td>
               </tr>
@@ -176,7 +176,7 @@
               </tr>
               <tr>
                 <td class="px-2 text-right">Point of Contact:</td>
-                <td class="px-2 font-weight-bold">{{ selectedDeployment.data_poc_name }} </td>
+                <td class="px-2 font-weight-bold">{{ selectedDeployment.data_poc }} </td>
               </tr>
               <tr v-if="!theme.deploymentsOnly">
                 <td class="px-2 text-right">Protocol:</td>
@@ -188,7 +188,6 @@
 
         <v-col xs="12" md="12" lg="12" xl="8" v-if="!theme.deploymentsOnly" class="black--text">
           <div class="heading font-weight-bold">Daily Detections</div>
-          <div class="subtitle-2 grey--text text--darken-1">Includes all detection data independent of filters</div>
           <highcharts class="chart" :options="chart"></highcharts>
         </v-col>
       </v-row>
@@ -302,7 +301,7 @@ export default {
         monitoringStart: starts.length > 0 ? moment.min(starts).format('ll') : 'N/A',
         monitoringEnd: ends.length > 0 ? moment.max(ends).format('ll') : 'N/A',
         nDeployments: deps.length,
-        dataPoc: unique('data_poc_name')
+        dataPoc: unique('data_poc')
       }
     },
     selectedDeployment () {
@@ -346,72 +345,11 @@ export default {
 
       const ids = detectionTypes.map(d => d.id)
 
-      if (this.isSiteView) {
-        const allIds = this.selectedDeployments.map(d => d.id)
-        const detections = xf.all().filter(d => allIds.includes(d.id))
-        const values = detections.map((d) => {
-          if (!d.presence) return null
-          const status = detectionTypes.find(s => s.id === d.presence)
-          return {
-            x: (new Date(d.date)).valueOf(),
-            y: ids.indexOf(d.presence),
-            label: status.label,
-            marker: {
-              fillColor: status.color
-            }
-          }
-        })
-        const starts = this.selectedDeployments
-          .map(d => moment.utc(d.analysis_start_date))
-          .filter(m => m.isValid())
-        const ends = this.selectedDeployments
-          .map(d => moment.utc(d.analysis_end_date))
-          .filter(m => m.isValid())
-        this.chart.xAxis.min = starts.length > 0
-          ? moment.min(starts).startOf('date').toDate().valueOf()
-          : undefined
-        this.chart.xAxis.max = ends.length > 0
-          ? moment.max(ends).startOf('date').toDate().valueOf()
-          : undefined
-
-        // compute gaps between deployments for shaded plotBands
-        const intervals = this.selectedDeployments
-          .map(d => ({
-            start: moment.utc(d.analysis_start_date),
-            end: moment.utc(d.analysis_end_date)
-          }))
-          .filter(iv => iv.start.isValid() && iv.end.isValid())
-          .sort((a, b) => a.start.valueOf() - b.start.valueOf())
-        const plotBands = []
-        for (let i = 1; i < intervals.length; i++) {
-          const prevEnd = intervals[i - 1].end
-          const nextStart = intervals[i].start
-          if (prevEnd.isBefore(nextStart)) {
-            plotBands.push({
-              from: prevEnd.valueOf(),
-              to: nextStart.valueOf(),
-              color: 'rgba(0, 0, 0, 0.06)'
-              // label: {
-              //   text: 'Gap',
-              //   style: { color: '#999', fontSize: '10px' }
-              // }
-            })
-          }
-        }
-        this.chart.xAxis.plotBands = plotBands
-
-        this.chart.series = [{
-          name: 'Result',
-          data: values
-        }]
-        return
-      }
-
-      const detections = xf.all().filter(d => d.id === this.selectedDeployment.id)
+      const allIds = this.selectedDeployments.map(d => d.id)
+      const detections = xf.all().filter(d => allIds.includes(d.id))
+      // if (this.isSiteView) {
       const values = detections.map((d) => {
-        if (!d.presence) {
-          return null
-        }
+        if (!d.presence) return null
         const status = detectionTypes.find(s => s.id === d.presence)
         return {
           x: (new Date(d.date)).valueOf(),
@@ -422,17 +360,48 @@ export default {
           }
         }
       })
-      this.chart.xAxis.plotBands = []
-      this.chart.xAxis.min = moment
-        .utc(this.selectedDeployment.analysis_start_date)
-        .startOf('date').toDate().valueOf()
-      this.chart.xAxis.max = moment
-        .utc(this.selectedDeployment.analysis_end_date)
-        .startOf('date').toDate().valueOf()
       this.chart.series = [{
         name: 'Result',
         data: values
       }]
+
+      // const filteredDetections = xf.allFiltered().filter(d => allIds.includes(d.id))
+      const filteredDetections = xf.allFiltered().filter(d => allIds.includes(d.id))
+      const minDetectionDate = Math.min(...filteredDetections.map(d => new Date(d.date)).filter(d => d !== null))
+      const maxDetectionDate = Math.max(...filteredDetections.map(d => new Date(d.date)).filter(d => d !== null))
+      this.chart.xAxis.min = minDetectionDate
+      this.chart.xAxis.max = maxDetectionDate
+
+      // compute gaps between deployments for shaded plotBands
+      const intervals = this.selectedDeployments
+        .map(d => ({
+          start: moment.utc(d.analysis_start_date),
+          end: moment.utc(d.analysis_end_date)
+        }))
+        .filter(iv => iv.start.isValid() && iv.end.isValid())
+        .sort((a, b) => a.start.valueOf() - b.start.valueOf())
+      console.log('[DeploymentDetail.updateChart] intervals', intervals)
+      const plotBands = []
+      for (let i = 1; i < intervals.length; i++) {
+        const prevEnd = intervals[i - 1].end
+        const nextStart = intervals[i].start
+        if (prevEnd.isBefore(nextStart) &&
+            nextStart.diff(prevEnd, 'days') > 1 &&
+            nextStart.isAfter(minDetectionDate) &&
+            prevEnd.isBefore(maxDetectionDate)) {
+          console.log('[DeploymentDetail.updateChart] plotBand', {
+            from: prevEnd.format('YYYY-MM-DD'),
+            to: nextStart.format('YYYY-MM-DD')
+          })
+          plotBands.push({
+            from: prevEnd.add(12, 'hours').valueOf(),
+            to: nextStart.subtract(12, 'hours').valueOf(),
+            color: 'rgba(0, 0, 0, 0.06)'
+          })
+        }
+      }
+      console.log('[DeploymentDetail.updateChart] plotBands', plotBands)
+      this.chart.xAxis.plotBands = plotBands
     }
   }
 }

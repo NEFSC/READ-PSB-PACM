@@ -17,6 +17,7 @@
 import * as dc from 'dc'
 import { xf } from '@/lib/crossfilter'
 import { mapGetters } from 'vuex'
+import { platformTypes } from '@/lib/constants'
 
 export default {
   name: 'PlatformTypeFilter',
@@ -47,7 +48,7 @@ export default {
   methods: {
     reset () {
       const datasetTypes = new Set(xf.all().map(d => d.platform_type)) // all types in dataset
-      this.options = this.platformTypes.filter(d => datasetTypes.has(d.code))
+      this.options = platformTypes.filter(d => datasetTypes.has(d.code))
       this.selected = this.options.map(d => d.code)
     },
     setFilter () {

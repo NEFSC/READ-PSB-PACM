@@ -2,22 +2,6 @@ import axios from 'axios'
 import moment from 'moment'
 import * as d3 from 'd3'
 
-export function fetchReferences () {
-  const tables = ['species', 'platform_types']
-  return Promise.all(tables.map(table => {
-    return axios.get(`data/${table}.csv`)
-      .then(response => response.data)
-      .then(csv => d3.csvParse(csv, (d, i) => {
-        return d
-      }))
-  })).then(([species, platformTypes]) => {
-    return {
-      species,
-      platformTypes
-    }
-  })
-}
-
 function fetchSites (id) {
   console.log('fetchSites', id)
   return axios.get(`data/${id}/sites.json`)

@@ -17,6 +17,7 @@
 import * as dc from 'dc'
 import { getRawDetections } from '@/lib/crossfilter'
 import { mapGetters } from 'vuex'
+import { species } from '@/lib/constants'
 
 export default {
   name: 'SpeciesFilter',
@@ -45,7 +46,7 @@ export default {
     reset () {
       const raw = getRawDetections()
       const speciesCodes = new Set(raw.map(d => d.species))
-      this.options = this.species.filter(d => speciesCodes.has(d.code))
+      this.options = species.filter(d => speciesCodes.has(d.code))
       this.selected = this.options.map(d => d.code)
     }
   }

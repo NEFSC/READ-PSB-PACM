@@ -32,13 +32,6 @@ export default {
         this.deployments?.filter(d => d.deployment_type === 'STATIONARY' && d.site_id).map(d => d.site_id) || []
       )
       return this.sites.filter(d => stationarySiteIds.has(d.site_id))
-    },
-    points () {
-      if (!this.deployments) return []
-      return this.deployments
-        .filter(d => d.deployment_type === 'MOBILE')
-        .map(d => d.trackDetections)
-        .flat()
     }
   },
   watch: {
@@ -76,6 +69,7 @@ export default {
     this.draw()
 
     evt.$on('map:zoom', this.draw)
+    evt.$on('xf:dataAdded', this.draw)
     evt.$on('xf:filtered', this.render)
     console.log('[MapLayer.mounted] event listeners registered')
   },
@@ -84,6 +78,7 @@ export default {
     d3.selectAll('.d3-tip.map').remove()
 
     evt.$off('map:zoom', this.draw)
+    evt.$off('xf:dataAdded', this.draw)
     evt.$off('xf:filtered', this.render)
   },
   methods: {
@@ -112,21 +107,32 @@ export default {
     setBounds () {
       console.log('[MapLayer.setBounds] called', {
         loading: this.loading,
-        deployments: this.deployments?.length
+        deployments: this.deployments,
+        tracks: this.tracks
       })
-      // TODO: compute bounds from sites, deployments and tracks
-      // if (this.loading) return
-      // if (!this.deployments) return
-      // const bounds = d3.geoBounds({ type: 'FeatureCollection', features: this.deployments })
-      // console.log('[MapLayer.setBounds] bounds:', bounds)
-      // evt.$emit('map:setBounds', bounds)
+      if (this.loading) return
+      if (!this.deployments) return
+      const deployments = this.deployments
+        .filter(d => d.deployment_type === 'STATIONARY')
+        .map(d => ({
+          type: 'Feature',
+          geometry: {
+            type: 'Point',
+            coordinates: [d.longitude, d.latitude]
+          }
+        }))
+      const bounds = d3.geoBounds({
+        type: 'FeatureCollection',
+        features: [deployments, this.tracks].flat()
+      })
+      console.log('[MapLayer.setBounds] bounds:', bounds)
+      evt.$emit('map:setBounds', bounds)
     },
     draw () {
       console.log('[MapLayer.draw] called', {
         loading: this.loading,
         deployments: this.deployments?.length,
         sites: this.sites?.length,
-        points: this.points?.length,
         container: !!this.container,
         map: !!this.map
       })
@@ -192,10 +198,18 @@ export default {
         .on('mouseenter', (event, d) => this.showTip(event, d, 'deployment'))
         .on('mouseout', (event, d) => this.hideTip())
     },
+    getTrackDetections () {
+      return this.deployments
+        .filter(d => d.deployment_type === 'MOBILE')
+        .map(d => d.trackDetections)
+        .flat()
+    },
     drawTrackDetections () {
+      const data = this.getTrackDetections()
+
       console.log('[MapLayer.drawTrackDetections] called', {
-        points: this.points?.length,
-        samplePoint: this.points?.[0]
+        points: data?.length,
+        samplePoint: data?.[0]
       })
       const g = this.container.select('g.points')
       console.log('[MapLayer.drawTrackDetections] g.points element:', g.node())
@@ -206,7 +220,6 @@ export default {
         return [point.x, point.y]
       }
 
-      const data = this.points
       // .sort((a, b) => d3.ascending(deploymentMap.get(a.id).y, deploymentMap.get(b.id).y))
       console.log('[MapLayer.drawTrackDetections] sorted data:', data.length)
 
@@ -225,9 +238,14 @@ export default {
         .attr('d', d3.symbol().type(d3.symbolSquare))
         .attr('transform', d => `translate(${projection(d)})`)
         .on('click', (event, d) => this.onClick(event, d, 'point'))
-        .on('mouseenter', (event, d) => this.showTip(event, d, 'point'))
+        .on('mouseenter', (event, d) => {
+          console.log('[MapLayer.drawTrackDetections] mouseenter', {
+            d
+          })
+          this.showTip(event, d, 'point')
+        })
         .on('mouseout', (event, d) => this.hideTip())
-      console.log('[MapLayer.drawTrackDetections] paths created:', paths.size())
+      console.log('[MapLayer.drawTrackDetections] points created:', paths.size())
     },
     drawTracks () {
       console.log('[MapLayer.drawTracks] called', {
@@ -318,7 +336,7 @@ export default {
     },
     render () {
       if (!this.container) return
-
+      console.log('[MapLayer.render] called')
       this.renderCircles(
         this.container.selectAll('g.sites circle.site'),
         d => siteMap.get(d.site_id)
@@ -340,7 +358,9 @@ export default {
         .style('display', d => (!deploymentMap.has(d.id) || deploymentMap.get(d.id).total === 0 ? 'none' : 'inline'))
 
       this.container.selectAll('g.points path.point')
-        .style('display', d => (xf.isElementFiltered(d.$index) ? 'inline' : 'none'))
+        .style('display', d => {
+          return xf.isElementFiltered(d.$index) ? 'inline' : 'none'
+        })
         .style('fill', d => colorScale(d.presence))
     },
     onClick (event, d, type) {
@@ -348,16 +368,14 @@ export default {
 
       if (type === 'track') {
         return this.selectDeployments([d.id])
+      } else if (type === 'point') {
+        return this.selectDeployments([d.id])
       } else if (type === 'deployment') {
         return this.selectDeployments([d.id])
       } else if (type === 'site') {
         const ids = this.deployments
           .filter(dep => dep.deployment_type === 'STATIONARY' && dep.site_id === d.site_id)
           .map(dep => dep.id)
-        return this.selectDeployments(ids)
-      } else if (type === 'point') {
-        const nearby = this.findNearbyDeployments(d)
-        const ids = nearby.points.map(p => p.id)
         return this.selectDeployments(ids)
       }
     },
@@ -410,7 +428,7 @@ export default {
         nNearby = nearbyDeployments.points.length - 1
       }
 
-      el.html(tipHtml(d, deployment, nNearby, type, siteDeployments))
+      el.html(tipHtml(d, deployment, nNearby, type, siteDeployments, this.theme.deploymentsOnly))
 
       const offset = tipOffset(event, el)
 
