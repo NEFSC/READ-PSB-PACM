@@ -151,7 +151,7 @@ targets_subs <- list(
           submission_id == "ORSTD_20251110_RevWindConstruction2025" ~ "ORSTED",
           str_starts(submission_id, "UCORN_") ~ "CORNELL",
           data_poc_affiliation == "Cornell University" ~ "CORNELL",
-          data_poc_affiliation == "DFO Maritimes" ~ "DFOCA",
+          data_poc_affiliation == "DFO Maritimes" ~ "DFO",
           data_poc_affiliation == "NYSDEC" ~ "NYDEC",
           TRUE ~ toupper(data_poc_affiliation)
         ),
@@ -194,6 +194,9 @@ targets_subs <- list(
           unnest(deployments) |> 
           select(site_id, deployment_id),
         by = "deployment_id"
+      ) |> 
+      mutate(
+        recording_device_lost = FALSE
       ) |> 
       select(all_of(pacm_names$deployments))
   }),

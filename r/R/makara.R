@@ -10,7 +10,7 @@ makara_connect <- function () {
 }
 
 targets_makara <- list(
-  tar_target(makara_exclude_organizations, c("DFOCA", "JASCO", "CORNELL", "ORSTED")),
+  tar_target(makara_exclude_organizations, c("DFO", "JASCO", "CORNELL", "ORSTED")),
   tar_target(makara_db, {
     con <- makara_connect()
 
@@ -273,7 +273,14 @@ targets_makara <- list(
     deployment_recordings <- makara_recordings |> 
       select(-deployment_id) |> 
       rename(deployment_id = makara_deployment_id) |>
-      nest(.by = deployment_id, .key = "recordings")
+      nest(.by = deployment_id, .key = "recordings") |> 
+      mutate(
+        recording_end_datetime = map_chr(recordings, function (x) {
+          if (all(is.na(x$recording_end_datetime))) return(NA_character_)
+          format_ISO8601(max(x$recording_end_datetime, na.rm = TRUE))
+        }),
+        recording_end_datetime = ymd_hms(recording_end_datetime)
+      )
     
     makara_db$deployments |> 
       filter(!organization_code %in% makara_exclude_organizations) |> 
@@ -330,7 +337,7 @@ targets_makara <- list(
         latitude = deployment_latitude,
         longitude = deployment_longitude,
         monitoring_start_datetime = deployment_datetime,
-        monitoring_end_datetime = recovery_datetime,
+        monitoring_end_datetime = coalesce(recovery_datetime, recording_end_datetime),
         platform_type = platform_type_code,
         deployment_type = if_else(platform_type_mobile, "MOBILE", "STATIONARY"),
         water_depth_meters = deployment_water_depth_m,
@@ -338,7 +345,8 @@ targets_makara <- list(
         # recording
         recorder_depth_meters = map_chr(recordings, ~ format_range(.x$recorder_depth_meters)),
         instrument_type = map_chr(recordings, ~ format_list(unlist(.x$device_type_codes))),
-        sampling_rate_hz = map_chr(recordings, ~ format_range(.x$sampling_rate_hz))
+        sampling_rate_hz = map_chr(recordings, ~ format_range(.x$sampling_rate_hz)),
+        recording_device_lost = map_lgl(recordings, ~ any(.x$recording_device_lost))
       )
   }),
   tar_target(makara_recordings, {
@@ -384,8 +392,12 @@ targets_makara <- list(
         recording_id = glue("{deployment_id}:{recording_code}"),
         recording_code,
         device_type_codes,
+        recording_start_datetime,
+        recording_end_datetime,
         recorder_depth_meters = recording_device_depth_m,
-        sampling_rate_hz = recording_sample_rate_khz * 1000
+        sampling_rate_hz = recording_sample_rate_khz * 1000,
+        recording_quality_type_code,
+        recording_device_lost = coalesce(recording_quality_type_code == "UNUSABLE", recording_device_lost, FALSE)
       )
   }),
   tar_target(makara_analyses, {
@@ -724,6 +736,23 @@ targets_makara <- list(
       select(all_of(pacm_names$tracks))
   }),
 
+  tar_target(makara_analyses_pacm_realtime_file, "data-raw/realtime/realtime-analyses.rds", format = "file"),
+  tar_target(makara_analyses_pacm_realtime, {
+    read_rds(makara_analyses_pacm_realtime_file) |> 
+      mutate(
+        detections = map(detections, function (detections) {
+          if (is.null(detections)) return(NULL)
+          detections |> 
+            mutate(
+              locations = map(locations, function (locations) {
+                if (is.null(locations)) return(NULL)
+                locations |> 
+                  filter(!is.na(latitude) & !is.na(longitude))
+              })
+            )
+        })
+      )
+  }),
   tar_target(makara_analyses_pacm, {
     x <- makara_analyses |> 
       select(
@@ -768,7 +797,8 @@ targets_makara <- list(
       filter(n_detections == 0)
     
     x |> 
-      select(all_of(pacm_names$analyses))
+      select(all_of(pacm_names$analyses)) |> 
+      bind_rows(makara_analyses_pacm_realtime)
   }),
 
   tar_target(makara_pacm, {

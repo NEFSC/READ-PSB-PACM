@@ -115,7 +115,8 @@ targets_pacm <- list(
         "recorder_depth_meters",
         "instrument_type",
         "sampling_rate_hz",
-        "data_poc"
+        "data_poc",
+        "recording_device_lost"
       ),
       analyses = c(
         "organization_code",
@@ -334,7 +335,7 @@ targets_pacm <- list(
 
   tar_target(pacm_deployments, {
     deployments <- pacm_data$deployments |> 
-      select(
+      transmute(
         organization_code,
         id = deployment_id,
         deployment_code,
@@ -352,12 +353,16 @@ targets_pacm <- list(
         instrument_type,
         sampling_rate_hz,
         data_poc,
+        recording_device_lost = coalesce(recording_device_lost, FALSE),
       ) |> 
       mutate(
         start = as_date(monitoring_start_datetime),
         end = as_date(monitoring_end_datetime)
       ) |> 
       filter(!is.na(start))
+    
+    active_deployments <- deployments |> 
+      filter(is.na(end), !recording_device_lost)
     
     detections <- deployments |>
       transmute(id, start, end = coalesce(end, start)) |> 
