@@ -85,8 +85,13 @@ const detectionTableFromValues = (filteredValues, allValues) => {
 }
 
 const uniqueStrings = (deployments, key) => {
-  const values = [...new Set(deployments.map(d => d[key]).filter(Boolean))]
+  const values = [...new Set(deployments.map(d => d[key]))]
   return values.length > 0 ? values.join(', ') : 'N/A'
+}
+
+export const uniqueStringsArray = (deployments, key) => {
+  const values = [...new Set(deployments.map(d => d[key].split(',').map(v => v.trim())).flat())]
+  return values.length > 0 ? values.join(',') : ['N/A']
 }
 
 const numericRange = (deployments, key, suffix) => {
@@ -120,7 +125,7 @@ const siteHtml = (d, siteDeployments, deploymentsOnly) => {
     ['Site', `${orNa(d.site)}`],
     ['Project', uniqueStrings(deps, 'project')],
     ['Platform Type', uniqueStrings(deps, 'platform_type')],
-    ['Recorder Type', uniqueStrings(deps, 'instrument_type')],
+    ['Recorder Type', uniqueStringsArray(deps, 'instrument_type')],
     ['Sampling Rate', uniqueStrings(deps, 'sampling_rate_hz') + ' Hz'],
     ['Recorder Depth', numericRange(deps, 'recorder_depth_meters', 'm')],
     ['Water Depth', numericRange(deps, 'water_depth_meters', 'm')],

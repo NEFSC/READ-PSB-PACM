@@ -134,7 +134,7 @@ export default new Vuex.Store({
       if (state.selectedDeployments.length > 0) {
         // clear existing selection if it includes clicked deployment
         const selectedIds = state.selectedDeployments.map(d => d.id)
-        if (selectedIds.some(id => ids.includes(id))) {
+        if (selectedIds.every(id => ids.includes(id))) {
           return commit('SET_SELECTED_DEPLOYMENTS', [])
         }
       }
@@ -151,9 +151,7 @@ export default new Vuex.Store({
     reloadSpeciesFilter ({ state }, selectedSpecies) {
       console.log('[reloadSpeciesFilter] called', { selectedSpecies })
       const raw = getRawDetections()
-      const filtered = selectedSpecies && selectedSpecies.length > 0
-        ? raw.filter(d => selectedSpecies.includes(d.species))
-        : raw
+      const filtered = raw.filter(d => selectedSpecies.includes(d.species))
       const aggregated = aggregateByDate(filtered)
       aggregated.forEach((d, i) => { d.$index = i })
       console.log('[reloadSpeciesFilter] aggregated', aggregated[0])
@@ -173,7 +171,6 @@ export default new Vuex.Store({
       state.deployments.forEach(d => {
         d.trackDetections = trackNest.get(d.id) || []
       })
-      window.deployments = state.deployments
 
       setData(aggregated)
     }

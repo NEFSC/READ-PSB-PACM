@@ -10,6 +10,8 @@
     multiple
     chips
     deletable-chips
+    clearable
+    @click:clear="onSelect"
   ></v-select>
 </template>
 
@@ -32,8 +34,7 @@ export default {
   },
   watch: {
     selected () {
-      this.$store.dispatch('reloadSpeciesFilter', this.selected)
-        .then(() => dc.redrawAll())
+      this.onSelect()
     },
     theme () {
       this.reset()
@@ -43,6 +44,11 @@ export default {
     this.reset()
   },
   methods: {
+    onSelect () {
+      console.log('[onSelect] called', { selected: this.selected })
+      this.$store.dispatch('reloadSpeciesFilter', this.selected)
+        .then(() => dc.redrawAll())
+    },
     reset () {
       const raw = getRawDetections()
       const speciesCodes = new Set(raw.map(d => d.species))

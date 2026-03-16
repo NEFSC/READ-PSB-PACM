@@ -10,6 +10,8 @@
     multiple
     chips
     deletable-chips
+    clearable
+    @click:clear="setFilter"
   ></v-select>
 </template>
 

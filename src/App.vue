@@ -355,9 +355,8 @@ export default {
     }
   },
   methods: {
-    ...mapActions(['setTheme', 'selectDeployments', 'fetchReferences']),
+    ...mapActions(['setTheme', 'selectDeployments']),
     init () {
-      this.fetchReferences()
       if (this.$route.params.id) {
         this.dialogs.about = false
         const theme = themes.find(d => d.id === this.$route.params.id)
@@ -390,6 +389,7 @@ export default {
     },
     onFiltered () {
       // unselect deployments that no longer have any filtered detections
+      console.log('[onFiltered] selectedDeployments:', this.selectedDeployments)
       if (this.selectedDeployments.length > 0) {
         const deploymentCounts = this.selectedDeployments.map(d => ({ id: d.id, ...deploymentMap.get(d.id) }))
         const newSelection = deploymentCounts.filter(d => d.total > 0)

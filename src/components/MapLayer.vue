@@ -57,8 +57,7 @@ export default {
     })
     this.container.append('g').classed('tracks', true)
     this.container.append('g').classed('points', true)
-    this.container.append('g').classed('sites', true)
-    this.container.append('g').classed('deployments', true)
+    this.container.append('g').classed('stationary', true)
 
     this.tip = d3Tip()
       .attr('class', 'd3-tip map')
@@ -70,6 +69,7 @@ export default {
 
     evt.$on('map:zoom', this.draw)
     evt.$on('xf:dataAdded', this.draw)
+    evt.$on('xf:dataRemoved', this.draw)
     evt.$on('xf:filtered', this.render)
     console.log('[MapLayer.mounted] event listeners registered')
   },
@@ -79,6 +79,7 @@ export default {
 
     evt.$off('map:zoom', this.draw)
     evt.$off('xf:dataAdded', this.draw)
+    evt.$off('xf:dataRemoved', this.draw)
     evt.$off('xf:filtered', this.render)
   },
   methods: {
@@ -91,10 +92,10 @@ export default {
       return this.selectedDeployments.some(dep => dep.site_id === d.site_id)
     },
     updateSelected () {
-      this.container.select('g.sites')
+      this.container.select('g.stationary')
         .selectAll('circle.site')
         .classed('selected', d => this.isSiteSelected(d))
-      this.container.select('g.deployments')
+      this.container.select('g.stationary')
         .selectAll('circle.deployment')
         .classed('selected', d => this.isSelected(d))
       this.container.select('g.points')
@@ -147,7 +148,7 @@ export default {
     drawSites () {
       if (!this.deployments) return
 
-      const g = this.container.select('g.sites')
+      const g = this.container.select('g.stationary')
 
       const data = this.stationarySites
         .filter(d => siteMap.has(d.site_id))
@@ -174,7 +175,7 @@ export default {
     drawStationaryDeployments () {
       if (!this.deployments) return
 
-      const g = this.container.select('g.deployments')
+      const g = this.container.select('g.stationary')
 
       const data = this.stationaryDeployments
         .filter(d => deploymentMap.has(d.id))
@@ -199,6 +200,7 @@ export default {
         .on('mouseout', (event, d) => this.hideTip())
     },
     getTrackDetections () {
+      if (this.theme.deploymentsOnly) return []
       return this.deployments
         .filter(d => d.deployment_type === 'MOBILE')
         .map(d => d.trackDetections)
@@ -338,14 +340,21 @@ export default {
       if (!this.container) return
       console.log('[MapLayer.render] called')
       this.renderCircles(
-        this.container.selectAll('g.sites circle.site'),
+        this.container.selectAll('g.stationary circle.site'),
         d => siteMap.get(d.site_id)
       )
 
       this.renderCircles(
-        this.container.selectAll('g.deployments circle.deployment'),
+        this.container.selectAll('g.stationary circle.deployment'),
         d => deploymentMap.get(d.id)
       )
+
+      this.container.selectAll('g.stationary circle')
+        .filter(function (d) {
+          const value = d.site_id ? siteMap.get(d.site_id) : deploymentMap.get(d.id)
+          return value && value.y > 0
+        })
+        .raise()
 
       this.container.selectAll('g.tracks path.track')
         .style('display', d => {
@@ -382,12 +391,12 @@ export default {
     findNearbyDeployments (d) {
       const distanceFrom = (x, y) => Math.sqrt(Math.pow(d.$x - x, 2) + Math.pow(d.$y - y, 2))
       const maxDistance = 10
-      const sites = this.container.select('g.sites').selectAll('circle.site')
+      const sites = this.container.select('g.stationary').selectAll('circle.site')
         .filter((d) => {
           return distanceFrom(d.$x, d.$y) < maxDistance && siteMap.has(d.site_id) && siteMap.get(d.site_id).total > 0
         })
         .data()
-      const standaloneDeployments = this.container.select('g.deployments').selectAll('circle.deployment')
+      const standaloneDeployments = this.container.select('g.stationary').selectAll('circle.deployment')
         .filter((d) => {
           return distanceFrom(d.$x, d.$y) < maxDistance && deploymentMap.has(d.id) && deploymentMap.get(d.id).total > 0
         })

@@ -199,6 +199,7 @@
 import { mapActions, mapGetters } from 'vuex'
 import moment from 'moment'
 
+import evt from '@/lib/events'
 import { xf } from '@/lib/crossfilter'
 import { detectionTypes, detectionTypesMap } from '@/lib/constants'
 import { monitoringPeriodLabels } from '@/lib/tip'
@@ -278,6 +279,10 @@ export default {
         const vals = [...new Set(deps.map(d => d[key]).filter(Boolean))]
         return vals.length > 0 ? vals.join(', ') : 'N/A'
       }
+      const uniqueArray = (key) => {
+        const vals = [...new Set(deps.map(d => d[key].split(',').map(v => v.trim())).flat())]
+        return vals.length > 0 ? vals.join(', ') : 'N/A'
+      }
       const range = (key, suffix) => {
         const vals = deps.map(d => +d[key]).filter(v => isFinite(v))
         if (vals.length === 0) return 'N/A'
@@ -292,7 +297,7 @@ export default {
         site: deps[0].site || deps[0].site_id || 'N/A',
         project: unique('project'),
         platformType: unique('platform_type'),
-        instrumentType: unique('instrument_type'),
+        instrumentType: uniqueArray('instrument_type'),
         samplingRate: unique('sampling_rate_hz'),
         detectionMethod: unique('detection_method'),
         qcData: unique('qc_data'),
@@ -334,6 +339,15 @@ export default {
   },
   mounted () {
     this.updateChart()
+
+    evt.$on('xf:dataAdded', this.updateChart)
+    evt.$on('xf:dataRemoved', this.updateChart)
+    evt.$on('xf:filtered', this.updateChart)
+  },
+  beforeDestroy () {
+    evt.$off('xf:dataAdded', this.updateChart)
+    evt.$off('xf:dataRemoved', this.updateChart)
+    evt.$off('xf:filtered', this.updateChart)
   },
   methods: {
     ...mapActions(['selectDeployments']),

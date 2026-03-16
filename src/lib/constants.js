@@ -52,10 +52,11 @@ export const themes = [
     id: 'kogia',
     label: 'Kogia Species'
   },
-  {
-    id: 'harbor',
-    label: 'Harbor Porpoise'
-  },
+  // FPOD only
+  // {
+  //   id: 'harbor',
+  //   label: 'Harbor Porpoise'
+  // },
   {
     id: 'nbhf',
     label: 'Unidentified High-Frequency Species'
