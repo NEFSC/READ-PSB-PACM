@@ -88,6 +88,11 @@
       <h2 class="text-h5 mb-2">Latest Updates</h2>
 
       <div class="text-subheading font-weight-bold text--secondary">
+        v1.2.1 | Apr 7, 2026
+      </div>
+      <p>Added Dynamic Management Platform filter to Advanced Filters. Added Bryde's Whale, Bottlenose Dolphin, Harbor Porpoise, and Killer Whale to species list. Added new NWFSC datasets and updated real-time detection data from NEFSC.</p>
+
+      <div class="text-subheading font-weight-bold text--secondary">
         v1.2.0 | Mar 16, 2026
       </div>
       <p>Major dataset updates from PARS submissions and Makara database. Deployments at the same site are now aggregated into a single site-level result. Seasonal filter now trims partial seasons when Start DOY > End DOY. Multi-species datasets (e.g., Beaked Whales) now aggregate detections across species by date to avoid double counting.</p>
