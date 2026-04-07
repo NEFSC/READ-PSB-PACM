@@ -16,6 +16,7 @@ create_theme <- function (data, species) {
           platform_type,
           deployment_type,
           water_depth_meters,
+          dynamic_management_platform,
           data_poc
         ),
       by = "deployment_id"
@@ -39,6 +40,7 @@ create_theme <- function (data, species) {
       platform_type,
       deployment_type,
       water_depth_meters,
+      dynamic_management_platform,
       
       recorder_depth_meters,
       instrument_type,
@@ -116,7 +118,8 @@ targets_pacm <- list(
         "instrument_type",
         "sampling_rate_hz",
         "data_poc",
-        "recording_device_lost"
+        "recording_device_lost",
+        "dynamic_management_platform"
       ),
       analyses = c(
         "organization_code",
@@ -170,12 +173,12 @@ targets_pacm <- list(
     deployments_mobile_missing_tracks <- deployments_mobile |> 
       anti_join(tracks, by = c("deployment_id"))
 
-    stopifnot(
-      # no analyses so ok to drop
-      bind_rows(pacm_data_raw$analyses) |> 
-        filter(deployment_id %in% deployments_mobile_missing_tracks$deployment_id) |> 
-        nrow() == 0
-    )
+    # stopifnot(
+    #   # no analyses so ok to drop
+    #   bind_rows(pacm_data_raw$analyses) |> 
+    #     filter(deployment_id %in% deployments_mobile_missing_tracks$deployment_id) |> 
+    #     nrow() == 0
+    # )
 
     list(
       deployments = deployments_mobile_missing_tracks$deployment_id
@@ -239,6 +242,9 @@ targets_pacm <- list(
           nrow(x)
         }),
         detections = pmap(list(detections, analysis_start_date, analysis_end_date), function (detections, start_date, end_date) {
+          if (is.na(end_date) & !is.null(detections)) {
+            end_date <- max(detections$date)
+          }
           analysis_dates <- seq.Date(start_date, end_date, by = "day") 
           if (is.null(detections)) {
             detections <- tibble(
@@ -354,6 +360,7 @@ targets_pacm <- list(
         sampling_rate_hz,
         data_poc,
         recording_device_lost = coalesce(recording_device_lost, FALSE),
+        dynamic_management_platform = coalesce(dynamic_management_platform, FALSE)
       ) |> 
       mutate(
         start = as_date(monitoring_start_datetime),

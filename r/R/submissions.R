@@ -170,7 +170,8 @@ targets_subs <- list(
         recorder_depth_meters = as.character(recorder_depth_meters),
         instrument_type,
         sampling_rate_hz = format_number(sampling_rate_hz),
-        data_poc = if_else(is.na(data_poc_name), NA_character_, glue("{data_poc_name} <{data_poc_email}>"))
+        data_poc = if_else(is.na(data_poc_name), NA_character_, glue("{data_poc_name} <{data_poc_email}>")),
+        dynamic_management_platform = NA
       )
     
     stopifnot(

@@ -35,18 +35,13 @@
         deletable-chips
         class="mt-4"
       ></v-select>
-      <!-- <v-select
+      <v-checkbox
         outlined
-        :items="samplingRate.options"
-        v-model="samplingRate.selected"
-        label="Select Recorder Sampling Rate"
+        v-model="dynamicManagementPlatform.selected"
+        label="Dynamic Management Platform Only"
         hide-details
-        clearable
-        multiple
-        chips
-        deletable-chips
         class="mt-4"
-      ></v-select> -->
+      ></v-checkbox>
     </v-card-text>
     <v-card-actions>
       <v-btn color="primary" text @click="clearAll" aria-label="reset all">Reset All</v-btn>
@@ -75,12 +70,10 @@ export default {
         dim: null,
         options: [],
         selected: null
+      },
+      dynamicManagementPlatform: {
+        selected: false
       }
-      // samplingRate: {
-      //   dim: null,
-      //   options: [],
-      //   selected: null
-      // }
     }
   },
   computed: {
@@ -93,9 +86,9 @@ export default {
     'instrumentType.selected' () {
       this.setInstrumentTypeFilter()
     },
-    // 'samplingRate.selected' () {
-    //   this.setSamplingRateFilter()
-    // },
+    'dynamicManagementPlatform.selected' () {
+      this.setDynamicManagementPlatformFilter()
+    },
     theme () {
       this.reset()
     }
@@ -103,19 +96,19 @@ export default {
   mounted () {
     this.affiliation.dim = xf.dimension(d => d.organization_code || 'N/A')
     this.instrumentType.dim = xf.dimension(d => d.instrument_type || 'N/A')
-    // this.samplingRate.dim = xf.dimension(d => d.sampling_rate || 'N/A')
+    this.dynamicManagementPlatform.dim = xf.dimension(d => d.dynamic_management_platform ? 'T' : 'F')
     this.reset()
   },
   beforeDestroy () {
     this.affiliation.dim.dispose()
     this.instrumentType.dim.dispose()
-    // this.samplingRate.dim.dispose()
+    this.dynamicManagementPlatform.dim.dispose()
   },
   methods: {
     clearAll () {
       this.affiliation.selected = []
       this.instrumentType.selected = []
-      // this.samplingRate.selected = []
+      this.dynamicManagementPlatform.selected = false
     },
     reset () {
       const detections = xf.all()
@@ -124,11 +117,6 @@ export default {
 
       const instrumentTypes = new Set(detections.map(d => d.instrument_type || 'N/A'))
       this.instrumentType.options = [...instrumentTypes].sort()
-
-      // const samplingRates = new Set(detections.map(d => d.sampling_rate || 'N/A'))
-      // const samplingRateLevels = ['Low (1-4 kHz)', 'Medium (5-96 kHz)', 'High (97+ kHz)', 'Unknown']
-      //   .filter(d => samplingRates.has(d))
-      // this.samplingRate.options = samplingRateLevels
 
       this.clearAll()
     },
@@ -147,15 +135,15 @@ export default {
         this.instrumentType.dim.filterAll()
       }
       dc.redrawAll()
+    },
+    setDynamicManagementPlatformFilter () {
+      if (this.dynamicManagementPlatform.selected) {
+        this.dynamicManagementPlatform.dim.filter(d => !d || d === 'T')
+      } else {
+        this.dynamicManagementPlatform.dim.filterAll()
+      }
+      dc.redrawAll()
     }
-    // setSamplingRateFilter () {
-    //   if (this.samplingRate.selected && this.samplingRate.selected.length > 0) {
-    //     this.samplingRate.dim.filter(d => !d || this.samplingRate.selected.includes(d))
-    //   } else {
-    //     this.samplingRate.dim.filterAll()
-    //   }
-    //   dc.redrawAll()
-    // }
   }
 }
 </script>

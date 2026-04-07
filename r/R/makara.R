@@ -341,6 +341,7 @@ targets_makara <- list(
         platform_type = platform_type_code,
         deployment_type = if_else(platform_type_mobile, "MOBILE", "STATIONARY"),
         water_depth_meters = deployment_water_depth_m,
+        dynamic_management_platform = dynamic_management_platform,
 
         # recording
         recorder_depth_meters = map_chr(recordings, ~ format_range(.x$recorder_depth_meters)),
@@ -736,23 +737,23 @@ targets_makara <- list(
       select(all_of(pacm_names$tracks))
   }),
 
-  tar_target(makara_analyses_pacm_realtime_file, "data-raw/realtime/realtime-analyses.rds", format = "file"),
-  tar_target(makara_analyses_pacm_realtime, {
-    read_rds(makara_analyses_pacm_realtime_file) |> 
-      mutate(
-        detections = map(detections, function (detections) {
-          if (is.null(detections)) return(NULL)
-          detections |> 
-            mutate(
-              locations = map(locations, function (locations) {
-                if (is.null(locations)) return(NULL)
-                locations |> 
-                  filter(!is.na(latitude) & !is.na(longitude))
-              })
-            )
-        })
-      )
-  }),
+  # tar_target(makara_analyses_pacm_realtime_file, "data-raw/realtime/realtime-analyses.rds", format = "file"),
+  # tar_target(makara_analyses_pacm_realtime, {
+  #   read_rds(makara_analyses_pacm_realtime_file) |> 
+  #     mutate(
+  #       detections = map(detections, function (detections) {
+  #         if (is.null(detections)) return(NULL)
+  #         detections |> 
+  #           mutate(
+  #             locations = map(locations, function (locations) {
+  #               if (is.null(locations)) return(NULL)
+  #               locations |> 
+  #                 filter(!is.na(latitude) & !is.na(longitude))
+  #             })
+  #           )
+  #       })
+  #     )
+  # }),
   tar_target(makara_analyses_pacm, {
     x <- makara_analyses |> 
       select(
@@ -797,8 +798,7 @@ targets_makara <- list(
       filter(n_detections == 0)
     
     x |> 
-      select(all_of(pacm_names$analyses)) |> 
-      bind_rows(makara_analyses_pacm_realtime)
+      select(all_of(pacm_names$analyses))
   }),
 
   tar_target(makara_pacm, {

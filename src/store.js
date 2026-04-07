@@ -85,6 +85,7 @@ export default new Vuex.Store({
             d.platform_type = deploymentsMap[d.id].platform_type
             d.organization_code = deploymentsMap[d.id].organization_code || 'UNKNOWN'
             d.instrument_type = deploymentsMap[d.id].instrument_type || 'UNKNOWN'
+            d.dynamic_management_platform = deploymentsMap[d.id].dynamic_management_platform || false
           })
 
           // Store raw detections and aggregate for multi-species themes
