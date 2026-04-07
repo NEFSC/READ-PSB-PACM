@@ -34,6 +34,10 @@ export const themes = [
     label: 'Gray Whale'
   },
   {
+    id: 'brwh',
+    label: 'Bryde\'s Whale'
+  },
+  {
     divider: true
   },
   {
@@ -52,11 +56,15 @@ export const themes = [
     id: 'kogia',
     label: 'Kogia Species'
   },
-  // FPOD only
-  // {
-  //   id: 'harbor',
-  //   label: 'Harbor Porpoise'
-  // },
+  {
+    id: 'kiwh',
+    label: 'Killer Whale',
+    showSpeciesFilter: true
+  },
+  {
+    id: 'hapo',
+    label: 'Harbor Porpoise'
+  },
   {
     id: 'nbhf',
     label: 'Unidentified High-Frequency Species'
@@ -68,6 +76,10 @@ export const themes = [
   {
     id: 'risso',
     label: 'Risso\'s Dolphin'
+  },
+  {
+    id: 'bodo',
+    label: 'Bottlenose Dolphin'
   },
   {
     id: 'pwdo',

@@ -233,7 +233,7 @@ targets_pacm <- list(
     #   tabyl(detection_method)
     
     # fill analyses with non-detect on missing days
-    analyses_fill <- analyses_data |> 
+    analyses_fill <- analyses_data |>
       mutate(
         n_detections = map_int(detections, function (x) {
           if (is.null(x)) {
@@ -455,7 +455,12 @@ targets_pacm <- list(
       pwdo = "PWDO",
       risso = "GRAM",
       sei = "SEWH",
-      sperm = "SPWH"
+      sperm = "SPWH",
+      hapo = "HAPO",
+      unid = "UNWH",
+      bodo = "BODO",
+      brwh = "BRWH",
+      kiwh = c("KIWH", "KIWHTR", "KIWHOF", "KIWHRE")
     )
 
     # confirm all codes in sound_sources table
@@ -558,6 +563,23 @@ targets_pacm <- list(
       )
     unlist(x$files)
   }, format = "file"),
+
+  tar_target(pacm_analyses_no_theme, {
+    # list analyses without matching theme
+    pacm_data$analyses |> 
+      anti_join(
+        pacm_themes_species |>
+          enframe(name = "theme", value = "species") |>
+          unnest_longer(species),
+        by = "species"
+      ) |> 
+      nest(analyses = -species) |> 
+      left_join(
+        makara_db$sound_sources |> 
+          select(code, species_name = name),
+        by = c("species" = "code")
+      )
+  }),
 
   tar_target(pacm_ref, {
     list(
