@@ -1,16 +1,19 @@
-import Vue from 'vue'
-import VueRouter from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router'
 
-Vue.use(VueRouter)
+const RoutePlaceholder = {
+  render: () => null
+}
 
 const routes = [
   {
     name: 'home',
-    path: '/:id'
+    path: '/:id?',
+    component: RoutePlaceholder
   }
 ]
 
-const router = new VueRouter({
+const router = createRouter({
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes
 })
 

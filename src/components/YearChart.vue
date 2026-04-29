@@ -23,10 +23,10 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['theme'])
+    ...mapGetters(['activeTheme'])
   },
   watch: {
-    theme () {
+    activeTheme () {
       this.updateChart()
     }
   },
@@ -55,7 +55,7 @@ export default {
         const header = `Year: ${d.data.key}<br><br>`
 
         let body
-        if (this.theme.deploymentsOnly) {
+        if (this.activeTheme.deploymentsOnly) {
           body = `
             ${pad(12, detectionTypesMap.get('d').label, '&nbsp;')}: ${pad(6, d.data.value.d.toLocaleString(), '&nbsp;')}<br>
           `
@@ -85,7 +85,7 @@ export default {
       .colors(d3.scaleOrdinal().range(detectionTypes.map(d => d.color)))
       .elasticY(true)
       .brushOn(false)
-      .yAxisLabel(this.yAxisLabel)
+      .yAxisLabel(this.axisLabel)
       .gap(0)
       .barPadding(0.1)
       .renderTitle(false)
@@ -114,7 +114,7 @@ export default {
 
     this.updateChart()
   },
-  beforeDestroy () {
+  beforeUnmount () {
     d3.selectAll('.d3-tip.year-chart').remove()
   },
   methods: {

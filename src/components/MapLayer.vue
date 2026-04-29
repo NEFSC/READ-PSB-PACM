@@ -12,7 +12,7 @@ import { tipOffset, tipHtml } from '@/lib/tip'
 export default {
   name: 'MapLayer',
   computed: {
-    ...mapGetters(['theme', 'sites', 'tracks', 'deployments', 'selectedDeployments', 'normalizeEffort', 'useSizeScale']),
+    ...mapGetters(['activeTheme', 'isLoading', 'sites', 'tracks', 'deployments', 'selectedDeployments', 'normalizeEffort', 'useSizeScale']),
     map () {
       return this.$parent.map
     },
@@ -35,7 +35,7 @@ export default {
     }
   },
   watch: {
-    theme () {
+    activeTheme () {
       this.draw()
       this.setBounds()
     },
@@ -73,7 +73,7 @@ export default {
     evt.$on('xf:filtered', this.render)
     console.log('[MapLayer.mounted] event listeners registered')
   },
-  beforeDestroy () {
+  beforeUnmount () {
     this.container.selectAll('g').remove()
     d3.selectAll('.d3-tip.map').remove()
 
@@ -107,11 +107,11 @@ export default {
     },
     setBounds () {
       console.log('[MapLayer.setBounds] called', {
-        loading: this.loading,
+        isLoading: this.isLoading,
         deployments: this.deployments,
         tracks: this.tracks
       })
-      if (this.loading) return
+      if (this.isLoading) return
       if (!this.deployments) return
       const deployments = this.deployments
         .filter(d => d.deployment_type === 'STATIONARY')
@@ -131,13 +131,13 @@ export default {
     },
     draw () {
       console.log('[MapLayer.draw] called', {
-        loading: this.loading,
+        isLoading: this.isLoading,
         deployments: this.deployments?.length,
         sites: this.sites?.length,
         container: !!this.container,
         map: !!this.map
       })
-      if (this.loading) return
+      if (this.isLoading) return
       this.drawTracks()
       this.drawSites()
       this.drawStationaryDeployments()
@@ -200,7 +200,7 @@ export default {
         .on('mouseout', (event, d) => this.hideTip())
     },
     getTrackDetections () {
-      if (this.theme.deploymentsOnly) return []
+      if (this.activeTheme.deploymentsOnly) return []
       return this.deployments
         .filter(d => d.deployment_type === 'MOBILE')
         .map(d => d.trackDetections)
@@ -294,11 +294,11 @@ export default {
           const mapValue = mapLookup(d)
           return (mapValue && mapValue.total === 0) ? 'none' : 'inline'
         })
-        .style('opacity', d => this.theme.deploymentsOnly ? 0.9 : null)
+        .style('opacity', d => this.activeTheme.deploymentsOnly ? 0.9 : null)
         .style('fill', (d) => {
           const value = mapLookup(d)
 
-          if (this.theme.deploymentsOnly) return 'orange'
+          if (this.activeTheme.deploymentsOnly) return 'orange'
 
           if (!value) return 'gray'
 
@@ -314,7 +314,7 @@ export default {
           const value = mapLookup(d)
           const total = value?.total ?? 0
 
-          if (this.theme.deploymentsOnly) {
+          if (this.activeTheme.deploymentsOnly) {
             return this.useSizeScale ? sizeScale(total) : 7
           } else if (this.normalizeEffort) {
             if (!value) return 0
@@ -437,7 +437,7 @@ export default {
         nNearby = nearbyDeployments.points.length - 1
       }
 
-      el.html(tipHtml(d, deployment, nNearby, type, siteDeployments, this.theme.deploymentsOnly))
+      el.html(tipHtml(d, deployment, nNearby, type, siteDeployments, this.activeTheme.deploymentsOnly))
 
       const offset = tipOffset(event, el)
 
@@ -544,17 +544,4 @@ export default {
   stroke-width: 3px;
 }
 
-.d3-tip {
-  line-height: 1;
-  padding: 10px;
-  background: rgba(255, 255, 255, 0.75);
-  color: #000;
-  border-radius: 4px;
-  pointer-events: none;
-  font-family: 'Roboto Mono', monospace;
-  font-weight: 400;
-  font-size: 14px;
-  z-index: 1000;
-  max-width: 600px;
-}
 </style>

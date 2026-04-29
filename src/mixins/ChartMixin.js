@@ -3,18 +3,18 @@ import * as dc from 'dc'
 import evt from '@/lib/events'
 
 export default {
-  props: ['yAxisLabel'],
+  props: ['axisLabel'],
   watch: {
-    yAxisLabel (val) {
+    axisLabel (val) {
       if (!this.chart) return
       this.chart
-        .yAxisLabel(this.yAxisLabel)
+        .yAxisLabel(this.axisLabel)
     }
   },
   mounted () {
     evt.$on('reset:filters', this.reset)
   },
-  beforeDestroy () {
+  beforeUnmount () {
     if (!this.chart) return
     this.chart.dimension().dispose()
     dc.chartRegistry.deregister(this.chart)

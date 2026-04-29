@@ -54,7 +54,7 @@ export default {
     this.map.on('draw:edited', this.onEdit)
     this.map.on('draw:deleted', this.onDelete)
   },
-  beforeDestroy () {
+  beforeUnmount () {
     this.dim && this.dim.dispose()
 
     this.reset()

@@ -1,4 +1,3 @@
-import Vue from 'vue'
 import HighchartsVue from 'highcharts-vue'
 import Highcharts from 'highcharts'
 import more from 'highcharts/highcharts-more'
@@ -11,4 +10,4 @@ Highcharts.setOptions({
   }
 })
 
-Vue.use(HighchartsVue)
+export default HighchartsVue

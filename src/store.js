@@ -1,5 +1,4 @@
-import Vue from 'vue'
-import Vuex from 'vuex'
+import { createStore } from 'vuex'
 // import moment from 'moment'
 import { nest } from 'd3-collection'
 // import { timeDay } from 'd3'
@@ -7,9 +6,7 @@ import { nest } from 'd3-collection'
 import { fetchData } from '@/lib/fetch'
 import { setData, setRawDetections, getRawDetections, aggregateByDate } from '@/lib/crossfilter'
 
-Vue.use(Vuex)
-
-export default new Vuex.Store({
+export default createStore({
   state: {
     loading: false,
     loadingFailed: false,
@@ -22,9 +19,9 @@ export default new Vuex.Store({
     useSizeScale: true
   },
   getters: {
-    loading: state => state.loading,
+    isLoading: state => state.loading,
     loadingFailed: state => state.loadingFailed,
-    theme: state => state.theme,
+    activeTheme: state => state.theme,
     themeId: state => state.theme ? state.theme.id : null,
     deployments: state => state.deployments,
     sites: state => state.sites,
@@ -98,12 +95,12 @@ export default new Vuex.Store({
           const trackDetections = processedDetections.map(d => {
             return d.locations
               ? d.locations.map(l => ({
-                $index: d.$index,
-                id: d.id,
-                species: d.species,
-                presence: d.presence,
-                ...l
-              }))
+                  $index: d.$index,
+                  id: d.id,
+                  species: d.species,
+                  presence: d.presence,
+                  ...l
+                }))
               : []
           }).flat()
 
@@ -160,11 +157,11 @@ export default new Vuex.Store({
       const trackDetections = aggregated.map(d =>
         d.locations
           ? d.locations.map(l => ({
-            $index: d.$index,
-            id: d.id,
-            presence: d.presence,
-            ...l
-          }))
+              $index: d.$index,
+              id: d.id,
+              presence: d.presence,
+              ...l
+            }))
           : []
       ).flat()
       console.log('[reloadSpeciesFilter] trackDetections', trackDetections[0])

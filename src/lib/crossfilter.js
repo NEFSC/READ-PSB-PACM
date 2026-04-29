@@ -1,5 +1,5 @@
 import crossfilter from 'crossfilter2'
-import { debounce } from 'debounce'
+import debounce from 'debounce'
 import evt from '@/lib/events'
 
 export const xf = crossfilter()

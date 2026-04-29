@@ -1,19 +1,19 @@
 <template>
   <v-card role="main" aria-label="advanced filters dialog">
-    <v-card-title primary-title>
-      <h1 class="headline">Advanced Filters</h1>
+    <v-card-title class="d-flex align-center">
+      <h1 class="text-h5">Advanced Filters</h1>
       <v-spacer></v-spacer>
-      <v-tooltip open-delay="500" bottom>
-        <template v-slot:activator="{ on }">
-          <v-btn icon small @click.native="$emit('close')" v-on="on" aria-label="close"><v-icon>mdi-close</v-icon></v-btn>
+      <v-tooltip open-delay="500" location="bottom">
+        <template v-slot:activator="{ props }">
+          <v-btn icon="mdi-close" variant="flat" size="small" @click="$emit('close')" v-bind="props" aria-label="close"></v-btn>
         </template>
         <span>Close</span>
       </v-tooltip>
     </v-card-title>
 
-    <v-card-text class="body-2 grey--text text--darken-4 pt-4">
+    <v-card-text class="text-body-2 text-grey-darken-4 pt-4">
       <v-select
-        outlined
+        variant="outlined"
         :items="affiliation.options"
         v-model="affiliation.selected"
         label="Select Data Affiliation"
@@ -21,10 +21,10 @@
         clearable
         multiple
         chips
-        deletable-chips
+        closable-chips
       ></v-select>
       <v-select
-        outlined
+        variant="outlined"
         :items="instrumentType.options"
         v-model="instrumentType.selected"
         label="Select Instrument Type"
@@ -32,11 +32,10 @@
         clearable
         multiple
         chips
-        deletable-chips
+        closable-chips
         class="mt-4"
       ></v-select>
       <v-checkbox
-        outlined
         v-model="dynamicManagementPlatform.selected"
         label="Dynamic Management Platform Only"
         hide-details
@@ -44,9 +43,9 @@
       ></v-checkbox>
     </v-card-text>
     <v-card-actions>
-      <v-btn color="primary" text @click="clearAll" aria-label="reset all">Reset All</v-btn>
+      <v-btn color="primary" variant="text" @click="clearAll" aria-label="reset all">Reset All</v-btn>
       <v-spacer></v-spacer>
-      <v-btn color="primary" text @click.native="$emit('close')" aria-label="close">Close</v-btn>
+      <v-btn color="primary" variant="text" @click="$emit('close')" aria-label="close">Close</v-btn>
     </v-card-actions>
   </v-card>
 </template>
@@ -77,7 +76,9 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['theme'])
+    ...mapGetters({
+      activeTheme: 'activeTheme'
+    })
   },
   watch: {
     'affiliation.selected' () {
@@ -89,7 +90,7 @@ export default {
     'dynamicManagementPlatform.selected' () {
       this.setDynamicManagementPlatformFilter()
     },
-    theme () {
+    activeTheme () {
       this.reset()
     }
   },
@@ -99,7 +100,7 @@ export default {
     this.dynamicManagementPlatform.dim = xf.dimension(d => d.dynamic_management_platform ? 'T' : 'F')
     this.reset()
   },
-  beforeDestroy () {
+  beforeUnmount () {
     this.affiliation.dim.dispose()
     this.instrumentType.dim.dispose()
     this.dynamicManagementPlatform.dim.dispose()

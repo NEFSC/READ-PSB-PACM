@@ -140,14 +140,14 @@ npm install
 To work on this application, run the following command to start a local development server:
 
 ```
-npm run serve
+npm run dev
 ```
 
-Then navigate to http://127.0.0.1:8080 in your browser to view the application.
+Then navigate to the local URL printed by Vite, usually http://localhost:5173, in your browser to view the application.
 
 ### Build
 
-To deploy this application to a production web server, first verify that the public path to this application is correctly set using the `publicPath` option in the `vue.config.js` file. For example, if the production application will be hosted using the URL `https://noaa.gov/apps/pacm`, then `publicPath` must be set to `/apps/pacm`. The `publicPath` option is currently set to an empty string (`''`), which means that relative paths will be used in `index.html` for fetching the stylesheets and javascript files. Relative paths are being used so that the code can be deployed to both the development and production environments, which have different base URLs (`/pacm_dev` vs `/pacm`).
+To deploy this application to a production web server, first verify that the production base path is correctly set using the `base` option in the `vite.config.mjs` file. For example, if the production application will be hosted using the URL `https://noaa.gov/apps/pacm`, then `base` must be set to `/apps/pacm/`. The current production base path is `/pacm/`.
 
 Build the application by running:
 

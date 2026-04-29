@@ -1,6 +1,6 @@
 <template>
   <div style="height:100%">
-    <v-overlay :value="loading" style="z-index:10000">
+    <v-overlay :model-value="isLoading" style="z-index:10000">
       <v-progress-circular
         indeterminate
         size="64"
@@ -10,21 +10,21 @@
       ref="map"
       style="width:100%;height:100%"
       :center="[50, -20]"
-      :zoom="$vuetify.breakpoint.mobile ? 2 : 3"
+      :zoom="$vuetify.display.mobile ? 2 : 3"
       :options="{ zoomControl: false }"
       @zoomend="onZoom">
       <l-control-scale position="bottomleft"></l-control-scale>
       <l-control position="topright">
-        <Legend :counts="counts" v-if="theme && !loading"></Legend>
+        <Legend :counts="counts" v-if="activeTheme && !isLoading"></Legend>
       </l-control>
     </l-map>
-    <MapLayer v-if="ready && !loading"></MapLayer>
+    <MapLayer v-if="ready && !isLoading"></MapLayer>
     <MapSelector v-if="ready"></MapSelector>
   </div>
 </template>
 
 <script>
-import { LMap, LControlScale, LControl } from 'vue2-leaflet'
+import { LMap, LControlScale, LControl } from '@vue-leaflet/vue-leaflet'
 import * as d3 from 'd3'
 import L from 'leaflet'
 
@@ -51,7 +51,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['loading', 'theme'])
+    ...mapGetters(['isLoading', 'activeTheme'])
   },
   components: {
     Legend,
@@ -64,7 +64,9 @@ export default {
     LControl
   },
   async mounted () {
-    this.map = this.$refs.map.mapObject
+    this.map = this.$refs.map.leafletObject
+
+    if (!this.map) return
 
     this.zoomMinControl = new ZoomMin({ minBounds: this.map.getBounds() })
     this.map.addControl(this.zoomMinControl)
@@ -103,7 +105,7 @@ export default {
 
     evt.$on('map:setBounds', this.setBounds)
   },
-  beforeDestroy () {
+  beforeUnmount () {
     evt.$off('map:setBounds', this.setBounds)
   },
   methods: {
@@ -211,7 +213,7 @@ export default {
     },
     setBounds (bounds) {
       this.map.invalidateSize()
-      const latLngBounds = new L.latLngBounds([ // eslint-disable-line
+      const latLngBounds = new L.latLngBounds([
         [bounds[0][1], bounds[0][0]],
         [bounds[1][1], bounds[1][0]]
       ])

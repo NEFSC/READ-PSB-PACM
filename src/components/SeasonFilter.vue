@@ -1,67 +1,66 @@
 <template>
   <div class="pacm-season-filter">
-    <v-tooltip open-delay="500" right>
-      <template v-slot:activator="{ on }">
-        <v-btn
-          icon
-          x-small
-          class="mt-1 float-right"
-          color="grey"
-          @click="reset"
-          v-on="on"
-          aria-label="reset"
-        >
-          <v-icon>mdi-sync</v-icon>
-        </v-btn>
-      </template>
-      <span>Reset</span>
-    </v-tooltip>
+    <div class="d-flex align-center justify-space-between">
+      <div class="text-subtitle-1 font-weight-medium">
+        Season:
+        <v-menu
+          v-model="start.show"
+          :close-on-content-click="false"
+          :offset="[40, 0]"
+          transition="scale-transition"
+          min-width="290px">
+          <template v-slot:activator="{ props }">
+            <span class="pacm-filter-value" v-bind="props">{{ dayLabel(start.jday) }}</span>
+          </template>
+          <v-date-picker
+            v-model="start.date"
+            @update:model-value="start.show = false">
+            <template>
+              <div class="text-center" style="width:100%">
+                Select a start month and day<br>(year does not matter)
+              </div>
+            </template>
+          </v-date-picker>
+        </v-menu>
+        to
+        <v-menu
+          v-model="end.show"
+          :close-on-content-click="false"
+          :offset="[40, 0]"
+          transition="scale-transition"
+          min-width="290px">
+          <template v-slot:activator="{ props }">
+            <span class="pacm-filter-value" v-bind="props">{{ dayLabel(end.jday) }}</span>
+          </template>
+          <v-date-picker
+            v-model="end.date"
+            @update:model-value="end.show = false">
+            <template>
+              <div class="text-center" style="width:100%">
+                Select a end month and day<br>(year does not matter)
+              </div>
+            </template>
+          </v-date-picker>
+        </v-menu>
+      </div>
+      <v-tooltip open-delay="500" location="right">
+        <template v-slot:activator="{ props }">
+          <v-btn
+            icon="mdi-sync"
+            variant="text"
+            size="small"
+            color="grey"
+            @click="reset"
+            v-bind="props"
+            aria-label="reset"
+          >
+          </v-btn>
+        </template>
+        <span>Reset</span>
+      </v-tooltip>
 
-    <div class="subtitle-1 mb-2 font-weight-medium">
-      Season:
-      <v-menu
-        v-model="start.show"
-        :close-on-content-click="false"
-        :nudge-right="40"
-        transition="scale-transition"
-        offset-y
-        min-width="290px">
-        <template v-slot:activator="{ on }">
-          <span class="pacm-filter-value" v-on="on">{{ start.jday | dayLabel }}</span>
-        </template>
-        <v-date-picker
-          v-model="start.date"
-          @input="start.show = false">
-          <template>
-            <div class="text-center" style="width:100%">
-              Select a start month and day<br>(year does not matter)
-            </div>
-          </template>
-        </v-date-picker>
-      </v-menu>
-      to
-      <v-menu
-        v-model="end.show"
-        :close-on-content-click="false"
-        :nudge-right="40"
-        transition="scale-transition"
-        offset-y
-        min-width="290px">
-        <template v-slot:activator="{ on }">
-          <span class="pacm-filter-value" v-on="on">{{ end.jday | dayLabel }}</span>
-        </template>
-        <v-date-picker
-          v-model="end.date"
-          @input="end.show = false">
-          <template>
-            <div class="text-center" style="width:100%">
-              Select a end month and day<br>(year does not matter)
-            </div>
-          </template>
-        </v-date-picker>
-      </v-menu>
     </div>
-    <SeasonChart :y-axis-label="yAxisLabel"></SeasonChart>
+    <SeasonChart :axis-label="axisLabel"></SeasonChart>
     <svg class="pacm-season-slider"></svg>
   </div>
 </template>
@@ -80,7 +79,7 @@ import { xf } from '@/lib/crossfilter'
 
 export default {
   name: 'SeasonFilter',
-  props: ['yAxisLabel'],
+  props: ['axisLabel'],
   components: {
     SeasonChart
   },
@@ -103,8 +102,8 @@ export default {
   },
   watch: {
     'start.date' (val) {
-      const m = moment(val)
-      if (val.endsWith('02-29')) {
+      const m = this.toMoment(val)
+      if (this.dateString(val).endsWith('02-29')) {
         m.add(1, 'day')
         this.start.date = m.format('YYYY-MM-DD')
       }
@@ -116,11 +115,11 @@ export default {
     },
     'start.jday' (val) {
       const m = moment('2000-12-31').add(val, 'days')
-      this.start.date = moment([this.start.date.substr(0, 4), m.month(), m.date()]).format('YYYY-MM-DD')
+      this.start.date = moment([this.toMoment(this.start.date).year(), m.month(), m.date()]).format('YYYY-MM-DD')
     },
     'end.date' (val) {
-      const m = moment(val)
-      if (val.endsWith('02-29')) {
+      const m = this.toMoment(val)
+      if (this.dateString(val).endsWith('02-29')) {
         m.add(1, 'day')
         this.end.date = m.format('YYYY-MM-DD')
       }
@@ -132,12 +131,7 @@ export default {
     },
     'end.jday' (val) {
       const m = moment('2000-12-31').add(val, 'days')
-      this.end.date = moment([this.end.date.substr(0, 4), m.month(), m.date()]).format('YYYY-MM-DD')
-    }
-  },
-  filters: {
-    dayLabel (value) {
-      return moment('2000-12-31').add(value, 'days').format('MMM D')
+      this.end.date = moment([this.toMoment(this.end.date).year(), m.month(), m.date()]).format('YYYY-MM-DD')
     }
   },
   mounted () {
@@ -258,7 +252,7 @@ export default {
 
     evt.$on('reset:filters', this.reset)
   },
-  beforeDestroy () {
+  beforeUnmount () {
     if (this.dim) {
       this.dim.filterAll()
       this.dim.dispose()
@@ -266,6 +260,15 @@ export default {
     evt.$off('reset:filters', this.reset)
   },
   methods: {
+    toMoment (value) {
+      return moment(value)
+    },
+    dateString (value) {
+      return typeof value === 'string' ? value : this.toMoment(value).format('YYYY-MM-DD')
+    },
+    dayLabel (value) {
+      return moment('2000-12-31').add(value, 'days').format('MMM D')
+    },
     reset () {
       this.start.jday = this.x.domain()[0]
       this.end.jday = this.x.domain()[1]
@@ -309,7 +312,7 @@ export default {
       }
       evt.$emit('period:season', { start, end })
       dc.redrawAll()
-    }, 1, true)
+    }, 1, { immediate: true })
   }
 }
 </script>

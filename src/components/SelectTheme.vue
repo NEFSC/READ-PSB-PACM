@@ -1,15 +1,24 @@
 <template>
   <v-select
-    outlined
+    variant="outlined"
     :items="options"
-    :value="theme"
+    :model-value="activeTheme"
     label="Select a Species/Group"
-    item-text="label"
+    item-title="label"
     item-value="id"
     hide-details
     return-object
-    @input="setTheme"
-  ></v-select>
+    @update:model-value="setTheme"
+    class="mt-2"
+  >
+    <template #item="{ props }">
+      <v-list-subheader v-if="props.header">
+        {{ props.header }}
+      </v-list-subheader>
+      <v-divider v-else-if="props.divider" class="mt-2" />
+      <v-list-item v-else v-bind="props"></v-list-item>
+    </template>
+  </v-select>
 </template>
 
 <script>
@@ -23,14 +32,12 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['theme'])
+    ...mapGetters({
+      activeTheme: 'activeTheme'
+    })
   },
   methods: {
     ...mapActions(['setTheme'])
   }
 }
 </script>
-
-<style>
-
-</style>

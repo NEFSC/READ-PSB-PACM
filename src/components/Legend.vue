@@ -1,20 +1,19 @@
 <template>
   <v-card style="width:235px">
     <v-toolbar
-      dense
+      density="compact"
       class="text-subtitle-1 font-weight-medium"
-      color="grey lighten-2"
+      color="gray-lighten-2"
     >
-      <h2 class="text-subtitle-1 font-weight-medium">Legend</h2>
+      <h2 class="text-subtitle-1 font-weight-medium ml-4">Legend</h2>
       <v-spacer></v-spacer>
-      <v-tooltip open-delay="500" bottom>
-        <template v-slot:activator="{ on }">
+      <v-tooltip open-delay="500" location="bottom">
+        <template v-slot:activator="{ props }">
           <v-btn
             icon
-            x-small
+            size="x-small"
             @click="collapse = !collapse"
-            class="mr-n2"
-            v-on="on"
+            v-bind="props"
             aria-label="collapse"
           >
             <v-icon v-if="!collapse">mdi-arrow-up-drop-circle</v-icon>
@@ -28,10 +27,10 @@
 
     <v-card-text
       v-show="!collapse"
-      :style="{ 'max-height': ($vuetify.breakpoint.height - 145) + 'px', 'overflow-y': 'auto' }"
+      :style="{ 'max-height': ($vuetify.display.height - 145) + 'px', 'overflow-y': 'auto' }"
       data-v-step="legend"
     >
-      <div class="mb-2 black--text">
+      <div class="mb-2 text-black">
         <div>
           <div class="font-weight-medium">Recorded Days:</div>
           <div class="ml-2">
@@ -57,11 +56,11 @@
 
       <v-divider></v-divider>
 
-      <div class="mt-2 black--text" v-if="hasStationary">
-        <h3 class="subtitle-1 font-weight-medium">Stationary Platforms</h3>
+      <div class="mt-2 text-black" v-if="hasStationary">
+        <h3 class="text-subtitle-1 font-weight-medium">Stationary Platforms</h3>
 
         <!-- DEPLOYMENTS ONLY (# DAYS RECORDED) -->
-        <div v-if="theme.deploymentsOnly">
+        <div v-if="activeTheme.deploymentsOnly">
           <svg width="200" height="130" v-if="useSizeScale">
             <text x="55" y="12" class="pacm-legend-text"># Days Recorded</text>
             <g v-for="(v, i) in [1000, 500, 100, 50, 1]" :key="'size-0-' + v" transform="translate(27,20)">
@@ -120,18 +119,18 @@
         </svg>
 
         <!-- OPTIONS -->
-        <div v-if="!theme.deploymentsOnly">
-          <v-checkbox class="ml-4 my-0 d-inline-block" hide-details dense label="Normalize by Effort" v-model="normalizeEffort"></v-checkbox>
+        <div v-if="!activeTheme.deploymentsOnly">
+          <v-checkbox class="ml-4 my-0 d-inline-block" hide-details density="compact" label="Normalize by Effort" v-model="normalizeEffort"></v-checkbox>
         </div>
-        <div v-if="theme.deploymentsOnly">
+        <div v-if="activeTheme.deploymentsOnly">
           <!-- <v-divider class="mb-2"></v-divider> -->
-          <v-checkbox class="ml-4 my-0 d-inline-block" hide-details dense label="Scale by # Days" v-model="useSizeScale" style="height:30px;vertical-align:middle"></v-checkbox>
+          <v-checkbox class="ml-4 my-0 d-inline-block" hide-details density="compact" label="Scale by # Days" v-model="useSizeScale" style="height:30px;vertical-align:middle"></v-checkbox>
         </div>
       </div>
 
-      <div class="mt-2 black--text" v-if="hasMobile">
-        <h3 class="subtitle-1 font-weight-medium">Mobile Platforms</h3>
-        <svg width="200" height="85" v-if="!theme.deploymentsOnly">
+      <div class="mt-2 text-black" v-if="hasMobile">
+        <h3 class="text-subtitle-1 font-weight-medium">Mobile Platforms</h3>
+        <svg width="200" height="85" v-if="!activeTheme.deploymentsOnly">
           <g transform="translate(27,10)">
             <rect y="-6" x="-6" width="12" height="12" stroke="white" stroke-opacity="0.5" :fill="detectionTypes[0].color" />
             <text x="27" :y="0" class="pacm-legend-text">{{detectionTypes[0].label}}</text>
@@ -172,12 +171,12 @@ export default {
     }
   },
   mounted () {
-    if (this.$vuetify.breakpoint.mobile) {
+    if (this.$vuetify.display.mobile) {
       this.collapse = true
     }
   },
   computed: {
-    ...mapGetters(['deployments', 'theme']),
+    ...mapGetters(['deployments', 'activeTheme']),
     hasStationary () {
       return this.deployments && this.deployments.some(d => d.deployment_type === 'STATIONARY')
     },

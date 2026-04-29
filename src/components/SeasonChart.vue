@@ -26,7 +26,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['theme'])
+    ...mapGetters(['activeTheme'])
   },
   mounted () {
     const dim = xf.dimension(d => {
@@ -58,7 +58,7 @@ export default {
         const header = `${formatter(start)} to ${formatter(end)}<br><br>`
 
         let body
-        if (this.theme.deploymentsOnly) {
+        if (this.activeTheme.deploymentsOnly) {
           body = `
             ${pad(12, detectionTypesMap.get('d').label, '&nbsp;')}: ${pad(6, d.data.value.d.toLocaleString(), '&nbsp;')}<br>
           `
@@ -85,7 +85,7 @@ export default {
       .colors(d3.scaleOrdinal().range(detectionTypes.map(d => d.color)))
       .elasticY(true)
       .brushOn(false)
-      .yAxisLabel(this.yAxisLabel)
+      .yAxisLabel(this.axisLabel)
       .gap(0)
       .barPadding(0.1)
       .renderTitle(false)
@@ -112,7 +112,7 @@ export default {
     this.chart.yAxis().ticks(4)
     this.chart.render()
   },
-  beforeDestroy () {
+  beforeUnmount () {
     d3.selectAll('.d3-tip.season-chart').remove()
   }
 }

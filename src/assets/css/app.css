@@ -1,7 +1,3 @@
-a {
-  text-decoration: none;
-}
-
 .pacm-filter-value {
   border-bottom: 1px solid #546E7A;
   border-bottom-style: dashed;
@@ -12,16 +8,24 @@ a {
   overflow: visible !important;
 }
 
-.body-2 {
+.text-body-2 {
   line-height: 1.5 !important;
-}
-
-label.v-label.theme--light {
-  color: #424242 !important;
-  font-size: 0.875rem !important;
-  margin-left: 6px !important;
 }
 
 h1 > .v-toolbar__title {
   font-weight: normal;
+}
+
+.d3-tip {
+  line-height: 1;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.75);
+  color: #000;
+  border-radius: 4px;
+  pointer-events: none;
+  font-family: 'Roboto Mono', monospace;
+  font-weight: 400;
+  font-size: 14px;
+  z-index: 10000;
+  max-width: 600px;
 }

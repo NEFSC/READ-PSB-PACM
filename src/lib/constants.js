@@ -3,7 +3,7 @@ import platformTypesData from './platform_types.json'
 
 export const themes = [
   {
-    header: 'Baleen Whales (Mysticeti)'
+    props: { header: 'Baleen Whales (Mysticeti)' }
   },
   {
     id: 'narw',
@@ -38,10 +38,10 @@ export const themes = [
     label: 'Bryde\'s Whale'
   },
   {
-    divider: true
+    props: { divider: true }
   },
   {
-    header: 'Toothed Whales, Porpoises and Dolphins (Odontoceti)'
+    props: { header: 'Toothed Whales, Porpoises and Dolphins (Odontoceti)' }
   },
   {
     id: 'beaked',
@@ -86,10 +86,10 @@ export const themes = [
     label: 'Pacific White-sided Dolphin'
   },
   {
-    divider: true
+    props: { divider: true }
   },
   {
-    header: 'Deployments Only (No Detection Data)'
+    props: { header: 'Deployments Only (No Detection Data)' }
   },
   {
     id: 'deployments',

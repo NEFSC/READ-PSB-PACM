@@ -1,81 +1,79 @@
 <template>
   <div class="pacm-year-filter">
-    <v-tooltip open-delay="500" right>
-      <template v-slot:activator="{ on }">
-        <v-btn
-          icon
-          x-small
-          class="mt-1 float-right"
-          color="grey"
-          @click="reset"
-          v-on="on"
-          aria-label="reset"
-        >
-          <v-icon>mdi-sync</v-icon>
-        </v-btn>
-      </template>
-      <span>Reset</span>
-    </v-tooltip>
-
-    <div class="subtitle-1 mb-2 font-weight-medium">
-      Years:
-      <v-menu
-        v-model="start.show"
-        :close-on-content-click="false"
-        :nudge-right="40"
-        transition="scale-transition"
-        offset-y
-        min-width="200px">
-        <template v-slot:activator="{ on }">
-          <span class="pacm-filter-value" v-on="on">{{ filter[0] }}</span>
+    <div class="d-flex align-center justify-space-between">
+      <div class="text-subtitle-1 font-weight-medium">
+        Years:
+        <v-menu
+          v-model="start.show"
+          :close-on-content-click="false"
+          :offset="[40, 0]"
+          transition="scale-transition"
+          min-width="200px">
+          <template v-slot:activator="{ props }">
+            <span class="pacm-filter-value" v-bind="props">{{ filter[0] }}</span>
+          </template>
+          <v-card class="pa-1">
+            <v-card-text>
+              <div class="text-subtitle-2">Start Year</div>
+              <v-text-field
+                v-model="start.input"
+                single-line
+                hide-details
+                type="number"
+                @keydown.enter="setStart">
+              </v-text-field>
+            </v-card-text>
+            <v-card-actions class="pr-4">
+              <v-spacer></v-spacer>
+              <v-btn color="primary" variant="outlined" @click="setStart" aria-label="done">Done</v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-menu>
+        to
+        <v-menu
+          v-model="end.show"
+          :close-on-content-click="false"
+          :offset="[40, 0]"
+          transition="scale-transition"
+          min-width="200px">
+          <template v-slot:activator="{ props }">
+            <span class="pacm-filter-value" v-bind="props">{{ filter[1] }}</span>
+          </template>
+          <v-card class="pa-1">
+            <v-card-text>
+              <div class="text-subtitle-2">End Year</div>
+              <v-text-field
+                v-model="end.input"
+                single-line
+                hide-details
+                type="number"
+                @keydown.enter="setEnd">
+              </v-text-field>
+            </v-card-text>
+            <v-card-actions class="pr-4">
+              <v-spacer></v-spacer>
+              <v-btn color="primary" variant="outlined" @click="setEnd" aria-label="done">Done</v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-menu>
+      </div>
+      <v-tooltip open-delay="500" location="right">
+        <template v-slot:activator="{ props }">
+          <v-btn
+            icon="mdi-sync"
+            variant="text"
+            size="small"
+            color="grey"
+            @click="reset"
+            v-bind="props"
+            aria-label="reset"
+          >
+          </v-btn>
         </template>
-        <v-card class="pa-1">
-          <v-card-text>
-            <div class="subtitle-2">Start Year</div>
-            <v-text-field
-              v-model="start.input"
-              single-line
-              hide-details
-              type="number"
-              @keydown.enter="setStart">
-            </v-text-field>
-          </v-card-text>
-          <v-card-actions class="pr-4">
-            <v-spacer></v-spacer>
-            <v-btn color="primary" outlined @click="setStart" aria-label="done">Done</v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-menu>
-      to
-      <v-menu
-        v-model="end.show"
-        :close-on-content-click="false"
-        :nudge-right="40"
-        transition="scale-transition"
-        offset-y
-        min-width="200px">
-        <template v-slot:activator="{ on }">
-          <span class="pacm-filter-value" v-on="on">{{ filter[1] }}</span>
-        </template>
-        <v-card class="pa-1">
-          <v-card-text>
-            <div class="subtitle-2">End Year</div>
-            <v-text-field
-              v-model="end.input"
-              single-line
-              hide-details
-              type="number"
-              @keydown.enter="setEnd">
-            </v-text-field>
-          </v-card-text>
-          <v-card-actions class="pr-4">
-            <v-spacer></v-spacer>
-            <v-btn color="primary" outlined @click="setEnd" aria-label="done">Done</v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-menu>
+        <span>Reset</span>
+      </v-tooltip>
     </div>
-    <YearChart :y-axis-label="yAxisLabel"></YearChart>
+    <YearChart :axis-label="axisLabel"></YearChart>
     <svg class="pacm-year-slider"></svg>
   </div>
 </template>
@@ -93,7 +91,7 @@ import { xf } from '@/lib/crossfilter'
 
 export default {
   name: 'YearFilter',
-  props: ['yAxisLabel'],
+  props: ['axisLabel'],
   components: {
     YearChart
   },
@@ -280,7 +278,7 @@ export default {
 
     evt.$on('reset:filters', this.reset)
   },
-  beforeDestroy () {
+  beforeUnmount () {
     if (this.dim) {
       this.dim.filterAll()
       this.dim.dispose()
@@ -350,7 +348,7 @@ export default {
 
       evt.$emit('period:year', { start, end })
       dc.redrawAll()
-    }, 1, true)
+    }, 1, { immediate: true })
   }
 }
 </script>

@@ -1,20 +1,20 @@
 <template>
   <v-card>
-    <v-toolbar color="grey darken-2" dense dark>
-      <div v-if="isSiteView" class="subtitle-1 font-weight-bold">
+    <v-toolbar color="grey-darken-2" density="compact" theme="dark">
+      <div v-if="isSiteView" class="text-subtitle-1 font-weight-bold">
         Selected Site ({{ selectedDeployments.length }} deployments)
       </div>
-      <div v-else class="subtitle-1 font-weight-bold">
+      <div v-else class="text-subtitle-1 font-weight-bold">
         Selected Deployments
         ({{ index + 1 }} of {{ selectedDeployments.length }})
-        <v-tooltip open-delay="500" bottom>
-          <template v-slot:activator="{ on }">
+        <v-tooltip open-delay="500" location="bottom">
+          <template v-slot:activator="{ props }">
             <v-btn
               icon
-              small
+              size="small"
               :disabled="index === 0"
               @click="index -= 1"
-              v-on="on"
+              v-bind="props"
               aria-label="previous"
             >
               <v-icon>mdi-menu-left</v-icon>
@@ -22,14 +22,14 @@
           </template>
           <span>Previous</span>
         </v-tooltip>
-        <v-tooltip open-delay="500" bottom>
-          <template v-slot:activator="{ on }">
+        <v-tooltip open-delay="500" location="bottom">
+          <template v-slot:activator="{ props }">
             <v-btn
               icon
-              small
+              size="small"
               :disabled="index === (selectedDeployments.length - 1)"
               @click="index += 1"
-              v-on="on"
+              v-bind="props"
               aria-label="next"
             >
               <v-icon>mdi-menu-right</v-icon>
@@ -39,21 +39,21 @@
         </v-tooltip>
       </div>
       <v-spacer></v-spacer>
-      <v-tooltip open-delay="500" bottom>
-        <template v-slot:activator="{ on }">
-          <v-btn icon small @click="close" v-on="on" aria-label="close">
-            <v-icon small>mdi-close</v-icon>
+      <v-tooltip open-delay="500" location="bottom">
+        <template v-slot:activator="{ props }">
+          <v-btn icon size="small" @click="close" v-bind="props" aria-label="close">
+            <v-icon size="small">mdi-close</v-icon>
           </v-btn>
         </template>
         <span>Close</span>
       </v-tooltip>
     </v-toolbar>
     <v-card-text
-      :style="{ 'max-height': Math.round($vuetify.breakpoint.height * 0.6) + 'px', 'overflow-y': 'auto' }"
+      :style="{ 'max-height': Math.round($vuetify.display.height * 0.6) + 'px', 'overflow-y': 'auto' }"
     >
       <v-row v-if="isSiteView">
         <v-col xs="12" md="12" lg="12" xl="4">
-          <v-simple-table dense>
+          <v-table density="compact">
             <tbody>
               <tr>
                 <td class="px-2 text-right" style="width:140px">Organization:</td>
@@ -79,11 +79,11 @@
                 <td class="px-2 text-right">Sampling Rate:</td>
                 <td class="px-2 font-weight-bold">{{ siteMetadata.samplingRate }} Hz</td>
               </tr>
-              <tr v-if="!theme.deploymentsOnly">
+              <tr v-if="!activeTheme.deploymentsOnly">
                 <td class="px-2 text-right">Detection Method:</td>
                 <td class="px-2 font-weight-bold">{{ siteMetadata.detectionMethod }}</td>
               </tr>
-              <tr v-if="!theme.deploymentsOnly">
+              <tr v-if="!activeTheme.deploymentsOnly">
                 <td class="px-2 text-right">Analysis QAQC:</td>
                 <td class="px-2 font-weight-bold">{{ siteMetadata.qcData }}</td>
               </tr>
@@ -108,19 +108,19 @@
                 <td class="px-2 font-weight-bold">{{ siteMetadata.dataPoc }}</td>
               </tr>
             </tbody>
-          </v-simple-table>
+          </v-table>
         </v-col>
 
-        <v-col xs="12" md="12" lg="12" xl="8" v-if="!theme.deploymentsOnly" class="black--text">
+        <v-col xs="12" md="12" lg="12" xl="8" v-if="!activeTheme.deploymentsOnly" class="text-black">
           <div class="heading font-weight-bold">Daily Detections</div>
-          <div class="subtitle-2 grey--text text--darken-1">Shaded periods indicate unmonitored gaps between deployments.</div>
+          <div class="text-subtitle-2 text-grey-darken-1">Shaded periods indicate unmonitored gaps between deployments.</div>
           <highcharts class="chart" :options="chart"></highcharts>
         </v-col>
       </v-row>
 
       <v-row v-else>
         <v-col xs="12" md="12" lg="12" xl="4">
-          <v-simple-table dense>
+          <v-table density="compact">
             <tbody>
               <tr>
                 <td class="px-2 text-right" style="width:140px">Organization:</td>
@@ -150,11 +150,11 @@
                 <td class="px-2 text-right">Sampling Rate:</td>
                 <td class="px-2 font-weight-bold">{{ selectedDeployment.sampling_rate_hz + ' Hz' || 'N/A' }}</td>
               </tr>
-              <tr v-if="!theme.deploymentsOnly">
+              <tr v-if="!activeTheme.deploymentsOnly">
                 <td class="px-2 text-right">Detection Method:</td>
                 <td class="px-2 font-weight-bold">{{ selectedDeployment.detection_method ? selectedDeployment.detection_method : 'N/A' }}</td>
               </tr>
-              <tr v-if="!theme.deploymentsOnly">
+              <tr v-if="!activeTheme.deploymentsOnly">
                 <td class="px-2 text-right">Analysis QAQC:</td>
                 <td class="px-2 font-weight-bold">{{ selectedDeployment.qc_data ? selectedDeployment.qc_data : 'N/A'}}</td>
               </tr>
@@ -178,15 +178,15 @@
                 <td class="px-2 text-right">Point of Contact:</td>
                 <td class="px-2 font-weight-bold">{{ selectedDeployment.data_poc }} </td>
               </tr>
-              <tr v-if="!theme.deploymentsOnly">
+              <tr v-if="!activeTheme.deploymentsOnly">
                 <td class="px-2 text-right">Protocol:</td>
                 <td class="px-2 font-weight-bold">{{ selectedDeployment.protocol_reference }}</td>
               </tr>
             </tbody>
-          </v-simple-table>
+          </v-table>
         </v-col>
 
-        <v-col xs="12" md="12" lg="12" xl="8" v-if="!theme.deploymentsOnly" class="black--text">
+        <v-col xs="12" md="12" lg="12" xl="8" v-if="!activeTheme.deploymentsOnly" class="text-black">
           <div class="heading font-weight-bold">Daily Detections</div>
           <highcharts class="chart" :options="chart"></highcharts>
         </v-col>
@@ -265,7 +265,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['selectedDeployments', 'theme']),
+    ...mapGetters(['selectedDeployments', 'activeTheme']),
     isSiteView () {
       if (this.selectedDeployments.length < 1) return false
       const isStationary = this.selectedDeployments.every(d => d.deployment_type === 'STATIONARY')
@@ -344,7 +344,7 @@ export default {
     evt.$on('xf:dataRemoved', this.updateChart)
     evt.$on('xf:filtered', this.updateChart)
   },
-  beforeDestroy () {
+  beforeUnmount () {
     evt.$off('xf:dataAdded', this.updateChart)
     evt.$off('xf:dataRemoved', this.updateChart)
     evt.$off('xf:filtered', this.updateChart)
@@ -355,7 +355,7 @@ export default {
       this.selectDeployments()
     },
     updateChart () {
-      if (this.theme && this.theme.deploymentsOnly) return
+      if (this.activeTheme && this.activeTheme.deploymentsOnly) return
 
       const ids = detectionTypes.map(d => d.id)
 

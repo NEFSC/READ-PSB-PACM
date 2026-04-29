@@ -1,23 +1,24 @@
 <template>
   <div class="detection-filter">
-    <v-tooltip open-delay="500" right>
-      <template v-slot:activator="{ on }">
-        <v-btn
-          icon
-          x-small
-          class="mt-1 float-right"
-          color="grey"
-          @click="reset"
-          v-on="on"
-          aria-label="reset"
-        >
-          <v-icon>mdi-sync</v-icon>
-        </v-btn>
-      </template>
-      <span>Reset</span>
-    </v-tooltip>
-
-    <div class="subtitle-1 font-weight-medium">Detection Results</div>
+    <div class="d-flex align-center justify-space-between">
+      <div class="text-subtitle-1 font-weight-medium">Detection Results</div>
+      <v-tooltip open-delay="500" location="right">
+        <template v-slot:activator="{ props }">
+          <v-btn
+            icon="mdi-sync"
+            variant="text"
+            size="small"
+            color="grey"
+            @click="reset"
+            v-bind="props"
+            aria-label="reset"
+          >
+            <v-icon>mdi-sync</v-icon>
+          </v-btn>
+        </template>
+        <span>Reset</span>
+      </v-tooltip>
+    </div>
     <div ref="chart"></div>
   </div>
 </template>
@@ -76,7 +77,7 @@ export default {
           .attr('text-anchor', 'middle')
           .attr('x', this.chart.width() / 2)
           .attr('y', this.chart.height() - 10)
-          .text(this.yAxisLabel)
+          .text(this.axisLabel)
         const textDims = textSelection.node().getBBox()
         const chartMargins = this.chart.margins()
 
@@ -121,7 +122,7 @@ export default {
       this.chart.render()
     })
   },
-  beforeDestroy () {
+  beforeUnmount () {
     d3.selectAll('.d3-tip.detection-filter').remove()
     this.chart && this.chart.selectAll('circle.toggle').remove()
   },

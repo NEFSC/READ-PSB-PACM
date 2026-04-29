@@ -1,17 +1,18 @@
 <template>
   <v-select
-    outlined
+    variant="outlined"
     :items="options"
     v-model="selected"
-    :label="`Select ${theme.label}`"
-    item-text="name"
+    :label="`Select ${activeTheme.label}`"
+    item-title="name"
     item-value="code"
     hide-details
     multiple
     chips
-    deletable-chips
+    closable-chips
     clearable
     @click:clear="onSelect"
+    class="mt-2"
   ></v-select>
 </template>
 
@@ -30,13 +31,16 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['theme', 'species'])
+    ...mapGetters({
+      activeTheme: 'activeTheme',
+      species: 'species'
+    })
   },
   watch: {
     selected () {
       this.onSelect()
     },
-    theme () {
+    activeTheme () {
       this.reset()
     }
   },

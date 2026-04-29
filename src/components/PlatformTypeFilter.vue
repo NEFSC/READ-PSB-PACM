@@ -1,17 +1,18 @@
 <template>
   <v-select
-    outlined
+    variant="outlined"
     :items="options"
     v-model="selected"
     label="Select Platform Type(s)"
-    item-text="name"
+    item-title="name"
     item-value="code"
     hide-details
     multiple
     chips
-    deletable-chips
+    closable-chips
     clearable
     @click:clear="setFilter"
+    class="mt-2"
   ></v-select>
 </template>
 
@@ -30,13 +31,16 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['theme', 'loading', 'platformTypes'])
+    ...mapGetters({
+      activeTheme: 'activeTheme',
+      platformTypes: 'platformTypes'
+    })
   },
   watch: {
     selected () {
       this.setFilter()
     },
-    theme () {
+    activeTheme () {
       this.reset()
     }
   },
@@ -44,7 +48,7 @@ export default {
     this.dim = xf.dimension(d => d.platform_type)
     this.reset()
   },
-  beforeDestroy () {
+  beforeUnmount () {
     this.dim && this.dim.dispose()
   },
   methods: {
