@@ -36,7 +36,14 @@
       <v-container class="my-4">
         <v-row justify="space-around">
           <v-col cols="12" md="4" class="text-center">
-            <v-btn color="secondary" class="px-8" size="x-large" aria-label="take a tour" disabled>
+            <v-btn
+              color="secondary"
+              class="px-8"
+              size="x-large"
+              aria-label="take a tour"
+              :disabled="$vuetify.display.mobile"
+              @click="$emit('close', { tour: true })"
+            >
               <v-icon start>mdi-cursor-default-click</v-icon>
               Take A Tour
             </v-btn>

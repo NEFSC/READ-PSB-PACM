@@ -32,7 +32,14 @@
         <UserGuideDialog @close="closeGuide"></UserGuideDialog>
       </v-dialog>
 
-      <v-btn color="default" variant="text" data-v-step="tour-button" aria-label="start tour" disabled>
+      <v-btn
+        color="default"
+        variant="text"
+        data-v-step="tour-button"
+        aria-label="start tour"
+        :disabled="$vuetify.display.mobile"
+        @click="startTour"
+      >
         <v-icon :start="!$vuetify.display.mobile">mdi-cursor-default-click</v-icon>
         <span v-if="!$vuetify.display.mobile"> Tour</span>
       </v-btn>
@@ -139,6 +146,8 @@
         </v-alert>
       </div>
     </v-dialog>
+
+    <v-tour name="pacmTour" :steps="tourSteps" :options="tourOptions"></v-tour>
   </v-app>
 </template>
 
@@ -161,6 +170,7 @@ import DeploymentDetail from '@/components/DeploymentDetail'
 import evt from '@/lib/events'
 import { xf, deploymentGroup, siteGroup, siteMap, deploymentMap } from '@/lib/crossfilter'
 import { themes } from '@/lib/constants'
+import tourSteps from '@/lib/tour'
 
 export default {
   name: 'App',
@@ -206,6 +216,16 @@ export default {
       period: {
         season: { start: 1, end: 365 },
         year: { start: null, end: null }
+      },
+      tourSteps,
+      tourOptions: {
+        highlight: true,
+        labels: {
+          buttonSkip: 'Skip',
+          buttonPrevious: 'Previous',
+          buttonNext: 'Next',
+          buttonStop: 'Finish'
+        }
       }
     }
   },
@@ -282,6 +302,7 @@ export default {
         if (!this.activeTheme) {
           this.setTheme(this.themes[1])
         }
+        this.startTour()
       } else if (!this.activeTheme) {
         this.setTheme(this.themes[1])
       }
@@ -326,7 +347,31 @@ export default {
         this.periodDim.filterAll()
       }
     },
-    startTour () { }
+    async startTour () {
+      if (this.$vuetify.display.mobile) return
+
+      if (!this.activeTheme) {
+        await this.setTheme(this.themes[1])
+      }
+
+      await this.waitForTourTargets()
+      this.$tours.pacmTour.start()
+    },
+    waitForTourTargets () {
+      const hasTargets = () => this.activeTheme && !this.isLoading && document.querySelector('[data-v-step="platform"]')
+      if (hasTargets()) return this.$nextTick()
+
+      return new Promise(resolve => {
+        const check = () => {
+          if (hasTargets()) {
+            this.$nextTick(resolve)
+          } else {
+            window.setTimeout(check, 100)
+          }
+        }
+        check()
+      })
+    }
   }
 }
 </script>
