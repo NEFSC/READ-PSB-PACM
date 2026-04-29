@@ -1,9 +1,9 @@
 # BUILDER
-FROM node:16 AS builder
+FROM node:18 AS builder
 
 WORKDIR /app
 COPY package*.json ./
-RUN npm install
+RUN npm install --legacy-peer-deps
 
 COPY . .
 

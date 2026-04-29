@@ -3,9 +3,9 @@
   "version": "1.2.1",
   "private": true,
   "scripts": {
-    "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint"
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint --ext .js,.vue src"
   },
   "dependencies": {
     "axios": "^1.12.2",
@@ -20,7 +20,8 @@
     "leaflet": "^1.9.2",
     "leaflet-draw": "^1.0.4",
     "pad": "^3.2.0",
-    "vue": "^2.7.10",
+    "@vue/compat": "^3.5.0",
+    "vue": "^3.5.0",
     "vue-moment": "^4.0.0",
     "vue-router": "^3.6.5",
     "vue-tour": "^2.0.0",
@@ -31,10 +32,10 @@
   "devDependencies": {
     "@babel/core": "^7.19.3",
     "@babel/eslint-parser": "^7.19.1",
-    "@vue/cli-plugin-babel": "^5.0.8",
-    "@vue/cli-plugin-eslint": "^5.0.8",
-    "@vue/cli-service": "^5.0.8",
+    "@vitejs/plugin-vue": "^5.2.0",
+    "@vue/compiler-sfc": "^3.5.0",
     "@vue/eslint-config-standard": "^6.1.0",
+    "autoprefixer": "^10.4.0",
     "eslint": "^7.32.0",
     "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-node": "^11.1.0",
@@ -42,10 +43,7 @@
     "eslint-plugin-standard": "^4.0.0",
     "eslint-plugin-vue": "^7.20.0",
     "sass": "~1.32.12",
-    "sass-loader": "^8.0.0",
-    "vue-cli-plugin-vuetify": "^2.5.8",
-    "vue-template-compiler": "^2.7.16",
-    "vuetify-loader": "^1.9.2"
+    "vite": "^5.4.0"
   },
   "overrides": {
     "d3-color": "^3.0.0"
