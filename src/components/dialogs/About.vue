@@ -1,18 +1,27 @@
 <template>
   <v-card role="main" aria-label="about page">
-    <v-card-title class="d-flex flex-wrap justify-space-between align-center">
-      <div class="flex-grow-1">
+    <v-card-title class="d-flex flex-wrap align-center pl-0">
+      <div class="px-2">
+        <a href="https://passiveacoustics.fisheries.noaa.gov">
+          <v-img
+            src="@/assets/img/noaa-logo.gif"
+            height="54px"
+            width="54px"
+            alt="NOAA Logo">
+          </v-img>
+        </a>
+      </div>
+      <div>
         <h1 class="text-h5"><span v-if="!$vuetify.display.mobile">Welcome to the </span>Passive Acoustic Cetacean Map</h1>
         <div class="text-caption">by the <a href="https://www.fisheries.noaa.gov/new-england-mid-atlantic/endangered-species-conservation/passive-acoustic-research-northeast">NOAA Northeast Fisheries Science Center</a></div>
       </div>
-      <div>
-        <v-img
-          src="@/assets/img/noaa-logo.gif"
-          height="54px"
-          width="54px"
-          alt="NOAA Logo">
-        </v-img>
-      </div>
+      <v-spacer></v-spacer>
+      <v-tooltip open-delay="500" location="bottom">
+        <template v-slot:activator="{ props }">
+          <v-btn icon="mdi-close" variant="text" size="small" @click="$emit('close')" v-bind="props" aria-label="close"></v-btn>
+        </template>
+        <span>Close</span>
+      </v-tooltip>
     </v-card-title>
     <v-img
       src="@/assets/img/whale.jpg"

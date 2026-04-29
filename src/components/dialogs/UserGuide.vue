@@ -1,15 +1,17 @@
 <template>
   <v-card role="main">
-    <v-card-title>
+    <v-card-title class="d-flex align-center">
       <h1 class="text-h5">User Guide</h1>
       <v-spacer></v-spacer>
       <v-tooltip open-delay="500" location="bottom">
         <template v-slot:activator="{ props }">
-          <v-btn icon size="small" @click="$emit('close')" v-bind="props" aria-label="close"><v-icon>mdi-close</v-icon></v-btn>
+          <v-btn icon="mdi-close" variant="text" size="small" @click="$emit('close')" v-bind="props" aria-label="close"></v-btn>
         </template>
         <span>Close</span>
       </v-tooltip>
     </v-card-title>
+
+    <v-divider></v-divider>
 
     <v-card-text class="mt-8">
       <v-row>
@@ -436,8 +438,10 @@
           </v-window>
         </v-col>
       </v-row>
-
     </v-card-text>
+
+    <v-divider></v-divider>
+
     <v-card-actions>
       <v-spacer></v-spacer>
       <v-btn color="primary" variant="text" @click="$emit('close')" aria-label="close">Close</v-btn>
@@ -459,3 +463,9 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+p {
+  margin-bottom: 1em;
+}
+</style>

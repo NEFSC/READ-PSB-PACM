@@ -1,6 +1,6 @@
 <template>
   <v-card>
-    <v-toolbar color="grey-darken-2" density="compact" theme="dark">
+    <v-toolbar color="grey-darken-2" density="compact" theme="dark" class="pl-2">
       <div v-if="isSiteView" class="text-subtitle-1 font-weight-bold">
         Selected Site ({{ selectedDeployments.length }} deployments)
       </div>

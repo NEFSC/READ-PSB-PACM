@@ -11,8 +11,11 @@
       style="width:100%;height:100%"
       :center="[50, -20]"
       :zoom="$vuetify.display.mobile ? 2 : 3"
-      :options="{ zoomControl: false }"
+      :options="{ zoomControl: false, attributionControl: false }"
+      @ready="onMapReady"
       @zoomend="onZoom">
+      <l-control-attribution position="bottomright" prefix="">
+      </l-control-attribution>
       <l-control-scale position="bottomleft"></l-control-scale>
       <l-control position="topright">
         <Legend :counts="counts" v-if="activeTheme && !isLoading"></Legend>
@@ -24,7 +27,7 @@
 </template>
 
 <script>
-import { LMap, LControlScale, LControl } from '@vue-leaflet/vue-leaflet'
+import { LMap, LControlAttribution, LControlScale, LControl } from '@vue-leaflet/vue-leaflet'
 import * as d3 from 'd3'
 import L from 'leaflet'
 
@@ -61,54 +64,56 @@ export default {
 
     LMap,
     LControlScale,
-    LControl
-  },
-  async mounted () {
-    this.map = this.$refs.map.leafletObject
-
-    if (!this.map) return
-
-    this.zoomMinControl = new ZoomMin({ minBounds: this.map.getBounds() })
-    this.map.addControl(this.zoomMinControl)
-
-    const basemaps = {
-      'No Basemap': L.tileLayer(''),
-      'ESRI Ocean': L.tileLayer(
-        '//server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}',
-        {
-          attribution: 'Tiles &copy; Esri &mdash; Sources: GEBCO, NOAA, CHS, OSU, UNH, CSUMB, National Geographic, DeLorme, NAVTEQ, and Esri'
-        }
-      ).addTo(this.map),
-      'NOAA Nautical Charts': L.tileLayer.wms('https://gis.charttools.noaa.gov/arcgis/rest/services/MCS/ENCOnline/MapServer/exts/MaritimeChartService/WMSServer', {
-        layers: '1,2,4',
-        attribution: 'NOAA Office of Coast Survey <a href="https://nauticalcharts.noaa.gov/data/gis-data-and-services.html" _target="_blank">ECDIS Display Service</a>'
-      })
-    }
-    const overlays = {
-      'Lobster Management Areas': await this.createLobsterLayer(),
-      'Wind Energy Areas': await this.createWindEnergyLayer()
-    }
-    L.control.layers(basemaps, overlays, { position: 'topleft' })
-      .addTo(this.map)
-
-    const svgLayer = L.svg()
-    this.map.addLayer(svgLayer)
-
-    this.svg = d3.select(svgLayer.getPane()).select('svg')
-      .classed('leaflet-zoom-animated', false)
-      .classed('leaflet-zoom-hide', true)
-      .classed('map', true)
-      .attr('pointer-events', 'none')
-      .style('z-index', 500)
-    this.container = this.svg.select('g')
-    this.ready = true
-
-    evt.$on('map:setBounds', this.setBounds)
+    LControl,
+    LControlAttribution
   },
   beforeUnmount () {
     evt.$off('map:setBounds', this.setBounds)
   },
   methods: {
+    async onMapReady (map) {
+      if (this.ready) return
+
+      this.map = map
+
+      this.zoomMinControl = new ZoomMin({ minBounds: this.map.getBounds() })
+      this.map.addControl(this.zoomMinControl)
+
+      const basemaps = {
+        'No Basemap': L.tileLayer(''),
+        'ESRI Ocean': L.tileLayer(
+          '//server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}',
+          {
+            attribution: 'Tiles &copy; Esri &mdash; Sources: GEBCO, NOAA, CHS, OSU, UNH, CSUMB, National Geographic, DeLorme, NAVTEQ, and Esri'
+          }
+        ).addTo(this.map),
+        'NOAA Nautical Charts': L.tileLayer.wms('https://gis.charttools.noaa.gov/arcgis/rest/services/MCS/ENCOnline/MapServer/exts/MaritimeChartService/WMSServer', {
+          layers: '1,2,4',
+          attribution: 'NOAA Office of Coast Survey <a href="https://nauticalcharts.noaa.gov/data/gis-data-and-services.html" _target="_blank">ECDIS Display Service</a>'
+        })
+      }
+      const overlays = {
+        'Lobster Management Areas': await this.createLobsterLayer(),
+        'Wind Energy Areas': await this.createWindEnergyLayer()
+      }
+      L.control.layers(basemaps, overlays, { position: 'topleft' })
+        .addTo(this.map)
+
+      const svgLayer = L.svg()
+      this.map.addLayer(svgLayer)
+
+      this.svg = d3.select(svgLayer.getPane()).select('svg')
+        .classed('leaflet-zoom-animated', false)
+        .classed('leaflet-zoom-hide', true)
+        .classed('map', true)
+        .attr('pointer-events', 'none')
+        .style('z-index', 500)
+      this.container = this.svg.select('g')
+      this.ready = true
+
+      evt.$on('map:setBounds', this.setBounds)
+      this.$nextTick(() => this.map.invalidateSize())
+    },
     async createLobsterLayer () {
       const layerGroup = L.layerGroup()
       const response = await fetch('gis/lobster-management-areas.geojson')

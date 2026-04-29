@@ -200,7 +200,7 @@ export default {
         .on('mouseout', (event, d) => this.hideTip())
     },
     getTrackDetections () {
-      if (this.activeTheme.deploymentsOnly) return []
+      if (!this.activeTheme || this.activeTheme.deploymentsOnly) return []
       return this.deployments
         .filter(d => d.deployment_type === 'MOBILE')
         .map(d => d.trackDetections)
@@ -457,24 +457,24 @@ export default {
 </script>
 
 <style>
-.vue2leaflet-map svg path.track {
+.leaflet-container svg path.track {
   stroke-linecap: round;
   stroke-linejoin: round;
   fill: none;
   stroke: hsla(0, 0%, 30%, 0.8);
   stroke-width: 2px;
 }
-.vue2leaflet-map svg path.track.not-analyzed {
+.leaflet-container svg path.track.not-analyzed {
   stroke: hsla(0, 0%, 30%, 0.25);
   stroke-dasharray: 3 3;
 }
-.vue2leaflet-map svg path.track-overlay.selected {
+.leaflet-container svg path.track-overlay.selected {
   stroke: hsla(0, 90%, 39%, 0.5);
 }
-.vue2leaflet-map svg path.track:hover {
+.leaflet-container svg path.track:hover {
   stroke-width: 3px;
 }
-.vue2leaflet-map svg path.track-overlay {
+.leaflet-container svg path.track-overlay {
   stroke: hsla(0, 0%, 30%, 0.8);
   stroke-width: 5px;
   stroke-linecap: round;
@@ -485,10 +485,10 @@ export default {
   stroke: transparent;
   stroke-width: 5px;
 }
-.vue2leaflet-map svg path.track-overlay:hover {
+.leaflet-container svg path.track-overlay:hover {
   stroke: hsla(0, 0%, 30%, 1);
 }
-.vue2leaflet-map svg circle.site {
+.leaflet-container svg circle.site {
   cursor: pointer;
   pointer-events: auto;
   fill-opacity: 0.75;
@@ -496,17 +496,17 @@ export default {
   stroke-width: 1.5px;
   stroke: rgb(255, 255, 255);
 }
-.vue2leaflet-map svg circle.site.selected {
+.leaflet-container svg circle.site.selected {
   stroke: rgb(255, 0, 0);
   stroke-opacity: 1;
   stroke-width: 2px;
 }
-.vue2leaflet-map svg circle.site:hover {
+.leaflet-container svg circle.site:hover {
   fill-opacity: 1;
   stroke-opacity: 1;
   stroke-width: 3px;
 }
-.vue2leaflet-map svg circle.deployment {
+.leaflet-container svg circle.deployment {
   cursor: pointer;
   pointer-events: auto;
   fill-opacity: 0.75;
@@ -514,18 +514,18 @@ export default {
   stroke-width: 1.5px;
   stroke: rgb(255, 255, 255);
 }
-.vue2leaflet-map svg circle.deployment.selected {
+.leaflet-container svg circle.deployment.selected {
   stroke: rgb(255, 0, 0);
   stroke-opacity: 1;
   stroke-width: 2px;
 }
-.vue2leaflet-map svg circle.deployment:hover {
+.leaflet-container svg circle.deployment:hover {
   fill-opacity: 1;
   stroke-opacity: 1;
   stroke-width: 3px;
 }
 
-.vue2leaflet-map svg path.point {
+.leaflet-container svg path.point {
   cursor: pointer;
   pointer-events: auto;
   fill-opacity: 0.75;
@@ -533,12 +533,12 @@ export default {
   stroke-width: 1.5px;
   stroke: rgb(255, 255, 255);
 }
-.vue2leaflet-map svg path.point.selected {
+.leaflet-container svg path.point.selected {
   stroke: rgb(255, 0, 0);
   stroke-opacity: 1;
   stroke-width: 2px;
 }
-.vue2leaflet-map svg path.point:hover {
+.leaflet-container svg path.point:hover {
   fill-opacity: 1;
   stroke-opacity: 1;
   stroke-width: 3px;

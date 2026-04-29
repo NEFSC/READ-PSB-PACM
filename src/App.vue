@@ -38,7 +38,9 @@
       </v-btn>
 
       <div>
-        <v-img src="./assets/img/noaa-logo.gif" height="40px" width="40px" class="ma-2" alt="NOAA Logo"></v-img>
+        <a href="https://passiveacoustics.fisheries.noaa.gov">
+          <v-img src="./assets/img/noaa-logo.gif" height="40px" width="40px" class="ma-2" alt="NOAA Logo"></v-img>
+        </a>
       </div>
     </v-app-bar>
 
@@ -70,7 +72,7 @@
         </v-list-item>
 
         <div class="text-right mx-4">
-          <v-dialog v-model="dialogs.filters" max-width="600" scrollable persistent
+          <v-dialog v-model="dialogs.filters" max-width="600" scrollable persistent eager
             :fullscreen="$vuetify.display.mobile">
             <template v-slot:activator="{ props }">
               <v-btn color="default" size="small" variant="text" v-bind="props" aria-label="advanced filters"
