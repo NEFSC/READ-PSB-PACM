@@ -2,7 +2,7 @@
   <v-app>
     <v-app-bar color="light-blue-darken-4" role="navigation">
       <v-app-bar-nav-icon v-if="$vuetify.display.mobile" @click="drawer = !drawer"></v-app-bar-nav-icon>
-      <v-icon icon="$whale" color="white" class="mr-4" v-if="!$vuetify.display.mobile"></v-icon>
+      <v-icon icon="$whale" color="white" class="mx-4" v-if="!$vuetify.display.mobile"></v-icon>
       <h1>
         <v-toolbar-title v-if="!$vuetify.display.mobile">
           Passive Acoustic Cetacean Map <span style="font-size: 50%;" class="pl-1">v{{ version }}</span>

@@ -116,6 +116,11 @@ export default {
       }
     }
   },
+  created () {
+    this.setFilter = debounce(function () {
+      this.applyFilter()
+    }, 1, { immediate: true })
+  },
   computed: {
     domain () {
       return [this.extent[0], this.extent[1] + 1]
@@ -279,6 +284,7 @@ export default {
     evt.$on('reset:filters', this.reset)
   },
   beforeUnmount () {
+    this.setFilter.clear()
     if (this.dim) {
       this.dim.filterAll()
       this.dim.dispose()
@@ -339,7 +345,7 @@ export default {
       this.setFilter()
       // this.$emit('update', [this.start.jday, this.end.jday])
     },
-    setFilter: debounce(function () {
+    applyFilter () {
       const start = this.start.value
       const end = this.end.value - 1
 
@@ -348,7 +354,7 @@ export default {
 
       evt.$emit('period:year', { start, end })
       dc.redrawAll()
-    }, 1, { immediate: true })
+    }
   }
 }
 </script>

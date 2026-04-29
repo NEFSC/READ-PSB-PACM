@@ -100,6 +100,11 @@ export default {
         .clamp(true)
     }
   },
+  created () {
+    this.setFilter = debounce(function () {
+      this.applyFilter()
+    }, 1, { immediate: true })
+  },
   watch: {
     'start.date' (val) {
       const m = this.toMoment(val)
@@ -253,6 +258,7 @@ export default {
     evt.$on('reset:filters', this.reset)
   },
   beforeUnmount () {
+    this.setFilter.clear()
     if (this.dim) {
       this.dim.filterAll()
       this.dim.dispose()
@@ -302,7 +308,7 @@ export default {
       }
       this.setFilter()
     },
-    setFilter: debounce(function () {
+    applyFilter () {
       const start = this.start.jday
       const end = this.end.jday
       if (start <= end) {
@@ -312,7 +318,7 @@ export default {
       }
       evt.$emit('period:season', { start, end })
       dc.redrawAll()
-    }, 1, { immediate: true })
+    }
   }
 }
 </script>

@@ -26,12 +26,12 @@ export default createVuetify({
       light: {
         colors: {
           primary: '#1976D2',
-          secondary: '#00791e',
+          secondary: '#00791e'
           // accent: '#82B1FF',
           // error: '#FF5252',
           // info: '#2196F3'
         }
       }
-    },
+    }
   }
 })
