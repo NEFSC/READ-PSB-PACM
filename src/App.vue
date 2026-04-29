@@ -58,18 +58,7 @@
           <SelectTheme></SelectTheme>
         </v-list-item>
       </v-list>
-      <v-list class="pa-4" v-if="isLoading">
-        <v-list-item>
-          <v-spacer></v-spacer>
-          <v-progress-circular indeterminate :size="32" :width="4" color="white" class="mr-4">
-          </v-progress-circular>
-
-          <v-list-item-title class="text-h6">Loading</v-list-item-title>
-
-          <v-spacer></v-spacer>
-        </v-list-item>
-      </v-list>
-      <v-list class="pt-0" v-else-if="activeTheme">
+      <v-list class="pt-0" v-if="activeTheme">
         <v-list-item class="my-1" v-if="activeTheme.showSpeciesFilter">
           <SpeciesFilter></SpeciesFilter>
         </v-list-item>

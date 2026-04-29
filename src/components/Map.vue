@@ -1,9 +1,11 @@
 <template>
   <div style="height:100%">
-    <v-overlay :model-value="isLoading" style="z-index:10000">
+    <v-overlay :model-value="isLoading" style="z-index:10000;width:100%;height:100%;" class="d-flex align-center justify-center">
       <v-progress-circular
         indeterminate
-        size="64"
+        size="128"
+        width="10"
+        color="white"
       ></v-progress-circular>
     </v-overlay>
     <l-map
