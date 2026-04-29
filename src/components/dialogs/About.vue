@@ -103,6 +103,11 @@
       <h2 class="text-h5 mb-2">Latest Updates</h2>
 
       <div class="text-subtitle-1 font-weight-bold text-medium-emphasis">
+        v1.3.0 | Apr 29, 2026
+      </div>
+      <p>Upgraded application frameworks and libraries to latest versions.</p>
+
+      <div class="text-subtitle-1 font-weight-bold text-medium-emphasis">
         v1.2.1 | Apr 7, 2026
       </div>
       <p>Added Dynamic Management Platform filter to Advanced Filters. Added Bryde's Whale, Bottlenose Dolphin, Harbor Porpoise, and Killer Whale to species list. Added new NWFSC datasets and updated real-time detection data from NEFSC.</p>
