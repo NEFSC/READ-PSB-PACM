@@ -62,28 +62,12 @@ export const themes = [
     showSpeciesFilter: true
   },
   {
-    id: 'hapo',
-    label: 'Harbor Porpoise'
-  },
-  {
-    id: 'nbhf',
-    label: 'Unidentified High-Frequency Species'
-  },
-  {
     id: 'dolphin',
     label: 'Unidentified Dolphin'
   },
   {
-    id: 'risso',
-    label: 'Risso\'s Dolphin'
-  },
-  {
     id: 'bodo',
     label: 'Bottlenose Dolphin'
-  },
-  {
-    id: 'pwdo',
-    label: 'Pacific White-sided Dolphin'
   },
   {
     props: { divider: true }
