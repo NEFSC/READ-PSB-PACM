@@ -105,7 +105,7 @@
       <div class="text-subtitle-1 font-weight-bold text-medium-emphasis">
         v1.3.1 | May 11, 2026
       </div>
-      <p>Removed species options without data. Added PIFSC detection datasets.</p>
+      <p>Added PIFSC detection datasets, and updated list of available species.</p>
 
       <div class="text-subtitle-1 font-weight-bold text-medium-emphasis">
         v1.3.0 | Apr 29, 2026
