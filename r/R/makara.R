@@ -453,7 +453,7 @@ targets_makara <- list(
       filter(n_sound_sources > 1)
 
     makara_db$analyses |> 
-      filter(!analysis_release_pacm) |> # exclude unreleased
+      filter(analysis_release_pacm) |> # exclude unreleased
       semi_join(makara_deployments, by = c("deployment_id" = "makara_deployment_id")) |>
       semi_join(
         makara_db$analyses_n_detections |> 
