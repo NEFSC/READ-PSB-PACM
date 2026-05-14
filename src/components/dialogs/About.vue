@@ -103,6 +103,11 @@
       <h2 class="text-h5 mb-2">Latest Updates</h2>
 
       <div class="text-subtitle-1 font-weight-bold text-medium-emphasis">
+        v1.3.2 | May 14, 2026
+      </div>
+      <p>Improved global map display so platform data repeats across wrapped world views when zoomed out.</p>
+
+      <div class="text-subtitle-1 font-weight-bold text-medium-emphasis">
         v1.3.1 | May 11, 2026
       </div>
       <p>Added PIFSC detection datasets, and updated list of available species.</p>

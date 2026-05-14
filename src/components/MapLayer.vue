@@ -84,12 +84,48 @@ export default {
   },
   methods: {
     ...mapActions(['selectDeployments']),
+    datum (d) {
+      return d?.datum || d
+    },
+    getWorldWidth () {
+      const bounds = this.map?.getPixelWorldBounds?.(this.map.getZoom())
+      return bounds ? bounds.getSize().x : 0
+    },
+    getWrapOffsets () {
+      const worldWidth = this.getWorldWidth()
+      if (!worldWidth) return [0]
+
+      const mapWidth = this.map.getSize().x
+      const copyCount = Math.ceil(mapWidth / worldWidth) + 1
+      return d3.range(-copyCount, copyCount + 1)
+    },
+    withWrapCopies (data, keyFn) {
+      return this.getWrapOffsets().flatMap(wrapOffset => {
+        return data.map(d => ({
+          datum: d,
+          wrapOffset,
+          key: `${keyFn(d)}:${wrapOffset}`
+        }))
+      })
+    },
+    wrappedPoint (d, latitudeKey, longitudeKey) {
+      const datum = this.datum(d)
+      const latitude = +datum[latitudeKey]
+      const longitude = +datum[longitudeKey]
+      if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return [0, 0]
+
+      const point = this.map.latLngToLayerPoint(new L.LatLng(latitude, longitude))
+      const x = point.x + (d.wrapOffset || 0) * this.getWorldWidth()
+      return [x, point.y]
+    },
     isSelected (d) {
-      return this.selectedDeployments.length > 0 && this.selectedDeployments.map(d => d.id).includes(d.id)
+      const datum = this.datum(d)
+      return this.selectedDeployments.length > 0 && this.selectedDeployments.map(d => d.id).includes(datum.id)
     },
     isSiteSelected (d) {
+      const datum = this.datum(d)
       if (this.selectedDeployments.length === 0) return false
-      return this.selectedDeployments.some(dep => dep.site_id === d.site_id)
+      return this.selectedDeployments.some(dep => dep.site_id === datum.site_id)
     },
     updateSelected () {
       this.container.select('g.stationary')
@@ -154,20 +190,21 @@ export default {
         .filter(d => siteMap.has(d.site_id))
         .sort((a, b) => d3.ascending(siteMap.get(a.site_id)?.y ?? 0, siteMap.get(b.site_id)?.y ?? 0))
 
-      data.forEach((d) => {
-        const latLon = new L.LatLng(d.site_latitude, d.site_longitude)
-        const point = this.map.latLngToLayerPoint(latLon)
-        d.$x = point.x
-        d.$y = point.y
-      })
-
       g.selectAll('circle.site')
-        .data(data, d => d.site_id)
+        .data(this.withWrapCopies(data, d => d.site_id), d => d.key)
         .join('circle')
         .attr('class', 'site')
         .attr('r', 5)
-        .attr('cx', d => d.$x)
-        .attr('cy', d => d.$y)
+        .attr('cx', d => {
+          const point = this.wrappedPoint(d, 'site_latitude', 'site_longitude')
+          d.$x = point[0]
+          return point[0]
+        })
+        .attr('cy', d => {
+          const point = this.wrappedPoint(d, 'site_latitude', 'site_longitude')
+          d.$y = point[1]
+          return point[1]
+        })
         .on('click', (event, d) => this.onClick(event, d, 'site'))
         .on('mouseenter', (event, d) => this.showTip(event, d, 'site'))
         .on('mouseout', (event, d) => this.hideTip())
@@ -181,20 +218,21 @@ export default {
         .filter(d => deploymentMap.has(d.id))
         .sort((a, b) => d3.ascending(deploymentMap.get(a.id)?.y ?? 0, deploymentMap.get(b.id)?.y ?? 0))
 
-      data.forEach((d) => {
-        const latLon = new L.LatLng(d.latitude, d.longitude)
-        const point = this.map.latLngToLayerPoint(latLon)
-        d.$x = point.x
-        d.$y = point.y
-      })
-
       g.selectAll('circle.deployment')
-        .data(data, d => d.id)
+        .data(this.withWrapCopies(data, d => d.id), d => d.key)
         .join('circle')
         .attr('class', 'deployment')
         .attr('r', 5)
-        .attr('cx', d => d.$x)
-        .attr('cy', d => d.$y)
+        .attr('cx', d => {
+          const point = this.wrappedPoint(d, 'latitude', 'longitude')
+          d.$x = point[0]
+          return point[0]
+        })
+        .attr('cy', d => {
+          const point = this.wrappedPoint(d, 'latitude', 'longitude')
+          d.$y = point[1]
+          return point[1]
+        })
         .on('click', (event, d) => this.onClick(event, d, 'deployment'))
         .on('mouseenter', (event, d) => this.showTip(event, d, 'deployment'))
         .on('mouseout', (event, d) => this.hideTip())
@@ -217,28 +255,23 @@ export default {
       console.log('[MapLayer.drawTrackDetections] g.points element:', g.node())
 
       const projection = (d) => {
-        if (!d.latitude || !d.longitude) return [0, 0]
-        const point = this.map.latLngToLayerPoint(new L.LatLng(d.latitude, d.longitude))
-        return [point.x, point.y]
+        return this.wrappedPoint(d, 'latitude', 'longitude')
       }
 
       // .sort((a, b) => d3.ascending(deploymentMap.get(a.id).y, deploymentMap.get(b.id).y))
       console.log('[MapLayer.drawTrackDetections] sorted data:', data.length)
 
-      data.forEach((d) => {
-        if (!d.latitude || !d.longitude) return
-        const latLon = new L.LatLng(d.latitude, d.longitude)
-        const point = this.map.latLngToLayerPoint(latLon)
-        d.$x = point.x
-        d.$y = point.y
-      })
-
       const paths = g.selectAll('path.point')
-        .data(data)
+        .data(this.withWrapCopies(data, d => `${d.id}:${d.$index}:${d.latitude}:${d.longitude}`), d => d.key)
         .join('path')
         .attr('class', 'point')
         .attr('d', d3.symbol().type(d3.symbolSquare))
-        .attr('transform', d => `translate(${projection(d)})`)
+        .attr('transform', d => {
+          const point = projection(d)
+          d.$x = point[0]
+          d.$y = point[1]
+          return `translate(${point})`
+        })
         .on('click', (event, d) => this.onClick(event, d, 'point'))
         .on('mouseenter', (event, d) => {
           console.log('[MapLayer.drawTrackDetections] mouseenter', {
@@ -256,30 +289,36 @@ export default {
       if (!this.tracks) return
 
       const map = this.map
+      const worldWidth = this.getWorldWidth()
       function projectPoint (x, y) {
         const point = map.latLngToLayerPoint(new L.LatLng(y, x))
-        this.stream.point(point.x, point.y)
+        this.stream.point(point.x + this.wrapOffset * worldWidth, point.y)
       }
-      const projection = d3.geoTransform({ point: projectPoint })
 
       const g = this.container.select('g.tracks')
       console.log('[MapLayer.drawTracks] g.tracks element:', g.node())
 
-      const line = d3.geoPath()
-        .projection(projection)
+      const line = (d) => {
+        const projection = d3.geoTransform({
+          point: projectPoint,
+          wrapOffset: d.wrapOffset
+        })
+        return d3.geoPath()
+          .projection(projection)(d.datum)
+      }
 
-      const data = this.tracks
-      console.log('[MapLayer.drawTracks] mobile deployments:', data.length, 'sample:', data[0]?.id)
+      const data = this.withWrapCopies(this.tracks, d => d.id)
+      console.log('[MapLayer.drawTracks] mobile deployments:', data.length, 'sample:', data[0]?.datum?.id)
 
       const tracks = g.selectAll('path.track')
-        .data(data, d => d.id)
+        .data(data, d => d.key)
         .join('path')
         .attr('class', 'track')
         .attr('d', line)
       console.log('[MapLayer.drawTracks] tracks created:', tracks.size())
 
       const overlays = g.selectAll('path.track-overlay')
-        .data(data, d => d.id)
+        .data(data, d => d.key)
         .join('path')
         .attr('class', 'track-overlay')
         .attr('d', line)
@@ -291,12 +330,12 @@ export default {
     renderCircles (selection, mapLookup) {
       selection
         .style('display', d => {
-          const mapValue = mapLookup(d)
+          const mapValue = mapLookup(this.datum(d))
           return (mapValue && mapValue.total === 0) ? 'none' : 'inline'
         })
         .style('opacity', d => this.activeTheme.deploymentsOnly ? 0.9 : null)
         .style('fill', (d) => {
-          const value = mapLookup(d)
+          const value = mapLookup(this.datum(d))
 
           if (this.activeTheme.deploymentsOnly) return 'orange'
 
@@ -311,7 +350,7 @@ export default {
                 : colorScale('na')
         })
         .attr('r', (d) => {
-          const value = mapLookup(d)
+          const value = mapLookup(this.datum(d))
           const total = value?.total ?? 0
 
           if (this.activeTheme.deploymentsOnly) {
@@ -351,39 +390,44 @@ export default {
 
       this.container.selectAll('g.stationary circle')
         .filter(function (d) {
-          const value = d.site_id ? siteMap.get(d.site_id) : deploymentMap.get(d.id)
+          const datum = d.datum || d
+          const value = datum.site_id ? siteMap.get(datum.site_id) : deploymentMap.get(datum.id)
           return value && value.y > 0
         })
         .raise()
 
       this.container.selectAll('g.tracks path.track')
         .style('display', d => {
-          const total = deploymentMap.get(d.id)?.total ?? 0
+          const total = deploymentMap.get(this.datum(d).id)?.total ?? 0
           return total === 0 ? 'none' : 'inline'
         })
 
       this.container
         .selectAll('g.tracks path.track-overlay')
-        .style('display', d => (!deploymentMap.has(d.id) || deploymentMap.get(d.id).total === 0 ? 'none' : 'inline'))
+        .style('display', d => {
+          const datum = this.datum(d)
+          return !deploymentMap.has(datum.id) || deploymentMap.get(datum.id).total === 0 ? 'none' : 'inline'
+        })
 
       this.container.selectAll('g.points path.point')
         .style('display', d => {
-          return xf.isElementFiltered(d.$index) ? 'inline' : 'none'
+          return xf.isElementFiltered(this.datum(d).$index) ? 'inline' : 'none'
         })
-        .style('fill', d => colorScale(d.presence))
+        .style('fill', d => colorScale(this.datum(d).presence))
     },
     onClick (event, d, type) {
       if (event._simulated) return // safari bug
+      const datum = this.datum(d)
 
       if (type === 'track') {
-        return this.selectDeployments([d.id])
+        return this.selectDeployments([datum.id])
       } else if (type === 'point') {
-        return this.selectDeployments([d.id])
+        return this.selectDeployments([datum.id])
       } else if (type === 'deployment') {
-        return this.selectDeployments([d.id])
+        return this.selectDeployments([datum.id])
       } else if (type === 'site') {
         const ids = this.deployments
-          .filter(dep => dep.deployment_type === 'STATIONARY' && dep.site_id === d.site_id)
+          .filter(dep => dep.deployment_type === 'STATIONARY' && dep.site_id === datum.site_id)
           .map(dep => dep.id)
         return this.selectDeployments(ids)
       }
@@ -393,17 +437,20 @@ export default {
       const maxDistance = 10
       const sites = this.container.select('g.stationary').selectAll('circle.site')
         .filter((d) => {
-          return distanceFrom(d.$x, d.$y) < maxDistance && siteMap.has(d.site_id) && siteMap.get(d.site_id).total > 0
+          const datum = this.datum(d)
+          return distanceFrom(d.$x, d.$y) < maxDistance && siteMap.has(datum.site_id) && siteMap.get(datum.site_id).total > 0
         })
         .data()
       const standaloneDeployments = this.container.select('g.stationary').selectAll('circle.deployment')
         .filter((d) => {
-          return distanceFrom(d.$x, d.$y) < maxDistance && deploymentMap.has(d.id) && deploymentMap.get(d.id).total > 0
+          const datum = this.datum(d)
+          return distanceFrom(d.$x, d.$y) < maxDistance && deploymentMap.has(datum.id) && deploymentMap.get(datum.id).total > 0
         })
         .data()
       const points = this.container.select('g.points').selectAll('path.point')
         .filter((d) => {
-          return distanceFrom(d.$x, d.$y) < maxDistance && xf.isElementFiltered(d.$index)
+          const datum = this.datum(d)
+          return distanceFrom(d.$x, d.$y) < maxDistance && xf.isElementFiltered(datum.$index)
         })
         .data()
       return {
@@ -414,16 +461,17 @@ export default {
     },
     showTip (event, d, type) {
       const el = d3.select('.d3-tip.map')
+      const datum = this.datum(d)
 
       let deployment = null
       let siteDeployments = null
 
       if (type === 'site') {
         siteDeployments = this.deployments.filter(
-          dep => dep.deployment_type === 'STATIONARY' && dep.site_id === d.site_id
+          dep => dep.deployment_type === 'STATIONARY' && dep.site_id === datum.site_id
         )
       } else if (type === 'deployment' || type === 'track' || type === 'point') {
-        deployment = this.$store.getters.deploymentById(d.id)
+        deployment = this.$store.getters.deploymentById(datum.id)
       }
 
       const nearbyDeployments = this.findNearbyDeployments(d)
@@ -437,7 +485,7 @@ export default {
         nNearby = nearbyDeployments.points.length - 1
       }
 
-      el.html(tipHtml(d, deployment, nNearby, type, siteDeployments, this.activeTheme.deploymentsOnly))
+      el.html(tipHtml(datum, deployment, nNearby, type, siteDeployments, this.activeTheme.deploymentsOnly))
 
       const offset = tipOffset(event, el)
 

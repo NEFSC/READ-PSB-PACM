@@ -65,6 +65,34 @@ export default {
     this.map.removeControl(this.control)
   },
   methods: {
+    getWorldWidth () {
+      const bounds = this.map?.getPixelWorldBounds?.(this.map.getZoom())
+      return bounds ? bounds.getSize().x : 0
+    },
+    getWrapOffsets () {
+      const worldWidth = this.getWorldWidth()
+      if (!worldWidth) return [0]
+
+      const mapWidth = this.map.getSize().x
+      const copyCount = Math.ceil(mapWidth / worldWidth) + 1
+      const offsets = []
+      for (let i = -copyCount; i <= copyCount; i++) {
+        offsets.push(i)
+      }
+      return offsets
+    },
+    projectPointCopies (p) {
+      const latitude = +p.latitude
+      const longitude = +p.longitude
+      if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return []
+
+      const point = this.map.latLngToLayerPoint(new L.LatLng(latitude, longitude))
+      const worldWidth = this.getWorldWidth()
+      return this.getWrapOffsets().map(wrapOffset => ({
+        x: point.x + wrapOffset * worldWidth,
+        y: point.y
+      }))
+    },
     onDraw (evt) {
       this.layer.addLayer(evt.layer.setStyle({ fillOpacity: 0.05 }))
       this.setFilter()
@@ -93,19 +121,22 @@ export default {
           const nePoint = this.map.latLngToLayerPoint(bounds._northEast)
           const swPoint = this.map.latLngToLayerPoint(bounds._southWest)
           return {
-            x1: swPoint.x,
-            y1: nePoint.y,
-            x2: nePoint.x,
-            y2: swPoint.y
+            x1: Math.min(swPoint.x, nePoint.x),
+            y1: Math.min(nePoint.y, swPoint.y),
+            x2: Math.max(swPoint.x, nePoint.x),
+            y2: Math.max(nePoint.y, swPoint.y)
           }
         })
         const selectedDeployments = new Set()
         projectedLayers.forEach((bbox) => {
           this.points.forEach(p => {
-            if (bbox.x1 <= p.$x &&
-                p.$x <= bbox.x2 &&
-                bbox.y1 <= p.$y &&
-                p.$y <= bbox.y2) {
+            const isSelected = this.projectPointCopies(p).some(point => {
+              return bbox.x1 <= point.x &&
+                point.x <= bbox.x2 &&
+                bbox.y1 <= point.y &&
+                point.y <= bbox.y2
+            })
+            if (isSelected) {
               selectedDeployments.add(p.id)
             }
           })
