@@ -45,6 +45,7 @@
     "vue-eslint-parser": "^10.4.0"
   },
   "overrides": {
-    "d3-color": "^3.0.0"
+    "d3-color": "^3.0.0",
+    "@ranfdev/deepobj": "1.0.4"
   }
 }
