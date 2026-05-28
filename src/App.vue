@@ -129,8 +129,8 @@
           <p class="text-body-1 mb-0">
             An error occurred fetching the dataset from the server.
             Please refresh and try again.
-            If the problem continues, please contact us at <a href="mailto:nmfs.nec.pacmdata@noaa.gov"
-              style="color:white">nmfs.nec.pacmdata@noaa.gov</a>.
+            If the problem continues, please contact us at <a href="mailto:passiveacoustics@noaa.gov"
+              style="color:white">passiveacoustics@noaa.gov</a>.
           </p>
         </v-alert>
       </div>

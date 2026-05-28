@@ -91,7 +91,7 @@
         <Citation></Citation>
       </p>
       <p>
-        Data can be submitted by using the <a class="text-decoration-underline" href="https://www.fisheries.noaa.gov/resource/document/passive-acoustic-reporting-system-templates">Passive Acoustic Reporting System</a> templates. For questions about contributing data to this project or any other inquiries, please contact <a class="text-decoration-underline" href="mailto:nmfs.nec.pacmdata@noaa.gov">nmfs.nec.pacmdata@noaa.gov</a>.
+        Data can be submitted by using the <a class="text-decoration-underline" href="https://www.fisheries.noaa.gov/resource/document/passive-acoustic-reporting-system-templates">Passive Acoustic Reporting System</a> templates. For questions about contributing data to this project or any other inquiries, please contact <a class="text-decoration-underline" href="mailto:passiveacoustics@noaa.gov">passiveacoustics@noaa.gov</a>.
       </p>
       <p>
         Further information about Passive Acoustic Monitoring can be found at the <a class="text-decoration-underline" href="https://www.fisheries.noaa.gov/new-england-mid-atlantic/endangered-species-conservation/passive-acoustic-research-northeast" target="_blank">NOAA NEFSC Passive Acoustic Research Website</a>
@@ -165,7 +165,7 @@
       <div class="text-subtitle-1 font-weight-bold text-medium-emphasis">
         v1.1.4 | Mar 22, 2023
       </div>
-      <p>Updated contact email address to <a class="text-decoration-underline" href="mailto:nmfs.nec.pacmdata@noaa.gov">nmfs.nec.pacmdata@noaa.gov</a>. Fixed ESRI Ocean basemap.</p>
+      <p>Updated contact email address to <a class="text-decoration-underline" href="mailto:passiveacoustics@noaa.gov">passiveacoustics@noaa.gov</a>. Fixed ESRI Ocean basemap.</p>
 
       <div class="text-subtitle-1 font-weight-bold text-medium-emphasis">
         v1.1.3 | Nov 17, 2022
