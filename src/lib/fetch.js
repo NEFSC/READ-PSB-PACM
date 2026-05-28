@@ -2,27 +2,29 @@ import axios from 'axios'
 import moment from 'moment'
 import * as d3 from 'd3'
 
+const api = axios.create({ baseURL: import.meta.env.BASE_URL })
+
 function fetchSites (id) {
   console.log('fetchSites', id)
-  return axios.get(`data/${id}/sites.json`)
+  return api.get(`data/${id}/sites.json`)
     .then(response => response.data)
 }
 
 function fetchTracks (id) {
   console.log('fetchTracks', id)
-  return axios.get(`data/${id}/tracks.json`)
+  return api.get(`data/${id}/tracks.json`)
     .then(response => response.data.features)
 }
 
 function fetchDeployments (id) {
   console.log('fetchDeployments', id)
-  return axios.get(`data/${id}/deployments.json`)
+  return api.get(`data/${id}/deployments.json`)
     .then(response => response.data)
 }
 
 function fetchDetections (id) {
   console.log('fetchDetections', id)
-  return axios.get(`data/${id}/detections.csv`)
+  return api.get(`data/${id}/detections.csv`)
     .then(response => response.data)
     .then(csv => d3.csvParse(csv, (d, i) => {
       const m = moment(d.date)
