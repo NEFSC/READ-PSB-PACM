@@ -1,31 +1,49 @@
-import axios from 'axios'
 import moment from 'moment'
 import * as d3 from 'd3'
 
-const api = axios.create({ baseURL: import.meta.env.BASE_URL })
+function dataUrl (id, filename) {
+  return `${import.meta.env.BASE_URL}data/${id}/${filename}`
+}
+
+async function getJson (url) {
+  const response = await fetch(url)
+
+  if (!response.ok) {
+    throw new Error(`Request failed: ${response.status} ${response.statusText}`)
+  }
+
+  return response.json()
+}
+
+async function getText (url) {
+  const response = await fetch(url)
+
+  if (!response.ok) {
+    throw new Error(`Request failed: ${response.status} ${response.statusText}`)
+  }
+
+  return response.text()
+}
 
 function fetchSites (id) {
   console.log('fetchSites', id)
-  return api.get(`data/${id}/sites.json`)
-    .then(response => response.data)
+  return getJson(dataUrl(id, 'sites.json'))
 }
 
 function fetchTracks (id) {
   console.log('fetchTracks', id)
-  return api.get(`data/${id}/tracks.json`)
-    .then(response => response.data.features)
+  return getJson(dataUrl(id, 'tracks.json'))
+    .then(data => data.features)
 }
 
 function fetchDeployments (id) {
   console.log('fetchDeployments', id)
-  return api.get(`data/${id}/deployments.json`)
-    .then(response => response.data)
+  return getJson(dataUrl(id, 'deployments.json'))
 }
 
 function fetchDetections (id) {
   console.log('fetchDetections', id)
-  return api.get(`data/${id}/detections.csv`)
-    .then(response => response.data)
+  return getText(dataUrl(id, 'detections.csv'))
     .then(csv => d3.csvParse(csv, (d, i) => {
       const m = moment(d.date)
 
