@@ -106,6 +106,11 @@
       <h2 class="text-h6 mb-2">Latest Updates</h2>
 
       <div class="text-subtitle-1 font-weight-bold text-medium-emphasis">
+        v1.3.3 | May 29, 2026
+      </div>
+      <p>Added dynamic attribution list of data contributors to map and Generate Citations button.</p>
+
+      <div class="text-subtitle-1 font-weight-bold text-medium-emphasis">
         v1.3.2 | May 14, 2026
       </div>
       <p>Improved global map display so platform data repeats across wrapped world views when zoomed out.</p>
