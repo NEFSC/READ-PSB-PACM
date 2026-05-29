@@ -25,16 +25,18 @@
           class="leaflet-control-organization-attribution"
           aria-live="polite"
         >
-          <span>Passive Acoustic Data Contributors: {{ organizationAttributionLabel }}</span>&nbsp;
-          <button
-            type="button"
-            class="leaflet-control-organization-attribution__button"
+          <span>Passive Acoustic Data Contributors: {{ organizationAttributionLabel }}</span>&nbsp;<br>
+          <v-btn
+            color="primary"
+            variant="outlined"
+            size="x-small"
             @click.stop="citationDialog = true"
             @mousedown.stop
             @dblclick.stop
           >
+            <v-icon start>mdi-file-document-outline</v-icon>
             Generate Citations
-          </button>
+          </v-btn>
         </div>
       </l-control>
       <l-control-scale position="bottomleft"></l-control-scale>

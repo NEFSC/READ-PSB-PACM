@@ -20,25 +20,6 @@
   margin: 0 !important;
 }
 
-.leaflet-control-organization-attribution__button {
-  margin-left: 8px;
-  padding: 0 5px;
-  border: 1px solid rgba(0, 0, 0, 0.25);
-  border-radius: 3px;
-  background: rgba(255, 255, 255, 0.9);
-  color: #1f4f7a;
-  cursor: pointer;
-  font: inherit;
-  font-weight: 500;
-  line-height: 1.5;
-}
-
-.leaflet-control-organization-attribution__button:hover,
-.leaflet-control-organization-attribution__button:focus {
-  background: #fff;
-  text-decoration: underline;
-}
-
 .pacm-citation-list {
   padding-left: 1.5rem;
 }
