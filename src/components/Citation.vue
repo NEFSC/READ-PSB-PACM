@@ -1,16 +1,22 @@
 <template>
   <span>
-    Passive Acoustic Cetacean Map. {{ year }}. Woods Hole (MA): NOAA Northeast Fisheries Science Center v{{ version }} [accessed date]. https://passiveacoustics.fisheries.noaa.gov/pacm/
+    Passive Acoustic Cetacean Map (PACM). 2026. Woods Hole (MA): NOAA Northeast Fisheries Science Center v{{ version }}. Accessed on {{ accessedDate }}. https://passiveacoustics.fisheries.noaa.gov/pacm/
   </span>
 </template>
 
 <script>
 export default {
   name: 'Citation',
-  data () {
-    return {
-      year: (new Date()).getYear() + 1900,
-      version: process.env.PACKAGE_VERSION || 'Unknown'
+  computed: {
+    version () {
+      return process.env.PACKAGE_VERSION || 'Unknown'
+    },
+    accessedDate () {
+      return new Date().toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      })
     }
   }
 }
