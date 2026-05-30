@@ -69,7 +69,7 @@
             {{ pacmCitation }}
           </p>
 
-          <h3 class="text-h6 mt-6 mb-2">Data Contributors</h3>
+          <h3 class="text-h6 mt-6 mb-2">Data Contributor Citations</h3>
           <p v-if="contributorCitations.length === 0" class="text-medium-emphasis">
             No data contributors are visible in the current map view.
           </p>

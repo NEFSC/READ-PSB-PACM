@@ -27,4 +27,4 @@ ln -sfn $DATE current
 echo "Setting permissions for $DATE and current..."
 chmod -R 755 $DATE current
 
-echo "Data update complete. Current data is now available in the 'current' directory."
+echo "Data update complete. Current data are now available in the 'current' directory."
