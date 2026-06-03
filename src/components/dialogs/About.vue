@@ -108,7 +108,7 @@
       <div class="text-subtitle-1 font-weight-bold text-medium-emphasis">
         v1.3.3 | May 29, 2026
       </div>
-      <p>Added dynamic attribution list of data contributors to map and Generate Citations button.</p>
+      <p>Added dynamic attribution list of data contributors to map and Generate Citations button. Minor bug fix to correct tallied totals listed in legend.</p>
 
       <div class="text-subtitle-1 font-weight-bold text-medium-emphasis">
         v1.3.2 | May 14, 2026
