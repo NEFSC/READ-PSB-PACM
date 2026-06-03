@@ -263,9 +263,9 @@ export default {
       this.period.season = { start: 1, end: 365 }
       this.period.year = { start: null, end: null }
       evt.$emit('reset:filters', 'app:loadData')
-      this.counts.detections.total = xf.size()
-      this.counts.deployments.total = deploymentGroup.size()
-      this.counts.sites.total = siteMap.size
+      this.$nextTick(() => {
+        this.updateCounts()
+      })
       if (this.activeTheme && this.activeTheme.id && this.$route.params.id !== this.activeTheme.id) {
         this.$router.push({ name: 'home', params: { id: this.activeTheme.id } })
       }

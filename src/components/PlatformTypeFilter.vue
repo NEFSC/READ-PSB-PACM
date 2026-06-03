@@ -27,7 +27,8 @@ export default {
   data () {
     return {
       selected: [],
-      options: []
+      options: [],
+      isResetting: false
     }
   },
   computed: {
@@ -53,14 +54,31 @@ export default {
   },
   methods: {
     reset () {
+      if (!this.dim) return
+
+      this.isResetting = true
+      this.dim.filterAll()
+
       const datasetTypes = new Set(xf.all().map(d => d.platform_type)) // all types in dataset
       this.options = platformTypes.filter(d => datasetTypes.has(d.code))
       this.selected = this.options.map(d => d.code)
+
+      this.$nextTick(() => {
+        this.selected = this.options.map(d => d.code)
+        this.dim.filterAll()
+        this.isResetting = false
+        dc.redrawAll()
+      })
     },
     setFilter () {
-      if (!this.dim) return
+      if (!this.dim || this.isResetting) return
 
-      this.dim.filter(d => !d || this.selected.includes(d))
+      if (this.selected.length === this.options.length) {
+        this.dim.filterAll()
+      } else {
+        const selected = new Set(this.selected)
+        this.dim.filter(d => !d || selected.has(d))
+      }
       dc.redrawAll()
     }
   }
