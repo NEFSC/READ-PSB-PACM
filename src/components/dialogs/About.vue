@@ -100,17 +100,28 @@
 
       <h2 class="text-h6 mb-2">About the Project</h2>
       <p>
-        PACM was created by the NOAA NEFSC Passive Acoustic Branch to facilitate collaborative research and management of marine species using PAM detection data. PACM was designed and built by <a href="https://walkerenvres.com" target="_blank">Walker Environmental Research LLC</a> based on a map-based interface for PAM acoustic detection data developed by Hansen Johnson (Dalhousie University).
+        PACM was created by the NOAA NEFSC Passive Acoustic Branch to facilitate collaborative research and management of marine species using PAM detection data. PACM was designed and built by Walker Environmental Research based on a map-based interface for PAM acoustic detection data developed by Hansen Johnson (Dalhousie University).
       </p>
 
       <h2 class="text-h6 mb-2">Latest Updates</h2>
 
       <div class="text-subtitle-1 font-weight-bold text-medium-emphasis">
-        v1.3.3 | May 29, 2026
+        v1.3.3 | June 3, 2026
       </div>
-      <p>Added dynamic attribution list of data contributors to map and Generate Citations button. Minor bug fix to correct tallied totals listed in legend.</p>
+      <div class="mt-2">Features:</div>
+      <ul class="ml-4">
+        <li>Added dynamic attribution list of data contributors to map and Generate Citations button.</li>
+        <li>Updated about text in this welcome dialog and clarified submission, data request, and citation processes.</li>
+      </ul>
+      <div class="mt-2">
+        Bug Fixes:
+      </div>
+      <ul class="ml-4">
+        <li>Data processing pipeline had previously excluded some datasets from Makara erroneously, those datasets have been added back.</li>
+        <li>Fixed minor bug fix in legend to correctly display the total recorded day tallies when switching species.</li>
+      </ul>
 
-      <div class="text-subtitle-1 font-weight-bold text-medium-emphasis">
+      <div class="text-subtitle-1 font-weight-bold text-medium-emphasis mt-4">
         v1.3.2 | May 14, 2026
       </div>
       <p>Improved global map display so platform data repeats across wrapped world views when zoomed out.</p>
