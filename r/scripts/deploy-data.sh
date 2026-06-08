@@ -1,7 +1,7 @@
 #!/bin/bash
 # package and copy data to gcs
 
-DIR=${1:-"${HOME}/data/pacm/data"}
+DIR=${1:-"./data/pacm"}
 DATE=$(date +%Y%m%d)
 FILENAME="pacm-data-$DATE.tar.gz"
 
@@ -12,4 +12,4 @@ echo
 
 # copy to gcs
 echo "Copying $FILENAME to gs://nmfs_pacm/data/..."
-gsutil cp $DIR/$FILENAME gs://nmfs_pacm/data/$FILENAME
+gsutil cp $FILENAME gs://nmfs_pacm/data/$FILENAME
