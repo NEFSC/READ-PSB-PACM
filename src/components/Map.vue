@@ -62,7 +62,7 @@
             Please note that this list may include preferred citations, which can be provided by data contributors upon submission to the <a href="https://passiveacoustics.fisheries.noaa.gov/pars/">Passive Acoustic Reporting System (PARS)</a>. If a dataset does not have a preferred citation, PACM generates a generic citation for the entire organization. Please include both the preferred and generic citations to ensure proper attribution of all data contributors.
           </p>
           <p>
-             If you have questions about how to cite data from PACM, please contact <a href="mailto:passiveacoustics@noaa.gov">passiveacoustics@noaa.gov</a>.
+             If you have questions about how to cite data from PACM, please contact <a href="mailto:passive.acoustics@noaa.gov">passive.acoustics@noaa.gov</a>.
           </p>
           <h3 class="text-h6 mt-6 mb-2">PACM Citation</h3>
           <p class="font-weight-bold text-grey-darken-2 text-body-2 mb-4 ml-4">

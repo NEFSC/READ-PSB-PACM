@@ -95,7 +95,7 @@
 
       <h2 class="text-h6 mb-2">Contact Us</h2>
       <p>
-        For any questions or comments about PACM, please contact <a class="text-decoration-underline" href="mailto:passiveacoustics@noaa.gov">passiveacoustics@noaa.gov</a>.
+        For any questions or comments about PACM, please contact <a class="text-decoration-underline" href="mailto:passive.acoustics@noaa.gov">passive.acoustics@noaa.gov</a>.
       </p>
 
       <h2 class="text-h6 mb-2">About the Project</h2>
@@ -197,7 +197,7 @@
         <div class="text-subtitle-1 font-weight-bold text-medium-emphasis">
           v1.1.4 | Mar 22, 2023
         </div>
-        <p>Updated contact email address to <a class="text-decoration-underline" href="mailto:passiveacoustics@noaa.gov">passiveacoustics@noaa.gov</a>. Fixed ESRI Ocean basemap.</p>
+        <p>Updated contact email address to <a class="text-decoration-underline" href="mailto:passive.acoustics@noaa.gov">passive.acoustics@noaa.gov</a>. Fixed ESRI Ocean basemap.</p>
 
         <div class="text-subtitle-1 font-weight-bold text-medium-emphasis">
           v1.1.3 | Nov 17, 2022
