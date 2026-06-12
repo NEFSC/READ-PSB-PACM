@@ -2,7 +2,8 @@ import moment from 'moment'
 import * as d3 from 'd3'
 
 function dataUrl (id, filename) {
-  return `${import.meta.env.BASE_URL}data/${id}/${filename}`
+  const path = filename ? `${id}/${filename}` : id
+  return `${import.meta.env.BASE_URL}data/${path}`
 }
 
 async function getJson (url) {
@@ -41,6 +42,16 @@ function fetchDeployments (id) {
   return getJson(dataUrl(id, 'deployments.json'))
 }
 
+function fetchOrganizations () {
+  console.log('fetchOrganizations')
+  return getJson(dataUrl('organizations.json'))
+}
+
+function fetchCitations () {
+  console.log('fetchCitations')
+  return getJson(dataUrl('citations.json'))
+}
+
 function fetchDetections (id) {
   console.log('fetchDetections', id)
   return getText(dataUrl(id, 'detections.csv'))
@@ -67,6 +78,8 @@ export function fetchData ({ id }) {
     fetchSites(id),
     fetchTracks(id),
     fetchDeployments(id),
-    fetchDetections(id)
+    fetchDetections(id),
+    fetchOrganizations(),
+    fetchCitations()
   ])
 }

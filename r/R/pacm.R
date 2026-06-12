@@ -17,7 +17,8 @@ create_theme <- function (data, species) {
           deployment_type,
           water_depth_meters,
           dynamic_management_platform,
-          data_poc
+          data_poc,
+          source
         ),
       by = "deployment_id"
     ) |> 
@@ -25,7 +26,8 @@ create_theme <- function (data, species) {
       id = deployment_id,
       analysis_id,
       site_id,
-      organization_code,
+      deployment_organization_code,
+      analysis_organization_code,
 
       data_poc,
 
@@ -46,12 +48,14 @@ create_theme <- function (data, species) {
       instrument_type,
       sampling_rate_hz,
       detection_method,
+      source,
       
       # TODO: excluding these for now, CVOWC used different freq/call type within BLWH causing duplicate IDs
       call_type = NA_character_,
       analysis_sampling_rate_hz = NA_real_,
       qc_data,
       protocol_reference,
+      citations,
       analysis_start_date,
       analysis_end_date,
 
@@ -94,14 +98,14 @@ targets_pacm <- list(
   tar_target(pacm_names, {
     list(
       sites = c(
-        "organization_code",
+        "deployment_organization_code",
         "site_id",
         "site",
         "site_latitude",
         "site_longitude"
       ),
       deployments = c(
-        "organization_code",
+        "deployment_organization_code",
         "deployment_id",
         "deployment_code",
         "project",
@@ -119,12 +123,14 @@ targets_pacm <- list(
         "sampling_rate_hz",
         "data_poc",
         "recording_device_lost",
-        "dynamic_management_platform"
+        "dynamic_management_platform",
+        "source"
       ),
       analyses = c(
-        "organization_code",
-        "analysis_id",
+        "deployment_organization_code",
         "deployment_id",
+        "analysis_organization_code",
+        "analysis_id",
 
         "recorder_depth_meters",
         "instrument_type",
@@ -138,7 +144,9 @@ targets_pacm <- list(
         "analysis_start_date",
         "analysis_end_date",
         "species",
-        "detections"
+        "detections",
+
+        "citations"
       ),
       analyses_detections = c(
         "date",
@@ -146,7 +154,7 @@ targets_pacm <- list(
         "locations"
       ),
       tracks = c(
-        "organization_code",
+        "deployment_organization_code",
         "deployment_id",
         "track_id"
       )
@@ -192,6 +200,7 @@ targets_pacm <- list(
       filter(site_id %in% deployments$site_id)
     tracks <- bind_rows(pacm_data_raw$tracks) |> 
       filter(deployment_id %in% deployments$deployment_id)
+    citations <- bind_rows(pacm_data_raw$citations)
     
     analyses_data <- bind_rows(pacm_data_raw$analyses) |> 
       filter(deployment_id %in% deployments$deployment_id) |>
@@ -276,7 +285,7 @@ targets_pacm <- list(
     mobile_detections <- detections |> 
       filter(deployment_type == "MOBILE") |> 
       rename(daily_presence = presence) |> 
-      select(organization_code, analysis_id, deployment_id, date, locations) |>
+      select(analysis_id, deployment_id, date, locations) |>
       unnest(locations)
     # skimr::skim(mobile_detections)
     # mobile_detections |> 
@@ -298,6 +307,13 @@ targets_pacm <- list(
       # analyses
       all(analyses$deployment_id %in% deployments$deployment_id),
       all(map_int(analyses$detections, nrow) > 0),
+      all(
+        analyses |> 
+          select(citations) |> 
+          filter(!is.na(citations)) |>
+          unnest_longer(citations) |>
+          pull(citations) %in% citations$code
+      ),
 
       # mobile detections
       all(!is.na(mobile_detections$latitude) & !is.na(mobile_detections$longitude))
@@ -307,7 +323,8 @@ targets_pacm <- list(
       sites = sites,
       deployments = deployments,
       analyses = analyses,
-      tracks = tracks
+      tracks = tracks,
+      citations = citations
     )
   }),
 
@@ -317,7 +334,7 @@ targets_pacm <- list(
       st_as_sf(coords = c("longitude", "latitude"), crs = 4326) |>
       mapview::mapview(
         label = "deployment_id",
-        zcol = "organization_code",
+        zcol = "deployment_organization_code",
         layer.name = "Organization"
       )
   }),
@@ -326,7 +343,7 @@ targets_pacm <- list(
       st_as_sf(coords = c("site_longitude", "site_latitude"), crs = 4326) |>
       mapview::mapview(
         label = "site_id",
-        zcol = "organization_code",
+        zcol = "deployment_organization_code",
         layer.name = "Organization"
       )
   }),
@@ -334,7 +351,7 @@ targets_pacm <- list(
     pacm_data$tracks |> 
       mapview::mapview(
         label = "track_id",
-        zcol = "organization_code",
+        zcol = "deployment_organization_code",
         layer.name = "Organization"
       )
   }),
@@ -342,7 +359,7 @@ targets_pacm <- list(
   tar_target(pacm_deployments, {
     deployments <- pacm_data$deployments |> 
       transmute(
-        organization_code,
+        deployment_organization_code,
         id = deployment_id,
         deployment_code,
         project,
@@ -359,6 +376,7 @@ targets_pacm <- list(
         instrument_type,
         sampling_rate_hz,
         data_poc,
+        source,
         recording_device_lost = coalesce(recording_device_lost, FALSE),
         dynamic_management_platform = coalesce(dynamic_management_platform, FALSE)
       ) |> 
@@ -390,7 +408,7 @@ targets_pacm <- list(
 
     tracks <- pacm_data$tracks |> 
       filter(deployment_id %in% deployments$id) |> 
-      select(organization_code, id = deployment_id, track_id)
+      select(deployment_organization_code, id = deployment_id, track_id)
     
     list(
       sites = sites,
@@ -583,10 +601,13 @@ targets_pacm <- list(
 
   tar_target(pacm_ref, {
     list(
+      organizations = makara_db$organizations |> 
+        select(code, name),
       species = makara_db$sound_sources |> 
         select(code, name),
       platform_types = makara_db$platform_types |> 
-        select(code, name)
+        select(code, name),
+      citations = pacm_data$citations
     )
   }),
 

@@ -115,10 +115,7 @@
     <v-main style="z-index:0">
       <div style="height:100%;position:relative">
         <Map :counts="counts"></Map>
-        <div style="position:absolute;bottom:0;left:0;width:100%;z-index:1000;background:white;max-height:600px"
-          v-if="selectedDeployments.length > 0">
-          <DeploymentDetail></DeploymentDetail>
-        </div>
+        <DeploymentDetail v-if="selectedDeployments.length > 0"></DeploymentDetail>
       </div>
     </v-main>
 

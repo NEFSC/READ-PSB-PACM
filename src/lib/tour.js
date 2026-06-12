@@ -57,7 +57,7 @@ export default [
     },
     content: `
       <i>Click here to open advanced filtering options.</i><br><br>
-      Advanced filters can be used to focus on specific data affiliations, instrument types, and recorder sampling rates.
+      Advanced filters can be used to focus on specific monitoring and analysis organizations, instrument types, and recorder sampling rates.
     `,
     params: {
       highlight: true,

@@ -121,7 +121,7 @@ const siteHtml = (d, siteDeployments, deploymentsOnly) => {
   const latest = monitoringEnds.length > 0 ? moment.max(monitoringEnds).format('ll') : 'N/A'
 
   let metaHtml = [
-    ['Organization', `${orNa(d.organization_code)}`],
+    ['Monitoring Organization', `${orNa(d.deployment_organization_code)}`],
     ['Site', `${orNa(d.site)}`],
     ['Project', uniqueStrings(deps, 'project')],
     ['Platform Type', uniqueStrings(deps, 'platform_type')],
@@ -134,6 +134,7 @@ const siteHtml = (d, siteDeployments, deploymentsOnly) => {
   ]
 
   if (!deploymentsOnly) {
+    metaHtml.push(['Analysis Organization', uniqueStrings(deps, 'analysis_organization_code')])
     metaHtml.push(['Detection Method', uniqueStrings(deps, 'detection_method')])
     metaHtml.push(['Analysis QAQC', uniqueStrings(deps, 'qc_data')])
     metaHtml = htmlTable(metaHtml)
@@ -165,7 +166,7 @@ const deploymentHtml = (d, deployment, deploymentsOnly) => {
   const monitoring = monitoringPeriodLabels(props)
 
   let metaHtml = [
-    ['Organization', `${orNa(d.organization_code)}`],
+    ['Monitoring Organization', `${orNa(d.deployment_organization_code)}`],
     ['Deployment', `${orNa(d.deployment_code)}`],
     ['Project', `${props.project}`],
     ['Platform Type', `${orNa(props.platform_type)}`],
@@ -177,6 +178,7 @@ const deploymentHtml = (d, deployment, deploymentsOnly) => {
     ['# Deployments', 1]
   ]
   if (!deploymentsOnly) {
+    metaHtml.push(['Analysis Organization', `${orNa(props.analysis_organization_code)}`])
     metaHtml.push(['Detection Method', `${orNa(props.detection_method)}`])
     metaHtml.push(['Analysis QAQC', `${orNa(props.qc_data)}`])
     metaHtml = htmlTable(metaHtml)
@@ -207,6 +209,8 @@ const trackHtml = (d, deployment, deploymentsOnly) => {
   const monitoring = monitoringPeriodLabels(props)
 
   let trackHtml = [
+    ['Monitoring Organization', `${orNa(props.deployment_organization_code)}`],
+    ['Deployment', `${orNa(props.deployment_code)}`],
     ['Project', `${props.project}`],
     ['Site', `${orNa(props.site)}`],
     ['Platform Type', `${orNa(props.platform_type)}`],
@@ -217,6 +221,7 @@ const trackHtml = (d, deployment, deploymentsOnly) => {
   ]
 
   if (!deploymentsOnly) {
+    trackHtml.push(['Analysis Organization', `${orNa(props.analysis_organization_code)}`])
     trackHtml.push(['Detection Method', `${orNa(props.detection_method)}`])
     trackHtml.push(['Analysis QAQC', `${orNa(props.qc_data)}`])
     trackHtml = htmlTable(trackHtml)

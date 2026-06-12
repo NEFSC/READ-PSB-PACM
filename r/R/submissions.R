@@ -171,7 +171,8 @@ targets_subs <- list(
         instrument_type,
         sampling_rate_hz = format_number(sampling_rate_hz),
         data_poc = if_else(is.na(data_poc_name), NA_character_, glue("{data_poc_name} <{data_poc_email}>")),
-        dynamic_management_platform = NA
+        dynamic_management_platform = NA,
+        source = "PARS"
       )
     
     stopifnot(
@@ -199,6 +200,7 @@ targets_subs <- list(
       mutate(
         recording_device_lost = FALSE
       ) |> 
+      rename(deployment_organization_code = organization_code) |> 
       select(all_of(pacm_names$deployments))
   }),
 
@@ -254,6 +256,7 @@ targets_subs <- list(
   }),
   tar_target(subs_sites_pacm, {
     subs_sites |> 
+      rename(deployment_organization_code = organization_code) |> 
       select(all_of(pacm_names$sites))
   }),
 
@@ -335,9 +338,12 @@ targets_subs <- list(
   tar_target(subs_analyses_pacm, {
     subs_analyses |> 
       mutate(
+        analysis_organization_code = organization_code,
+        deployment_organization_code = organization_code,
         detections = map(detections, function (detections) {
           select(detections, all_of(pacm_names$analyses_detections))
-        })
+        }),
+        citations = NA_character_
       ) |> 
       select(all_of(pacm_names$analyses))
   }),
@@ -396,6 +402,7 @@ targets_subs <- list(
   }),
   tar_target(subs_tracks_pacm, {
     subs_tracks |> 
+      rename(deployment_organization_code = organization_code) |>
       select(all_of(pacm_names$tracks))
   }),
 

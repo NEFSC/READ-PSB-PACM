@@ -1,5 +1,13 @@
 <template>
-  <v-card>
+  <v-dialog
+    :model-value="selectedDeployments.length > 0"
+    :fullscreen="$vuetify.display.mobile"
+    max-width="1600"
+    width="calc(100vw - 48px)"
+    scrollable
+    @update:model-value="onDialogModelUpdate"
+  >
+  <v-card class="deployment-detail-dialog">
     <v-toolbar color="grey-darken-2" density="compact" theme="dark" class="pl-2">
       <div v-if="isSiteView" class="text-subtitle-1 font-weight-bold">
         Selected Site ({{ selectedDeployments.length }} deployments)
@@ -49,150 +57,58 @@
       </v-tooltip>
     </v-toolbar>
     <v-card-text
-      :style="{ 'max-height': Math.round($vuetify.display.height * 0.6) + 'px', 'overflow-y': 'auto' }"
+      class="deployment-detail-body"
+      :style="{ 'max-height': $vuetify.display.mobile ? 'none' : Math.round($vuetify.display.height * 0.82) + 'px' }"
     >
-      <v-row v-if="isSiteView">
-        <v-col xs="12" md="12" lg="12" xl="4">
-          <v-table density="compact">
-            <tbody>
-              <tr>
-                <td class="px-2 text-right" style="width:140px">Organization:</td>
-                <td class="px-2 font-weight-bold">{{ siteMetadata.organizationCode }}</td>
-              </tr>
-              <tr>
-                <td class="px-2 text-right" style="width:140px">Site:</td>
-                <td class="px-2 font-weight-bold">{{ siteMetadata.site }}</td>
-              </tr>
-              <tr>
-                <td class="px-2 text-right" style="width:140px">Project:</td>
-                <td class="px-2 font-weight-bold">{{ siteMetadata.project }}</td>
-              </tr>
-              <tr>
-                <td class="px-2 text-right" style="width:140px">Platform Type:</td>
-                <td class="px-2 font-weight-bold">{{ siteMetadata.platformType }}</td>
-              </tr>
-              <tr>
-                <td class="px-2 text-right">Recorder Type:</td>
-                <td class="px-2 font-weight-bold">{{ siteMetadata.instrumentType }}</td>
-              </tr>
-              <tr>
-                <td class="px-2 text-right">Sampling Rate:</td>
-                <td class="px-2 font-weight-bold">{{ siteMetadata.samplingRate }} Hz</td>
-              </tr>
-              <tr v-if="!activeTheme.deploymentsOnly">
-                <td class="px-2 text-right">Detection Method:</td>
-                <td class="px-2 font-weight-bold">{{ siteMetadata.detectionMethod }}</td>
-              </tr>
-              <tr v-if="!activeTheme.deploymentsOnly">
-                <td class="px-2 text-right">Analysis QAQC:</td>
-                <td class="px-2 font-weight-bold">{{ siteMetadata.qcData }}</td>
-              </tr>
-              <tr>
-                <td class="px-2 text-right">Recorder Depth:</td>
-                <td class="px-2 font-weight-bold">{{ siteMetadata.recorderDepth }}</td>
-              </tr>
-              <tr>
-                <td class="px-2 text-right">Water Depth:</td>
-                <td class="px-2 font-weight-bold">{{ siteMetadata.waterDepth }}</td>
-              </tr>
-              <tr>
-                <td class="px-2 text-right">Monitoring Period:</td>
-                <td class="px-2 font-weight-bold">{{ siteMetadata.monitoringStart }} to {{ siteMetadata.monitoringEnd }}</td>
-              </tr>
-              <tr>
-                <td class="px-2 text-right"># Deployments:</td>
-                <td class="px-2 font-weight-bold">{{ siteMetadata.nDeployments }}</td>
-              </tr>
-              <tr>
-                <td class="px-2 text-right">Point of Contact:</td>
-                <td class="px-2 font-weight-bold">{{ siteMetadata.dataPoc }}</td>
-              </tr>
-            </tbody>
-          </v-table>
+      <v-row class="deployment-detail-content">
+        <v-col cols="12" md="5" xl="4">
+          <div class="deployment-detail-metadata">
+            <div
+              v-for="field in activeMetadataFields"
+              :key="field.label"
+              class="deployment-detail-metadata__item"
+            >
+              <span class="deployment-detail-metadata__label">{{ field.label }}:</span>
+              <span class="deployment-detail-metadata__value">{{ field.value }}</span>
+            </div>
+          </div>
         </v-col>
 
-        <v-col xs="12" md="12" lg="12" xl="8" v-if="!activeTheme.deploymentsOnly" class="text-black">
-          <div class="heading font-weight-bold">Daily Detections</div>
-          <div class="text-subtitle-2 text-grey-darken-1">Shaded periods indicate unmonitored gaps between deployments.</div>
-          <highcharts class="chart" :options="chart"></highcharts>
-        </v-col>
-      </v-row>
+        <v-col
+          v-if="!activeTheme.deploymentsOnly || activeCitations.length > 0"
+          cols="12"
+          md="7"
+          xl="8"
+          class="text-black"
+        >
+          <template v-if="!activeTheme.deploymentsOnly">
+            <div class="heading font-weight-bold">Daily Detections</div>
+            <div v-if="isSiteView" class="text-subtitle-2 text-grey-darken-1">
+              Shaded periods indicate unmonitored gaps between deployments.
+            </div>
+            <highcharts class="chart" :options="chart"></highcharts>
+          </template>
 
-      <v-row v-else>
-        <v-col xs="12" md="12" lg="12" xl="4">
-          <v-table density="compact">
-            <tbody>
-              <tr>
-                <td class="px-2 text-right" style="width:140px">Organization:</td>
-                <td class="px-2 font-weight-bold">{{ selectedDeployment.organization_code }}</td>
-              </tr>
-              <tr>
-                <td class="px-2 text-right" style="width:140px">Deployment:</td>
-                <td class="px-2 font-weight-bold">{{ selectedDeployment.deployment_code }}</td>
-              </tr>
-              <tr>
-                <td class="px-2 text-right" style="width:140px">Project:</td>
-                <td class="px-2 font-weight-bold">{{ selectedDeployment.project }}</td>
-              </tr>
-              <tr v-if="deploymentType === 'station' || deploymentType === 'glider'">
-                <td class="px-2 text-right" style="width:140px">Site:</td>
-                <td class="px-2 font-weight-bold">{{ selectedDeployment.site ? selectedDeployment.site : 'N/A' }}</td>
-              </tr>
-              <tr>
-                <td class="px-2 text-right" style="width:140px">Platform Type:</td>
-                <td class="px-2 font-weight-bold">{{ selectedDeployment.platform_type || 'N/A' }}</td>
-              </tr>
-              <tr>
-                <td class="px-2 text-right">Recorder Type:</td>
-                <td class="px-2 font-weight-bold">{{ selectedDeployment.instrument_type || 'N/A' }}</td>
-              </tr>
-              <tr>
-                <td class="px-2 text-right">Sampling Rate:</td>
-                <td class="px-2 font-weight-bold">{{ selectedDeployment.sampling_rate_hz + ' Hz' || 'N/A' }}</td>
-              </tr>
-              <tr v-if="!activeTheme.deploymentsOnly">
-                <td class="px-2 text-right">Detection Method:</td>
-                <td class="px-2 font-weight-bold">{{ selectedDeployment.detection_method ? selectedDeployment.detection_method : 'N/A' }}</td>
-              </tr>
-              <tr v-if="!activeTheme.deploymentsOnly">
-                <td class="px-2 text-right">Analysis QAQC:</td>
-                <td class="px-2 font-weight-bold">{{ selectedDeployment.qc_data ? selectedDeployment.qc_data : 'N/A'}}</td>
-              </tr>
-              <tr v-if="selectedDeployment.deployment_type === 'STATIONARY'">
-                <td class="px-2 text-right">Recorder Depth:</td>
-                <td class="px-2 font-weight-bold">{{ selectedDeployment.recorder_depth_meters ? `${(+selectedDeployment.recorder_depth_meters).toFixed(0)} m` : 'N/A' }}</td>
-              </tr>
-              <tr v-if="selectedDeployment.deployment_type === 'STATIONARY'">
-                <td class="px-2 text-right">Water Depth: </td>
-                <td class="px-2 font-weight-bold">{{ selectedDeployment.water_depth_meters ? `${(+selectedDeployment.water_depth_meters).toFixed(0)} m` : 'N/A' }}</td>
-              </tr>
-              <tr>
-                <td class="px-2 text-right">Deployed:</td>
-                <td class="px-2 font-weight-bold">{{ monitoringPeriod.start || 'N/A' }} to {{ monitoringPeriod.end || 'N/A' }}</td>
-              </tr>
-              <tr>
-                <td class="px-2 text-right">Duration:</td>
-                <td class="px-2 font-weight-bold">{{ isFinite(monitoringPeriod.duration) ? monitoringPeriod.duration.toLocaleString() + ' days' : 'N/A' }}</td>
-              </tr>
-              <tr>
-                <td class="px-2 text-right">Point of Contact:</td>
-                <td class="px-2 font-weight-bold">{{ selectedDeployment.data_poc }} </td>
-              </tr>
-              <tr v-if="!activeTheme.deploymentsOnly">
-                <td class="px-2 text-right">Protocol:</td>
-                <td class="px-2 font-weight-bold">{{ selectedDeployment.protocol_reference }}</td>
-              </tr>
-            </tbody>
-          </v-table>
-        </v-col>
-
-        <v-col xs="12" md="12" lg="12" xl="8" v-if="!activeTheme.deploymentsOnly" class="text-black">
-          <div class="heading font-weight-bold">Daily Detections</div>
-          <highcharts class="chart" :options="chart"></highcharts>
+          <template v-if="activeCitations.length > 0">
+            <v-divider v-if="!activeTheme.deploymentsOnly" class="my-5"></v-divider>
+            <section class="deployment-detail-citations">
+              <div class="heading font-weight-bold mb-1">Citations</div>
+              <ul class="deployment-detail-citations__list">
+                <li
+                  v-for="citation in activeCitations"
+                  :key="citation.key"
+                  class="deployment-detail-citations__item text-body-2 text-grey-darken-3"
+                >
+                  {{ citation.reference }}
+                </li>
+              </ul>
+            </section>
+          </template>
         </v-col>
       </v-row>
     </v-card-text>
   </v-card>
+  </v-dialog>
 </template>
 
 <script>
@@ -203,6 +119,7 @@ import evt from '@/lib/events'
 import { xf } from '@/lib/crossfilter'
 import { detectionTypes, detectionTypesMap } from '@/lib/constants'
 import { monitoringPeriodLabels } from '@/lib/tip'
+import { createContributorCitation, parseCitationCodes } from '@/lib/citations'
 
 export default {
   name: 'DeploymentDetail',
@@ -214,7 +131,7 @@ export default {
         chart: {
           type: 'scatter',
           zoomType: 'x',
-          height: 275,
+          height: 360,
           marginRight: 50,
           marginLeft: 70
         },
@@ -265,7 +182,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['selectedDeployments', 'activeTheme']),
+    ...mapGetters(['selectedDeployments', 'activeTheme', 'citations', 'organizations']),
     isSiteView () {
       if (this.selectedDeployments.length < 1) return false
       const isStationary = this.selectedDeployments.every(d => d.deployment_type === 'STATIONARY')
@@ -293,7 +210,8 @@ export default {
       const starts = deps.map(d => moment.utc(d.monitoring_start_datetime)).filter(m => m.isValid())
       const ends = deps.map(d => moment.utc(d.monitoring_end_datetime)).filter(m => m.isValid())
       return {
-        organizationCode: unique('organization_code'),
+        organizationCode: unique('deployment_organization_code'),
+        analysisOrganizationCode: unique('analysis_organization_code'),
         site: deps[0].site || deps[0].site_id || 'N/A',
         project: unique('project'),
         platformType: unique('platform_type'),
@@ -313,6 +231,79 @@ export default {
       return this.selectedDeployments.length > 0
         ? this.selectedDeployments[this.index]
         : null
+    },
+    citationByCode () {
+      return new Map((this.citations || []).map(citation => [citation.code, citation]))
+    },
+    organizationByCode () {
+      return new Map((this.organizations || []).map(organization => [organization.code, organization]))
+    },
+    accessedDate () {
+      return new Date().toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      })
+    },
+    siteDeploymentCitations () {
+      return this.getDeploymentCitations(this.selectedDeployments)
+    },
+    selectedDeploymentCitations () {
+      return this.getDeploymentCitations(this.selectedDeployment ? [this.selectedDeployment] : [])
+    },
+    activeCitations () {
+      return this.isSiteView ? this.siteDeploymentCitations : this.selectedDeploymentCitations
+    },
+    siteMetadataFields () {
+      const m = this.siteMetadata
+      if (!m) return []
+      const showAnalysis = !this.activeTheme?.deploymentsOnly
+      return [
+        { label: 'Monitoring Organization', value: m.organizationCode },
+        { label: 'Site', value: m.site },
+        { label: 'Project', value: m.project },
+        { label: 'Platform Type', value: m.platformType },
+        { label: 'Recorder Type', value: m.instrumentType },
+        { label: 'Sampling Rate', value: `${m.samplingRate} Hz` },
+        showAnalysis && { label: 'Analysis Organization', value: m.analysisOrganizationCode },
+        showAnalysis && { label: 'Detection Method', value: m.detectionMethod },
+        showAnalysis && { label: 'Analysis QAQC', value: m.qcData },
+        { label: 'Recorder Depth', value: m.recorderDepth },
+        { label: 'Water Depth', value: m.waterDepth },
+        { label: 'Monitoring Period', value: `${m.monitoringStart} to ${m.monitoringEnd}` },
+        { label: '# Deployments', value: m.nDeployments },
+        { label: 'Point of Contact', value: m.dataPoc }
+      ].filter(Boolean)
+    },
+    deploymentMetadataFields () {
+      const d = this.selectedDeployment
+      if (!d) return []
+      const showAnalysis = !this.activeTheme?.deploymentsOnly
+      const isStationary = d.deployment_type === 'STATIONARY'
+      const showSite = this.deploymentType === 'station' || this.deploymentType === 'glider'
+      const period = this.monitoringPeriod
+      const depth = value => value ? `${(+value).toFixed(0)} m` : 'N/A'
+      return [
+        { label: 'Monitoring Organization', value: d.deployment_organization_code },
+        { label: 'Deployment', value: d.deployment_code },
+        { label: 'Project', value: d.project },
+        showSite && { label: 'Site', value: d.site ? d.site : 'N/A' },
+        { label: 'Platform Type', value: d.platform_type || 'N/A' },
+        { label: 'Recorder Type', value: d.instrument_type || 'N/A' },
+        { label: 'Sampling Rate', value: d.sampling_rate_hz + ' Hz' || 'N/A' },
+        showAnalysis && { label: 'Analysis Organization', value: d.analysis_organization_code ? d.analysis_organization_code : 'N/A' },
+        showAnalysis && { label: 'Detection Method', value: d.detection_method ? d.detection_method : 'N/A' },
+        showAnalysis && { label: 'Analysis QAQC', value: d.qc_data ? d.qc_data : 'N/A' },
+        isStationary && { label: 'Recorder Depth', value: depth(d.recorder_depth_meters) },
+        isStationary && { label: 'Water Depth', value: depth(d.water_depth_meters) },
+        { label: 'Deployed', value: `${period.start || 'N/A'} to ${period.end || 'N/A'}` },
+        { label: 'Duration', value: isFinite(period.duration) ? period.duration.toLocaleString() + ' days' : 'N/A' },
+        { label: 'Point of Contact', value: d.data_poc },
+        showAnalysis && { label: 'Protocol', value: d.protocol_reference }
+      ].filter(Boolean)
+    },
+    activeMetadataFields () {
+      return this.isSiteView ? this.siteMetadataFields : this.deploymentMetadataFields
     },
     deploymentType () {
       if (this.selectedDeployment.platform_type === 'mooring' || this.selectedDeployment.platform_type === 'buoy') {
@@ -353,6 +344,75 @@ export default {
     ...mapActions(['selectDeployments']),
     close () {
       this.selectDeployments()
+    },
+    onDialogModelUpdate (value) {
+      if (!value) this.close()
+    },
+    normalizeOrganizationCode (code) {
+      return code || 'UNKNOWN'
+    },
+    normalizeSource (source) {
+      const normalizedSource = String(source || 'PARS').toUpperCase()
+      return ['MAKARA', 'PARS'].includes(normalizedSource) ? normalizedSource : 'PARS'
+    },
+    getDeploymentCitations (deployments) {
+      const codes = new Set()
+
+      deployments.forEach(deployment => {
+        parseCitationCodes(deployment?.citations)
+          .forEach(code => codes.add(code))
+      })
+
+      const preferredCitations = Array.from(codes)
+        .sort()
+        .map(code => ({
+          key: `citation:${code}`,
+          code,
+          reference: this.citationByCode.get(code)?.reference || code
+        }))
+
+      const organizationCitations = this.getDeploymentOrganizationSources(deployments).map(({ organizationCode, sources }) => {
+        const organization = this.organizationByCode.get(organizationCode) || { code: organizationCode }
+        return {
+          key: `organization:${organizationCode}`,
+          code: organizationCode,
+          reference: createContributorCitation(organization, this.accessedDate, sources)
+        }
+      })
+
+      return [
+        ...preferredCitations,
+        ...organizationCitations
+      ].sort((a, b) => a.reference.localeCompare(b.reference))
+    },
+    getDeploymentOrganizationSources (deployments) {
+      const organizationSources = new Map()
+
+      deployments.forEach(deployment => {
+        if (!deployment) return
+
+        const source = this.normalizeSource(deployment.source)
+        const organizationCodes = [
+          deployment.deployment_organization_code,
+        ]
+        if (deployment.analysis_organization_code) {
+          organizationCodes.push(deployment.analysis_organization_code)
+        }
+
+        organizationCodes.forEach(organizationCode => {
+          if (!organizationSources.has(organizationCode)) {
+            organizationSources.set(organizationCode, new Set())
+          }
+          organizationSources.get(organizationCode).add(source)
+        })
+      })
+
+      return Array.from(organizationSources.entries())
+        .map(([organizationCode, sources]) => ({
+          organizationCode,
+          sources: Array.from(sources).sort()
+        }))
+        .sort((a, b) => a.organizationCode.localeCompare(b.organizationCode))
     },
     updateChart () {
       if (this.activeTheme && this.activeTheme.deploymentsOnly) return
@@ -421,5 +481,57 @@ export default {
 }
 </script>
 
-<style>
+<style scoped>
+.deployment-detail-dialog {
+  max-height: calc(100vh - 48px);
+}
+
+.deployment-detail-body {
+  overflow-y: auto;
+}
+
+.deployment-detail-content {
+  min-height: 420px;
+}
+
+.deployment-detail-metadata {
+  font-size: 0.875rem;
+}
+
+.deployment-detail-metadata__item {
+  break-inside: avoid;
+  display: flex;
+  gap: 0.75rem;
+  align-items: baseline;
+  padding: 5px 0;
+  line-height: 1.4;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.deployment-detail-metadata__label {
+  flex: 0 0 170px;
+  text-align: right;
+  color: #555;
+  white-space: nowrap;
+}
+
+.deployment-detail-metadata__value {
+  min-width: 0;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.deployment-detail-citations__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.deployment-detail-citations__item {
+  margin-bottom: 0.9rem;
+  padding-left: 1.25rem;
+  text-indent: -1.25rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
 </style>

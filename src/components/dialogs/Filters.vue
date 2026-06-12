@@ -14,14 +14,26 @@
     <v-card-text class="text-body-2 text-grey-darken-4 pt-4">
       <v-select
         variant="outlined"
-        :items="affiliation.options"
-        v-model="affiliation.selected"
-        label="Select Data Affiliation"
+        :items="monitoringOrganization.options"
+        v-model="monitoringOrganization.selected"
+        label="Select Monitoring Organization"
         hide-details
         clearable
         multiple
         chips
         closable-chips
+      ></v-select>
+      <v-select
+        variant="outlined"
+        :items="analysisOrganization.options"
+        v-model="analysisOrganization.selected"
+        label="Select Analysis Organization"
+        hide-details
+        clearable
+        multiple
+        chips
+        closable-chips
+        class="mt-4"
       ></v-select>
       <v-select
         variant="outlined"
@@ -60,7 +72,12 @@ export default {
   name: 'FiltersDialog',
   data () {
     return {
-      affiliation: {
+      monitoringOrganization: {
+        dim: null,
+        options: [],
+        selected: []
+      },
+      analysisOrganization: {
         dim: null,
         options: [],
         selected: []
@@ -81,8 +98,11 @@ export default {
     })
   },
   watch: {
-    'affiliation.selected' () {
-      this.setAffiliationFilter()
+    'monitoringOrganization.selected' () {
+      this.setMonitoringOrganizationFilter()
+    },
+    'analysisOrganization.selected' () {
+      this.setAnalysisOrganizationFilter()
     },
     'instrumentType.selected' () {
       this.setInstrumentTypeFilter()
@@ -95,37 +115,52 @@ export default {
     }
   },
   mounted () {
-    this.affiliation.dim = xf.dimension(d => d.organization_code || 'N/A')
+    this.monitoringOrganization.dim = xf.dimension(d => d.deployment_organization_code || 'N/A')
+    this.analysisOrganization.dim = xf.dimension(d => d.analysis_organization_code || 'N/A')
     this.instrumentType.dim = xf.dimension(d => d.instrument_type || 'N/A')
     this.dynamicManagementPlatform.dim = xf.dimension(d => d.dynamic_management_platform ? 'T' : 'F')
     this.reset()
   },
   beforeUnmount () {
-    this.affiliation.dim.dispose()
+    this.monitoringOrganization.dim.dispose()
+    this.analysisOrganization.dim.dispose()
     this.instrumentType.dim.dispose()
     this.dynamicManagementPlatform.dim.dispose()
   },
   methods: {
     clearAll () {
-      this.affiliation.selected = []
+      this.monitoringOrganization.selected = []
+      this.analysisOrganization.selected = []
       this.instrumentType.selected = []
       this.dynamicManagementPlatform.selected = false
     },
     reset () {
       const detections = xf.all()
-      const affiliations = new Set(detections.map(d => d.organization_code || 'N/A'))
-      this.affiliation.options = [...affiliations].sort()
+
+      const monitoringOrganizations = new Set(detections.map(d => d.deployment_organization_code || 'N/A'))
+      this.monitoringOrganization.options = [...monitoringOrganizations].sort()
+
+      const analysisOrganizations = new Set(detections.map(d => d.analysis_organization_code || 'N/A'))
+      this.analysisOrganization.options = [...analysisOrganizations].sort()
 
       const instrumentTypes = new Set(detections.map(d => d.instrument_type || 'N/A'))
       this.instrumentType.options = [...instrumentTypes].sort()
 
       this.clearAll()
     },
-    setAffiliationFilter () {
-      if (this.affiliation.selected && this.affiliation.selected.length > 0) {
-        this.affiliation.dim.filter(d => !d || this.affiliation.selected.includes(d))
+    setMonitoringOrganizationFilter () {
+      if (this.monitoringOrganization.selected && this.monitoringOrganization.selected.length > 0) {
+        this.monitoringOrganization.dim.filter(d => !d || this.monitoringOrganization.selected.includes(d))
       } else {
-        this.affiliation.dim.filterAll()
+        this.monitoringOrganization.dim.filterAll()
+      }
+      dc.redrawAll()
+    },
+    setAnalysisOrganizationFilter () {
+      if (this.analysisOrganization.selected && this.analysisOrganization.selected.length > 0) {
+        this.analysisOrganization.dim.filter(d => !d || this.analysisOrganization.selected.includes(d))
+      } else {
+        this.analysisOrganization.dim.filterAll()
       }
       dc.redrawAll()
     },

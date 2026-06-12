@@ -68,9 +68,9 @@
         More information about Passive Acoustic Monitoring and how it works can be found at the <a class="text-decoration-underline" href="https://www.fisheries.noaa.gov/new-england-mid-atlantic/endangered-species-conservation/passive-acoustic-research-northeast" target="_blank">NOAA NEFSC Passive Acoustic Research website</a>
       </p>
 
-      <h2 class="text-h6">Data Attributions and Citations</h2>
+      <h2 class="text-h6 mb-2">Data Attributions and Citations</h2>
       <p>
-        PACM displays PAM datasets contributed from a wide range of government agencies, research institutions, industry partners, and other organizations. PAM data collected by NOAA Fisheries, across its various branches and science centers, are obtained from an internal passive acoustics database (Makara) accessible only within NOAA. All datasets contributed by agencies and organizations outside NOAA are obtained from the <a class="text-decoration-underline" href="https://passiveacoustics.fisheries.noaa.gov/pars/">Passive Acoustic Reporting System (PARS)</a>.
+        PACM displays PAM datasets contributed by a wide range of government agencies, research institutions, industry partners, and other organizations through the <a class="text-decoration-underline" href="https://passiveacoustics.fisheries.noaa.gov/pars/">Passive Acoustic Reporting System (PARS)</a>. PARS also includes PAM data stored in the Makara Passive Acoustics Database, which is an internal database used across the various branches and science centers at NOAA Fisheries.
       </p>
       <p>
         PACM dynamically lists all data contributors based on which datasets are currently visible on the map. Click the "Generate Citations" button for more information and to get a list of citations for all currently visible datasets, which can be copied and pasted into reports, publications, presentations, or other documents.
@@ -84,7 +84,7 @@
 
       <h2 class="text-h6 mb-2">Contributing Data to PACM</h2>
       <p>
-        Data can be submitted for display on PACM by any organization who uses standard scientific protocols to collect and analyze PAM data through the <a class="text-decoration-underline" href="https://passiveacoustics.fisheries.noaa.gov/pars/">Passive Acoustic Reporting System</a>. NOAA scientists and staff can also contribute data to PACM using the internal (NOAA-only) Makara passive acoustics database.
+        Data can be submitted for display on PACM by any organization who uses standard scientific protocols to collect and analyze PAM data through the <a class="text-decoration-underline" href="https://passiveacoustics.fisheries.noaa.gov/pars/">Passive Acoustic Reporting System</a>. NOAA scientists and staff can also contribute data to PACM using the Makara Passive Acoustics Database, which is only accessible within NOAA.
       </p>
 
 
@@ -106,6 +106,15 @@
       <h2 class="text-h6 mb-2">Latest Updates</h2>
 
       <div class="text-subtitle-1 font-weight-bold text-medium-emphasis">
+        v1.3.4 | June 11, 2026
+      </div>
+      <div class="mt-2">Features:</div>
+      <ul class="ml-4">
+        <li>Updated auto-generated citation list formats and added analysis-specific preferred citations.</li>
+        <li>Metadata now distinguishes between monitoring organizations (who collected the recordings) and analysis organizations (who processed the data). The advanced filters window was updated accordingly.</li>
+      </ul>
+
+      <div class="text-subtitle-1 font-weight-bold text-medium-emphasis">
         v1.3.3 | June 3, 2026
       </div>
       <div class="mt-2">Features:</div>
@@ -121,11 +130,6 @@
         <li>Fixed minor bug fix in legend to correctly display the total recorded day tallies when switching species.</li>
       </ul>
 
-      <div class="text-subtitle-1 font-weight-bold text-medium-emphasis mt-4">
-        v1.3.2 | May 14, 2026
-      </div>
-      <p>Improved global map display so platform data repeats across wrapped world views when zoomed out.</p>
-
       <v-btn
         color="primary"
         variant="text"
@@ -139,6 +143,11 @@
       </v-btn>
 
       <div v-show="showAllUpdates" id="about-update-history">
+        <div class="text-subtitle-1 font-weight-bold text-medium-emphasis mt-4">
+          v1.3.2 | May 14, 2026
+        </div>
+        <p>Improved global map display so platform data repeats across wrapped world views when zoomed out.</p>
+
         <div class="text-subtitle-1 font-weight-bold text-medium-emphasis">
           v1.3.1 | May 11, 2026
         </div>

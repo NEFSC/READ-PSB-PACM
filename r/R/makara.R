@@ -47,6 +47,10 @@ targets_makara <- list(
       collect()
     analyses_sound_sources <- tbl(con, "analyses_sound_sources") |>
       collect()
+    analyses_citations <- tbl(con, "analyses_citations") |>
+      collect()
+    citations <- tbl(con, "citations") |>
+      collect()
     detectors <- tbl(con, "detectors") |>
       collect()
     analyses_n_detections <- tbl(con, "detections") |> 
@@ -95,6 +99,8 @@ targets_makara <- list(
       analyses_recordings = analyses_recordings,
       analyses_detectors = analyses_detectors,
       analyses_sound_sources = analyses_sound_sources,
+      analyses_citations = analyses_citations,
+      citations = citations,
       detectors = detectors,
       detections_daily = detections_daily,
       detections_mobile = detections_mobile,
@@ -186,9 +192,9 @@ targets_makara <- list(
       filter(!organization_code %in% makara_exclude_organizations) |> 
       bind_rows(makara_jasco$sites) |>
       transmute(
-        organization_code,
+        deployment_organization_code = organization_code,
         makara_site_id = id,
-        site_id = glue("{organization_code}:{site_code}"),
+        site_id = glue("{deployment_organization_code}:{site_code}"),
         site = site_code,
         site_latitude,
         site_longitude
@@ -197,7 +203,7 @@ targets_makara <- list(
         makara_db$deployments |>
           select(
             makara_site_id = site_id,
-            makara_deployment_id = id, organization_code, deployment_code,
+            makara_deployment_id = id, deployment_organization_code = organization_code, deployment_code,
             deployment_latitude, deployment_longitude,
             deployment_datetime
           ) |> 
@@ -322,7 +328,7 @@ targets_makara <- list(
       transmute(
         makara_deployment_id,
         deployment_id = glue("{organization_code}:{deployment_code}"),
-        organization_code,
+        deployment_organization_code = organization_code,
         deployment_code,
         site_id,
         project_id,
@@ -432,6 +438,23 @@ targets_makara <- list(
       summarise(
         detector_codes = list(detector_code)
       )
+    
+    analyses_citations <- makara_db$analyses |> 
+      select(analysis_id = id) |> 
+      left_join(
+        makara_db$analyses_citations |> 
+          left_join(
+            makara_db$citations |> 
+              mutate(citation_code = paste0(organization_code, ":", citation_code)),
+            by = c("citation_id" = "id")
+          ) |> 
+          select(analysis_id, citation_code),
+        by = c("analysis_id")
+      ) |> 
+      group_by(analysis_id) |>
+      summarise(
+        citation_codes = list(citation_code)
+      )
 
     # analyses with multiple detectors
     analyses_detectors |> 
@@ -477,11 +500,16 @@ targets_makara <- list(
         analyses_sound_sources,
         by = c("id" = "analysis_id")
       ) |> 
+      left_join(
+        analyses_citations,
+        by = c("id" = "analysis_id")
+      ) |>
       transmute(
         makara_deployment_id = deployment_id,
         makara_analysis_id = id,
-        analysis_organization_code,
+        deployment_organization_code,
         deployment_id = glue("{deployment_organization_code}:{deployment_code}"),
+        analysis_organization_code,
         analysis_id = glue("{deployment_id}:{analysis_organization_code}:{analysis_code}"),
         analysis_code,
         recordings,
@@ -499,7 +527,10 @@ targets_makara <- list(
         analysis_sampling_rate_hz = analysis_sample_rate_khz * 1000,
         protocol_reference = analysis_protocol_reference,
         analysis_start_date = as_date(analysis_start_datetime),
-        analysis_end_date = as_date(analysis_end_datetime)
+        analysis_end_date = as_date(analysis_end_datetime),
+
+        citations = map_chr(citation_codes, ~ paste(unique(.x), collapse = ",")),
+        citations = if_else(citations == "NA", NA_character_, citations)
       )
   }),
   tar_target(makara_track_positions, {
@@ -543,14 +574,14 @@ targets_makara <- list(
 
     tracks_sf <- makara_db$tracks |> 
       filter(!organization_code %in% makara_exclude_organizations) |> 
-      select(organization_code, deployment_id, track_id = id, track_code) |> 
+      select(deployment_organization_code = organization_code, deployment_id, track_id = id, track_code) |> 
       inner_join(
         track_positions_hourly_sf,
         by = c("track_id")
       ) |> 
       st_as_sf() |>
       st_cast("MULTILINESTRING") |> 
-      relocate(organization_code, deployment_id, track_id, track_code)
+      relocate(deployment_organization_code, deployment_id, track_id, track_code)
 
     stopifnot(
       all(!duplicated(tracks_sf$track_id)),
@@ -730,6 +761,7 @@ targets_makara <- list(
           select(site_id, makara_deployment_id),
         by = "makara_deployment_id"
       ) |> 
+      mutate(source = "MAKARA") |>
       select(all_of(pacm_names$deployments))
   }),
 
@@ -758,8 +790,9 @@ targets_makara <- list(
   tar_target(makara_analyses_pacm, {
     x <- makara_analyses |> 
       select(
-        organization_code = analysis_organization_code,
+        deployment_organization_code,
         deployment_id,
+        analysis_organization_code,
         analysis_id,
         recorder_depth_meters,
         instrument_type,
@@ -772,7 +805,8 @@ targets_makara <- list(
         protocol_reference,
         analysis_start_date,
         analysis_end_date,
-        species = sound_source_codes
+        species = sound_source_codes,
+        citations
       ) |> 
       unnest_longer(species) |> 
       left_join(
@@ -802,6 +836,25 @@ targets_makara <- list(
       select(all_of(pacm_names$analyses))
   }),
 
+  tar_target(makara_citations_pacm, {
+    x <- makara_db$citations |> 
+      transmute(
+        code = paste0(organization_code, ":", citation_code),
+        reference = citation_text
+      )
+    
+    analysis_citations <- makara_analyses_pacm |> 
+      select(citations) |> 
+      filter(!is.na(citations)) |>
+      unnest_longer(citations)
+    
+    stopifnot(
+      all(analysis_citations$citations %in% x$code)
+    )
+
+    x
+  }),
+
   tar_target(makara_pacm, {
     stopifnot(
       all(na.omit(makara_deployments_pacm$site_id) %in% makara_sites_pacm$site_id),
@@ -812,7 +865,8 @@ targets_makara <- list(
       sites = makara_sites_pacm,
       deployments = makara_deployments_pacm,
       analyses = makara_analyses_pacm,
-      tracks = makara_tracks_pacm
+      tracks = makara_tracks_pacm,
+      citations = makara_citations_pacm
     )
   })
 )

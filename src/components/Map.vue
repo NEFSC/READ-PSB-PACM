@@ -15,7 +15,6 @@
       :zoom="$vuetify.display.mobile ? 2 : 3"
       :options="{ zoomControl: false, attributionControl: false }"
       @ready="onMapReady"
-      @moveend="updateVisibleOrganizations"
       @zoomend="onZoom">
       <l-control-attribution position="bottomright" prefix="">
       </l-control-attribution>
@@ -44,45 +43,7 @@
         <Legend :counts="counts" v-if="activeTheme && !isLoading"></Legend>
       </l-control>
     </l-map>
-    <v-dialog v-model="citationDialog" max-width="900" scrollable>
-      <v-card>
-        <v-card-title class="d-flex align-center">
-          <h2 class="text-h5">Citations</h2>
-          <v-spacer></v-spacer>
-          <v-btn icon="mdi-close" variant="flat" size="small" aria-label="close citations" @click="citationDialog = false"></v-btn>
-        </v-card-title>
-        <v-card-text class="text-body-1 text-grey-darken-4">
-          <p class="mb-4">
-            If you use data from the Passive Acoustic Cetacean Map (PACM) in a publication, presentation, or other work, please include the PACM citation below and the list of data contributor citations.
-          </p>
-          <p class="mb-4">
-            The data contributor list is generated automatically based on which datasets currently visible on the map. Changing any of the dropdown selections or filters may change this list. Please verify that you have the correct selections and filters applied to the map before copying the citations.
-          </p>
-          <p class="mb-4">
-            Please note that this list may include preferred citations, which can be provided by data contributors upon submission to the <a href="https://passiveacoustics.fisheries.noaa.gov/pars/">Passive Acoustic Reporting System (PARS)</a>. If a dataset does not have a preferred citation, PACM generates a generic citation for the entire organization. Please include both the preferred and generic citations to ensure proper attribution of all data contributors.
-          </p>
-          <p>
-             If you have questions about how to cite data from PACM, please contact <a href="mailto:passive.acoustics@noaa.gov">passive.acoustics@noaa.gov</a>.
-          </p>
-          <h3 class="text-h6 mt-6 mb-2">PACM Citation</h3>
-          <p class="font-weight-bold text-grey-darken-2 text-body-2 mb-4 ml-4">
-            {{ pacmCitation }}
-          </p>
-
-          <h3 class="text-h6 mt-6 mb-2">Data Contributor Citations</h3>
-          <p v-if="contributorCitations.length === 0" class="text-medium-emphasis">
-            No data contributors are visible in the current map view.
-          </p>
-          <p class="font-weight-bold text-grey-darken-2 text-body-2 ml-4 mb-4" v-for="citation in contributorCitations" :key="citation.organizationCode">
-            {{ citation.text }}
-          </p>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="primary" variant="text" @click="citationDialog = false">Close</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+    <CitationsDialog v-model="citationDialog"></CitationsDialog>
     <MapLayer v-if="ready && !isLoading"></MapLayer>
     <MapSelector v-if="ready"></MapSelector>
   </div>
@@ -96,12 +57,13 @@ import L from 'leaflet'
 import Legend from '@/components/Legend'
 import MapLayer from '@/components/MapLayer'
 import MapSelector from '@/components/MapSelector'
+import CitationsDialog from '@/components/dialogs/CitationsDialog'
 
 import ZoomMin from '@/lib/leaflet/L.Control.ZoomMin'
 import '@/lib/leaflet/L.Control.ZoomMin.css'
 import evt from '@/lib/events'
 import { mapGetters } from 'vuex'
-import { deploymentMap, xf } from '@/lib/crossfilter'
+import { xf } from '@/lib/crossfilter'
 
 export default {
   name: 'Map',
@@ -119,7 +81,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['isLoading', 'activeTheme', 'deployments', 'sites', 'tracks']),
+    ...mapGetters(['isLoading', 'activeTheme', 'deployments']),
     showOrganizationAttribution () {
       return this.activeTheme && !this.isLoading && this.deployments
     },
@@ -127,22 +89,6 @@ export default {
       return this.visibleOrganizationCodes.length > 0
         ? this.visibleOrganizationCodes.join(', ')
         : 'None in current view'
-    },
-    accessedDate () {
-      return new Date().toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      })
-    },
-    pacmCitation () {
-      return `Passive Acoustic Cetacean Map (PACM). 2026. Woods Hole (MA): NOAA Northeast Fisheries Science Center v${process.env.PACKAGE_VERSION || 'Unknown'}. Accessed on ${this.accessedDate}. https://passiveacoustics.fisheries.noaa.gov/pacm/`
-    },
-    contributorCitations () {
-      return this.visibleOrganizationCodes.map(organizationCode => ({
-        organizationCode,
-        text: `${organizationCode}. 2026. Passive acoustic detection data submitted to the Passive Acoustic Reporting System (PARS) at https://passiveacoustics.fisheries.noaa.gov/pars/. Accessed on ${this.accessedDate} via the Passive Acoustic Cetacean Map (PACM) at https://passiveacoustics.fisheries.noaa.gov/pacm/.`
-      }))
     }
   },
   watch: {
@@ -151,16 +97,11 @@ export default {
     },
     deployments () {
       this.updateVisibleOrganizations()
-    },
-    sites () {
-      this.updateVisibleOrganizations()
-    },
-    tracks () {
-      this.updateVisibleOrganizations()
     }
   },
   components: {
     Legend,
+    CitationsDialog,
 
     MapLayer,
     MapSelector,
@@ -337,93 +278,17 @@ export default {
     },
     onZoom () {
       evt.$emit('map:zoom', this.map.getZoom())
-      this.updateVisibleOrganizations()
     },
     normalizeOrganizationCode (code) {
       return code || 'UNKNOWN'
     },
-    deploymentTotal (id) {
-      return deploymentMap.get(id)?.total ?? 0
-    },
-    getDeploymentCode (id) {
-      const deployment = this.deployments?.find(d => d.id === id)
-      return this.normalizeOrganizationCode(deployment?.organization_code)
-    },
-    pointInCurrentBounds (latitude, longitude) {
-      if (!this.map) return false
-      const lat = Number(latitude)
-      const lng = Number(longitude)
-      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return false
-
-      const bounds = this.map.getBounds()
-      return [-360, 0, 360].some(offset => bounds.contains([lat, lng + offset]))
-    },
-    flattenCoordinates (coordinates) {
-      if (!Array.isArray(coordinates)) return []
-      if (coordinates.length >= 2 && Number.isFinite(Number(coordinates[0])) && Number.isFinite(Number(coordinates[1]))) {
-        return [coordinates]
-      }
-      return coordinates.flatMap(d => this.flattenCoordinates(d))
-    },
-    trackIntersectsCurrentBounds (track) {
-      if (!this.map || !track?.geometry?.coordinates) return false
-      const coordinates = this.flattenCoordinates(track.geometry.coordinates)
-      if (coordinates.length === 0) return false
-
-      const mapBounds = this.map.getBounds()
-      return [-360, 0, 360].some(offset => {
-        const trackBounds = L.latLngBounds(
-          coordinates
-            .map(([longitude, latitude]) => [Number(latitude), Number(longitude) + offset])
-            .filter(([latitude, longitude]) => Number.isFinite(latitude) && Number.isFinite(longitude))
-        )
-        return trackBounds.isValid() && mapBounds.intersects(trackBounds)
+    getFilteredOrganizationCodes () {
+      const codes = new Set()
+      xf.allFiltered().forEach(detection => {
+        codes.add(this.normalizeOrganizationCode(detection.deployment_organization_code))
+        codes.add(this.normalizeOrganizationCode(detection.analysis_organization_code))
       })
-    },
-    collectStationaryOrganizations (codes) {
-      const siteLookup = new Map((this.sites || []).map(site => [site.site_id, site]))
-
-      ;(this.deployments || [])
-        .filter(deployment => deployment.deployment_type === 'STATIONARY')
-        .forEach(deployment => {
-          if (this.deploymentTotal(deployment.id) <= 0) return
-
-          const site = deployment.site_id ? siteLookup.get(deployment.site_id) : null
-          const latitude = site ? site.site_latitude : deployment.latitude
-          const longitude = site ? site.site_longitude : deployment.longitude
-          if (this.pointInCurrentBounds(latitude, longitude)) {
-            codes.add(this.normalizeOrganizationCode(deployment.organization_code))
-          }
-        })
-    },
-    collectTrackOrganizations (codes) {
-      ;(this.tracks || []).forEach(track => {
-        const id = track.properties?.deployment_id || track.id
-        if (!id || this.deploymentTotal(id) <= 0) return
-        if (!this.trackIntersectsCurrentBounds(track)) return
-
-        codes.add(this.normalizeOrganizationCode(track.properties?.organization_code || this.getDeploymentCode(id)))
-      })
-    },
-    collectDetectionPointOrganizations (codes) {
-      if (!this.activeTheme || this.activeTheme.deploymentsOnly) return
-
-      const deploymentCodeLookup = new Map(
-        (this.deployments || []).map(deployment => [
-          deployment.id,
-          this.normalizeOrganizationCode(deployment.organization_code)
-        ])
-      )
-
-      ;(this.deployments || [])
-        .filter(deployment => deployment.deployment_type === 'MOBILE')
-        .flatMap(deployment => deployment.trackDetections || [])
-        .forEach(point => {
-          if (!xf.isElementFiltered(point.$index)) return
-          if (this.pointInCurrentBounds(point.latitude, point.longitude)) {
-            codes.add(deploymentCodeLookup.get(point.id) || 'UNKNOWN')
-          }
-        })
+      return Array.from(codes).sort()
     },
     updateVisibleOrganizations () {
       if (!this.map || !this.activeTheme || this.isLoading || !this.deployments) {
@@ -431,11 +296,7 @@ export default {
         return
       }
 
-      const codes = new Set()
-      this.collectStationaryOrganizations(codes)
-      this.collectTrackOrganizations(codes)
-      this.collectDetectionPointOrganizations(codes)
-      this.visibleOrganizationCodes = Array.from(codes).sort()
+      this.visibleOrganizationCodes = this.getFilteredOrganizationCodes()
     }
   }
 }

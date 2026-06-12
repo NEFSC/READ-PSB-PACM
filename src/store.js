@@ -14,6 +14,8 @@ export default createStore({
     deployments: null,
     sites: null,
     tracks: null,
+    organizations: null,
+    citations: null,
     selectedDeployments: [],
     normalizeEffort: false,
     useSizeScale: true
@@ -26,6 +28,8 @@ export default createStore({
     deployments: state => state.deployments,
     sites: state => state.sites,
     tracks: state => state.tracks,
+    organizations: state => state.organizations,
+    citations: state => state.citations,
     deploymentById: state => id => state.deployments.find(d => d.id === id),
     selectedDeployments: state => state.selectedDeployments,
     normalizeEffort: state => state.normalizeEffort,
@@ -52,6 +56,12 @@ export default createStore({
     SET_TRACKS (state, tracks) {
       state.tracks = Object.freeze(tracks)
     },
+    SET_ORGANIZATIONS (state, organizations) {
+      state.organizations = Object.freeze(organizations)
+    },
+    SET_CITATIONS (state, citations) {
+      state.citations = Object.freeze(citations)
+    },
     SET_DEPLOYMENTS (state, deployments) {
       state.deployments = Object.freeze(deployments)
     },
@@ -74,13 +84,14 @@ export default createStore({
       commit('SET_LOADING', true)
       commit('SET_SELECTED_DEPLOYMENTS', [])
       return fetchData(theme)
-        .then(([sites, tracks, deployments, detections]) => {
+        .then(([sites, tracks, deployments, detections, organizations, citations]) => {
           const deploymentsMap = Object.fromEntries(deployments.map(d => [d.id, d]))
           detections.forEach((d, i) => {
             d.$index = i
             d.site_id = deploymentsMap[d.id].site_id || '__none__'
             d.platform_type = deploymentsMap[d.id].platform_type
-            d.organization_code = deploymentsMap[d.id].organization_code || 'UNKNOWN'
+            d.analysis_organization_code = deploymentsMap[d.id].analysis_organization_code
+            d.deployment_organization_code = deploymentsMap[d.id].deployment_organization_code
             d.instrument_type = deploymentsMap[d.id].instrument_type || 'UNKNOWN'
             d.dynamic_management_platform = deploymentsMap[d.id].dynamic_management_platform || false
           })
@@ -116,6 +127,8 @@ export default createStore({
           commit('SET_DEPLOYMENTS', deployments)
           commit('SET_SITES', sites)
           commit('SET_TRACKS', tracks)
+          commit('SET_ORGANIZATIONS', organizations)
+          commit('SET_CITATIONS', citations)
           commit('SET_THEME', theme)
           commit('SET_LOADING', false)
           return theme

@@ -251,7 +251,9 @@ targets_towed <- list(
   }),
 
   tar_target(towed_deployments_pacm, {
-    towed_deployments
+    towed_deployments |> 
+      mutate(source = "MAKARA") |> 
+      rename(deployment_organization_code = organization_code)
   }),
   tar_target(towed_analyses_pacm, {
     towed_analyses |> 
@@ -296,13 +298,17 @@ targets_towed <- list(
       unnest_wider(analysis_period) |>
       select(-species, -dates, -recording_id) |> 
       unnest(daily) |> 
+      rename(analysis_organization_code = organization_code) |> 
       mutate(
-        analysis_id = glue("{deployment_id}:NEFSC:{analysis_code}:{species}")
+        deployment_organization_code = analysis_organization_code,
+        analysis_id = glue("{deployment_id}:NEFSC:{analysis_code}:{species}"),
+        citations = NA_character_
       ) |> 
       select(all_of(pacm_names$analyses))
   }),
   tar_target(towed_tracks_pacm, {
     towed_tracks |> 
+      rename(deployment_organization_code = organization_code) |> 
       select(all_of(pacm_names$tracks))
   }),
 
