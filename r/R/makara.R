@@ -855,6 +855,15 @@ targets_makara <- list(
     x
   }),
 
+  tar_target(makara_pocs, {
+    makara_db$projects |> 
+      select(organization_code, project_code, project_contacts) |>
+      filter(!is.na(project_contacts)) |> 
+      distinct() |>
+      group_by(organization_code, project_contacts) |>
+      summarise(projects = str_c(project_code, collapse = ","))
+  }),
+
   tar_target(makara_pacm, {
     stopifnot(
       all(na.omit(makara_deployments_pacm$site_id) %in% makara_sites_pacm$site_id),

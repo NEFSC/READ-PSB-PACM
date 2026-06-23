@@ -426,5 +426,13 @@ targets_subs <- list(
       analyses = subs_analyses_pacm,
       tracks = subs_tracks_pacm
     )
+  }),
+  tar_target(subs_pocs, {
+    subs_metadata |>
+      select(submission_id, starts_with("DATA_POC")) |>
+      distinct() |>
+      group_by(DATA_POC_NAME, DATA_POC_EMAIL, DATA_POC_AFFILIATION) |>
+      summarise(submissions = str_c(submission_id, collapse = ",")) |> 
+      filter(!is.na(DATA_POC_NAME) & !is.na(DATA_POC_EMAIL))
   })
 )
