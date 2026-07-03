@@ -2,4 +2,5 @@
 # copy all folders from `./data/pacm/` to `../public/data/`
 
 cp -r ./data/pacm/* ../public/data/
-cp -r ./data/pacm/*.json ../src/lib/
+cp -r ./data/pacm/platform_types.json ../src/lib/
+cp -r ./data/pacm/species.json ../src/lib/

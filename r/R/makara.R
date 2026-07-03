@@ -130,7 +130,7 @@ targets_makara <- list(
         by = c("deployment_id")
       ) |>
       filter(
-        analysis_organization_code == "NEFSC",
+        organization_code == "NEFSC",
         deployment_organization_code == "JASCO"
       ) |> 
       select(-deployment_organization_code)
@@ -509,7 +509,7 @@ targets_makara <- list(
         makara_analysis_id = id,
         deployment_organization_code,
         deployment_id = glue("{deployment_organization_code}:{deployment_code}"),
-        analysis_organization_code,
+        analysis_organization_code = organization_code,
         analysis_id = glue("{deployment_id}:{analysis_organization_code}:{analysis_code}"),
         analysis_code,
         recordings,
