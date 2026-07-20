@@ -43,7 +43,7 @@ clean_legacies <- function (ids) {
 legacy_targets <- tar_map(
   values = list(sub_id = legacy_manifest$submission_id, sub_format = legacy_manifest$format, sub_skip = legacy_manifest$skip),
   names = c(sub_id),
-  tar_target(legacy, load_submission(sub_id, sub_format, sub_skip, legacy_dir, makara_codes), cue = tar_cue(mode = "never"))
+  tar_target(legacy, load_legacy(sub_id, sub_format, sub_skip, legacy_dir, makara_codes), cue = tar_cue(mode = "never"))
 )
 
 # legacy submissions in PACM/Makara formats

@@ -46,12 +46,12 @@ remap <- function (x, mapping, upper = TRUE) {
   ifelse(x %in% names(mapping), mapping[x], x)
 }
 
-load_submission <- function (id, format, skip, root_dir, codes) {
+load_legacy <- function (id, format, skip, root_dir, codes) {
   if (!is.na(skip)) {
     warning(glue("Skipping submission {id} with format {format}"))
     return(NULL)
   } else if (format == "PACM_20240820") {
-    return(load_submission_pacm(id, format, root_dir, codes))
+    return(load_legacy_pacm(id, format, root_dir, codes))
   } else if (format == "MAKARA_1.2") {
     warning(glue("No loader implemented for submission {id} with format {format}, skipping"))
     return(NULL)
@@ -60,7 +60,7 @@ load_submission <- function (id, format, skip, root_dir, codes) {
   }
 }
 
-load_submission_pacm <- function (id, format, root_dir, codes) {
+load_legacy_pacm <- function (id, format, root_dir, codes) {
   clean_dir <- file.path(root_dir, id, "clean")
   stopifnot(dir.exists(clean_dir))
 
