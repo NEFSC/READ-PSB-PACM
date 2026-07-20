@@ -165,7 +165,7 @@ targets_pacm <- list(
     bind_rows(
       makara = enframe(makara_pacm),
       towed = enframe(towed_pacm),
-      submissions = enframe(subs_pacm),
+      legacy = enframe(legacy_pacm),
       .id = "dataset"
     ) |> 
       pivot_wider()

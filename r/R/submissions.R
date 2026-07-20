@@ -1,26 +1,26 @@
 source("packages.R")
 
-subs_manifest <- read_csv("data-raw/submissions/submissions.csv", show_col_types = FALSE)
+legacy_manifest <- read_csv("data-raw/legacy/submissions.csv", show_col_types = FALSE)
 
 # functions --------------------------------------------------------------
 
 # IMPORTANT: changes in source files in `{submission_id}/clean/` are not tracked
-# so clean scripts must be re-run manually and then `make_submissions()` must be called to re-load the cleaned data
+# so clean scripts must be re-run manually and then `make_legacy()` must be called to re-load the cleaned data
 
 # re-load all submissions
-# make_submissions(subs_manifest$submission_id)
-make_submissions <- function (ids = NULL) {
+# make_legacy(legacy_manifest$submission_id)
+make_legacy <- function (ids = NULL) {
   if (is.null(ids)) {
     tar_invalidate(starts_with("sub_"))
   } else {
     tar_invalidate(any_of(paste0("sub_", ids)))
   }
 
-  tar_make(subs)
+  tar_make(legacy)
 }
 
 # run the `clean.R` script for a given submission ID
-clean_submission <- function (submission_id, root_dir = "data-raw/submissions") {
+clean_legacy <- function (submission_id, root_dir = "data-raw/legacy") {
   sub_dir <- file.path(root_dir, submission_id)
   clean_script <- file.path(sub_dir, "clean.R")
   stopifnot(file.exists(clean_script))
@@ -33,44 +33,45 @@ clean_submission <- function (submission_id, root_dir = "data-raw/submissions") 
 }
 
 # clean multiple submissions
-# clean_submissions(subs_manifest$submission_id)
-clean_submissions <- function (ids) {
-  walk(ids, clean_submission)
+# clean_legacies(legacy_manifest$submission_id)
+clean_legacies <- function (ids) {
+  walk(ids, clean_legacy)
 }
 
 # targets ----------------------------------------------------------------
 
-subs_targets <- tar_map(
-  values = list(sub_id = subs_manifest$submission_id, sub_format = subs_manifest$format, sub_skip = subs_manifest$skip),
+legacy_targets <- tar_map(
+  values = list(sub_id = legacy_manifest$submission_id, sub_format = legacy_manifest$format, sub_skip = legacy_manifest$skip),
   names = c(sub_id),
-  tar_target(sub, load_submission(sub_id, sub_format, sub_skip, subs_dir, makara_codes), cue = tar_cue(mode = "never"))
+  tar_target(legacy, load_submission(sub_id, sub_format, sub_skip, legacy_dir, makara_codes), cue = tar_cue(mode = "never"))
 )
 
-targets_subs <- list(
-  tar_target(subs_dir, "data-raw/submissions"),
-  subs_targets,
+# legacy submissions in PACM/Makara formats
+targets_legacy <- list(
+  tar_target(legacy_dir, "data-raw/legacy"),
+  legacy_targets,
   tar_combine(
-    subs,
-    subs_targets,
+    legacy,
+    legacy_targets,
     command = bind_rows(!!!.x)
   ),
 
-  tar_target(subs_metadata_errors, {
-    subs |>
+  tar_target(legacy_metadata_errors, {
+    legacy |>
       select(id, metadata) |>
       unnest(metadata) |>
       select(id, errors) |>
       unnest(errors)
   }),
-  tar_target(subs_detectiondata_errors, {
-    subs |>
+  tar_target(legacy_detectiondata_errors, {
+    legacy |>
       select(id, detectiondata) |>
       unnest(detectiondata) |>
       select(id, errors) |>
       unnest(errors)
   }),
-  tar_target(subs_gpsdata_errors, {
-    gpsdata <- subs |>
+  tar_target(legacy_gpsdata_errors, {
+    gpsdata <- legacy |>
       select(id, gpsdata) |>
       unnest(gpsdata)
 
@@ -81,8 +82,8 @@ targets_subs <- list(
       unnest(errors)
   }),
 
-  tar_target(subs_metadata, {
-    x <- subs |>
+  tar_target(legacy_metadata, {
+    x <- legacy |>
       select(id, metadata) |>
       unnest(metadata) |> 
       select(submission_id = id, parsed) |> 
@@ -100,8 +101,8 @@ targets_subs <- list(
 
     x
   }),
-  tar_target(subs_detectiondata, {
-    x <- subs |>
+  tar_target(legacy_detectiondata, {
+    x <- legacy |>
       select(id, detectiondata) |>
       unnest(detectiondata) |> 
       select(submission_id = id, parsed) |> 
@@ -111,14 +112,14 @@ targets_subs <- list(
     x |> 
       distinct(submission_id, UNIQUE_ID) |> 
       anti_join(
-        subs_metadata, 
+        legacy_metadata, 
         by = c("UNIQUE_ID")
       )
     
     x
   }),
-  tar_target(subs_gpsdata, {
-    x <- subs |>
+  tar_target(legacy_gpsdata, {
+    x <- legacy |>
       select(id, gpsdata) |>
       unnest(gpsdata) |> 
       select(submission_id = id, parsed) |> 
@@ -128,7 +129,7 @@ targets_subs <- list(
     x_missing <- x |> 
       distinct(submission_id, UNIQUE_ID) |> 
       anti_join(
-        subs_metadata, 
+        legacy_metadata, 
         by = c("UNIQUE_ID")
       )
     stopifnot(nrow(x_missing) == 0)
@@ -136,8 +137,8 @@ targets_subs <- list(
     x
   }),
 
-  tar_target(subs_deployments, {
-    x <- subs_metadata |> 
+  tar_target(legacy_deployments, {
+    x <- legacy_metadata |> 
       clean_names() |> 
       left_join(
         platform_types |> 
@@ -182,16 +183,16 @@ targets_subs <- list(
     
     x
   }),
-  tar_target(subs_deployments_map, {
-    subs_deployments |> 
+  tar_target(legacy_deployments_map, {
+    legacy_deployments |> 
       filter(deployment_type == "STATIONARY") |>
       st_as_sf(coords = c("longitude", "latitude"), crs = 4326, remove = FALSE) |>
       mapview::mapview(zcol = "organization_code", layer.name = "deployments")
   }),
-  tar_target(subs_deployments_pacm, {
-    subs_deployments |> 
+  tar_target(legacy_deployments_pacm, {
+    legacy_deployments |> 
       left_join(
-        subs_sites |> 
+        legacy_sites |> 
           st_drop_geometry() |> 
           unnest(deployments) |> 
           select(site_id, deployment_id),
@@ -204,8 +205,8 @@ targets_subs <- list(
       select(all_of(pacm_names$deployments))
   }),
 
-  tar_target(subs_sites, {
-    subs_deployments |>
+  tar_target(legacy_sites, {
+    legacy_deployments |>
       filter(deployment_type == "STATIONARY") |> 
       select(organization_code, site, deployment_id, latitude, longitude, monitoring_start_datetime, monitoring_end_datetime) |>
       arrange(organization_code, site, monitoring_start_datetime) |>
@@ -248,20 +249,20 @@ targets_subs <- list(
       ungroup() |> 
       select(-n_versions)
   }),
-  tar_target(subs_sites_map, {
-    subs_sites |> 
+  tar_target(legacy_sites_map, {
+    legacy_sites |> 
       select(-deployments) |> 
       st_as_sf(coords = c("site_longitude", "site_latitude"), crs = 4326) |>
       mapview::mapview(label = "site_id", zcol = "n_deployments", layer.name = "# deployments")
   }),
-  tar_target(subs_sites_pacm, {
-    subs_sites |> 
+  tar_target(legacy_sites_pacm, {
+    legacy_sites |> 
       rename(deployment_organization_code = organization_code) |> 
       select(all_of(pacm_names$sites))
   }),
 
-  tar_target(subs_analyses, {
-    x <- subs_detectiondata |> 
+  tar_target(legacy_analyses, {
+    x <- legacy_detectiondata |> 
       janitor::clean_names() |> 
       rename(
         qc_data = qc_processing,
@@ -289,7 +290,7 @@ targets_subs <- list(
         call_type = map_chr(detections, ~ str_c(na.omit(unique(.$call_type)), collapse = ","))
       ) |>
       left_join(
-        subs_deployments |> 
+        legacy_deployments |> 
           select(
             organization_code, deployment_id, deployment_code,
             recorder_depth_meters, instrument_type, sampling_rate_hz, water_depth_meters,
@@ -335,8 +336,8 @@ targets_subs <- list(
 
     x
   }),
-  tar_target(subs_analyses_pacm, {
-    subs_analyses |> 
+  tar_target(legacy_analyses_pacm, {
+    legacy_analyses |> 
       mutate(
         analysis_organization_code = organization_code,
         deployment_organization_code = organization_code,
@@ -348,8 +349,8 @@ targets_subs <- list(
       select(all_of(pacm_names$analyses))
   }),
 
-  tar_target(subs_tracks, {
-    track_positions <- subs_gpsdata |>
+  tar_target(legacy_tracks, {
+    track_positions <- legacy_gpsdata |>
       clean_names() |> 
       select(-submission_id) |> 
       rename(deployment_code = unique_id) |> 
@@ -386,7 +387,7 @@ targets_subs <- list(
 
     tracks <- track_positions_hourly_sf |> 
       left_join(
-        subs_deployments |> 
+        legacy_deployments |> 
           select(organization_code, deployment_id, deployment_code),
         by = c("deployment_code")
       ) |> 
@@ -400,35 +401,35 @@ targets_subs <- list(
     
     tracks
   }),
-  tar_target(subs_tracks_pacm, {
-    subs_tracks |> 
+  tar_target(legacy_tracks_pacm, {
+    legacy_tracks |> 
       rename(deployment_organization_code = organization_code) |>
       select(all_of(pacm_names$tracks))
   }),
 
-  tar_target(subs_pacm, {
+  tar_target(legacy_pacm, {
     stopifnot(
-      nrow(subs_metadata_errors) == 0,
-      nrow(subs_detectiondata_errors) == 0,
-      nrow(subs_gpsdata_errors) == 0,
-      all(!is.na(subs_deployments_pacm$organization_code)),
-      all(na.omit(subs_deployments_pacm$site_id) %in% subs_sites_pacm$site_id),
-      all(subs_analyses_pacm$deployment_id %in% subs_deployments_pacm$deployment_id),
-      all(subs_tracks_pacm$deployment_id %in% subs_deployments_pacm$deployment_id),
-      !anyDuplicated(subs_sites_pacm$site_id),
-      !anyDuplicated(subs_deployments_pacm$deployment_id),
-      !anyDuplicated(subs_analyses_pacm$analysis_id),
-      !anyDuplicated(subs_tracks_pacm$track_id)
+      nrow(legacy_metadata_errors) == 0,
+      nrow(legacy_detectiondata_errors) == 0,
+      nrow(legacy_gpsdata_errors) == 0,
+      all(!is.na(legacy_deployments_pacm$organization_code)),
+      all(na.omit(legacy_deployments_pacm$site_id) %in% legacy_sites_pacm$site_id),
+      all(legacy_analyses_pacm$deployment_id %in% legacy_deployments_pacm$deployment_id),
+      all(legacy_tracks_pacm$deployment_id %in% legacy_deployments_pacm$deployment_id),
+      !anyDuplicated(legacy_sites_pacm$site_id),
+      !anyDuplicated(legacy_deployments_pacm$deployment_id),
+      !anyDuplicated(legacy_analyses_pacm$analysis_id),
+      !anyDuplicated(legacy_tracks_pacm$track_id)
     )
     list(
-      sites = subs_sites_pacm,
-      deployments = subs_deployments_pacm,
-      analyses = subs_analyses_pacm,
-      tracks = subs_tracks_pacm
+      sites = legacy_sites_pacm,
+      deployments = legacy_deployments_pacm,
+      analyses = legacy_analyses_pacm,
+      tracks = legacy_tracks_pacm
     )
   }),
-  tar_target(subs_pocs, {
-    subs_metadata |>
+  tar_target(legacy_pocs, {
+    legacy_metadata |>
       select(submission_id, starts_with("DATA_POC")) |>
       distinct() |>
       group_by(DATA_POC_NAME, DATA_POC_EMAIL, DATA_POC_AFFILIATION) |>

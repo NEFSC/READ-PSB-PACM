@@ -28,7 +28,7 @@ list(
   targets_towed,
 
   targets_makara,
-  targets_subs,
+  targets_legacy,
   
   targets_pacm
 )
