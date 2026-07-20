@@ -11,9 +11,9 @@ legacy_manifest <- read_csv("data-raw/legacy/submissions.csv", show_col_types = 
 # make_legacy(legacy_manifest$submission_id)
 make_legacy <- function (ids = NULL) {
   if (is.null(ids)) {
-    tar_invalidate(starts_with("sub_"))
+    tar_invalidate(starts_with("legacy_"))
   } else {
-    tar_invalidate(any_of(paste0("sub_", ids)))
+    tar_invalidate(any_of(paste0("legacy_", ids)))
   }
 
   tar_make(legacy)
