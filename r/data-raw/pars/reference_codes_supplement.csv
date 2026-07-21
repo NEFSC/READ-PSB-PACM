@@ -1,0 +1,8 @@
+table,code,label,rationale,date_added
+detectors,OTHER,Other,placeholder for legacy detection methods too ambiguous to map; remapped manually per submission in clean.R,2026-07-21
+detectors,RPS,RPS Contour and Click Detectors,named tool with no official code; 2100 legacy analyses,2026-07-21
+detectors,CHORUS_BIOSOUND,CHORUS BioSound,named tool with no official code; 252 legacy analyses,2026-07-21
+call_types,OTHER,Other,legacy call type recorded as OTHER with no more specific value available,2026-07-21
+device_types,COLMAR,COLMAR Hydrophone,legacy instrument type with no official code; 350 legacy deployments,2026-07-21
+device_types,OBSERVER,Observer,legacy instrument type recorded for visual/human observation rather than a recording device; 99 legacy deployments,2026-07-21
+device_types,AUTOBUOY,Autonomous Buoy,legacy instrument type with no official code; 10 legacy deployments,2026-07-21

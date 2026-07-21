@@ -9,6 +9,9 @@ staging/
 .Rhistory
 
 data-raw/**/*.csv
+# configuration, not bulk data - must be version controlled
+!data-raw/*/submissions.csv
+!data-raw/pars/reference_codes_supplement.csv
 data-raw/**/*.xlsx
 data-raw/**/*.xls
 data-raw/**/*.gpx

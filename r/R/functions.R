@@ -367,6 +367,113 @@ clean_gpsdata <- function (x) {
 }
 
 
+# derivations ------------------------------------------------------------
+
+# these are shared by every submission source: given deployments (or GPS
+# positions) already in the common shape, derive sites and tracks the same way
+# regardless of whether the data arrived as legacy or PARS. keeping them here
+# rather than in a source file is what guarantees identical site ids across the
+# migration.
+
+# group stationary deployments into sites, splitting a site into versions when
+# it moves more than max_distance_km from its previous position
+derive_sites <- function (deployments, max_distance_km = 10) {
+  deployments |>
+    filter(deployment_type == "STATIONARY") |>
+    select(organization_code, site, deployment_id, latitude, longitude, monitoring_start_datetime, monitoring_end_datetime) |>
+    arrange(organization_code, site, monitoring_start_datetime) |>
+    nest(versions = -c(organization_code, site)) |>
+    mutate(
+      versions = map(versions, function (deps) {
+        deps_sf <- st_as_sf(deps, coords = c("longitude", "latitude"), crs = 4326, remove = FALSE, sf_column_name = "deployment_geometry")
+        n <- nrow(deps_sf)
+        geoms <- st_geometry(deps_sf)
+        if (n <= 1) {
+          deps$dist_to_prev_km <- 0
+          deps$site_version <- 1
+        } else {
+          dist_to_prev_km <- c(0, vapply(seq(2, n, by = 1), function (i) {
+            as.numeric(st_distance(geoms[i], geoms[i - 1])) / 1000
+          }, numeric(1)))
+          deps$dist_to_prev_km <- dist_to_prev_km
+          deps$site_version <- cumsum(dist_to_prev_km > max_distance_km) + 1
+        }
+        deps |>
+          nest(deployments = -site_version) |>
+          mutate(
+            site_latitude = map_dbl(deployments, ~ first(.$latitude)),
+            site_longitude = map_dbl(deployments, ~ first(.$longitude)),
+            n_deployments = map_int(deployments, nrow)
+          )
+      })
+    ) |>
+    unnest(versions) |>
+    group_by(site) |>
+    mutate(
+      n_versions = max(site_version),
+      site_id = if_else(
+        n_versions > 1,
+        glue("{organization_code}:{site}:{site_version}"),
+        glue("{organization_code}:{site}")
+      )
+    ) |>
+    relocate(site_id, .before = site) |>
+    ungroup() |>
+    select(-n_versions)
+}
+
+# build one track per deployment from GPS positions, thinned to the first fix
+# in each hour. positions must already be shaped as
+# deployment_code, datetime, latitude, longitude
+derive_tracks <- function (positions, deployments) {
+  track_positions <- positions |>
+    arrange(deployment_code, datetime)
+
+  # aggregate to hourly positions (first position in each hour)
+  track_positions_hourly <- track_positions |>
+    mutate(
+      datetime_hour = floor_date(datetime, unit = "hour")
+    ) |>
+    group_by(deployment_code, datetime_hour) |>
+    slice_min(order_by = datetime, n = 1) |>
+    ungroup() |>
+    select(-datetime_hour)
+
+  # convert to sf linestrings
+  track_positions_hourly_sf <- track_positions_hourly |>
+    st_as_sf(coords = c("longitude", "latitude"), crs = 4326, remove = FALSE) |>
+    arrange(deployment_code, datetime) |>
+    group_by(deployment_code) |>
+    summarise(
+      start_datetime = min(datetime),
+      end_datetime = max(datetime),
+      start_latitude = first(latitude),
+      start_longitude = first(longitude),
+      end_latitude = last(latitude),
+      end_longitude = last(longitude),
+      do_union = FALSE
+    ) |>
+    st_cast("LINESTRING") |>
+    ungroup()
+
+  tracks <- track_positions_hourly_sf |>
+    left_join(
+      deployments |>
+        select(organization_code, deployment_id, deployment_code),
+      by = c("deployment_code")
+    ) |>
+    mutate(track_id = glue("{deployment_id}:TRACK")) |>
+    st_cast("MULTILINESTRING")
+
+  stopifnot(
+    all(!duplicated(tracks$track_id)),
+    all(!duplicated(tracks$deployment_id))
+  )
+
+  tracks
+}
+
+
 # formatting -------------------------------------------------------------
 
 format_number <- function(x) {

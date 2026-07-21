@@ -205,50 +205,7 @@ targets_legacy <- list(
       select(all_of(pacm_names$deployments))
   }),
 
-  tar_target(legacy_sites, {
-    legacy_deployments |>
-      filter(deployment_type == "STATIONARY") |> 
-      select(organization_code, site, deployment_id, latitude, longitude, monitoring_start_datetime, monitoring_end_datetime) |>
-      arrange(organization_code, site, monitoring_start_datetime) |>
-      nest(versions = -c(organization_code, site)) |>
-      mutate(
-        versions = map(versions, function (deps) {
-          deps_sf <- st_as_sf(deps, coords = c("longitude", "latitude"), crs = 4326, remove = FALSE, sf_column_name = "deployment_geometry")
-          n <- nrow(deps_sf)
-          geoms <- st_geometry(deps_sf)
-          if (n <= 1) {
-            deps$dist_to_prev_km <- 0
-            deps$site_version <- 1
-          } else {
-            dist_to_prev_km <- c(0, vapply(seq(2, n, by = 1), function (i) {
-              as.numeric(st_distance(geoms[i], geoms[i - 1])) / 1000
-            }, numeric(1)))
-            deps$dist_to_prev_km <- dist_to_prev_km
-            deps$site_version <- cumsum(dist_to_prev_km > 10) + 1
-          }
-          deps |> 
-            nest(deployments = -site_version) |> 
-            mutate(
-              site_latitude = map_dbl(deployments, ~ first(.$latitude)),
-              site_longitude = map_dbl(deployments, ~ first(.$longitude)),
-              n_deployments = map_int(deployments, nrow)
-            )
-        })
-      ) |> 
-      unnest(versions) |> 
-      group_by(site) |> 
-      mutate(
-        n_versions = max(site_version),
-        site_id = if_else(
-          n_versions > 1,
-          glue("{organization_code}:{site}:{site_version}"),
-          glue("{organization_code}:{site}")
-        )
-      ) |> 
-      relocate(site_id, .before = site) |>
-      ungroup() |> 
-      select(-n_versions)
-  }),
+  tar_target(legacy_sites, derive_sites(legacy_deployments)),
   tar_target(legacy_sites_map, {
     legacy_sites |> 
       select(-deployments) |> 
@@ -351,55 +308,11 @@ targets_legacy <- list(
 
   tar_target(legacy_tracks, {
     track_positions <- legacy_gpsdata |>
-      clean_names() |> 
-      select(-submission_id) |> 
-      rename(deployment_code = unique_id) |> 
-      arrange(deployment_code, datetime)
+      clean_names() |>
+      select(-submission_id) |>
+      rename(deployment_code = unique_id)
 
-    # aggregate to hourly positions (first position in each hour)
-    track_positions_hourly <- track_positions |> 
-      mutate(
-        datetime_hour = floor_date(datetime, unit = "hour")
-      ) |> 
-      group_by(deployment_code, datetime_hour) |> 
-      slice_min(order_by = datetime, n = 1) |> 
-      ungroup() |> 
-      select(-datetime_hour)
-    
-    # convert to sf linestrings
-    track_positions_hourly_sf <- track_positions_hourly |> 
-      st_as_sf(coords = c("longitude", "latitude"), crs = 4326, remove = FALSE) |> 
-      arrange(deployment_code, datetime) |> 
-      group_by(deployment_code) |> 
-      summarise(
-        start_datetime = min(datetime),
-        end_datetime = max(datetime),
-        start_latitude = first(latitude),
-        start_longitude = first(longitude),
-        end_latitude = last(latitude),
-        end_longitude = last(longitude),
-        do_union = FALSE
-      ) |> 
-      st_cast("LINESTRING") |> 
-      ungroup()
-
-    # mapview::mapview(track_positions_hourly_sf, legend = FALSE)
-
-    tracks <- track_positions_hourly_sf |> 
-      left_join(
-        legacy_deployments |> 
-          select(organization_code, deployment_id, deployment_code),
-        by = c("deployment_code")
-      ) |> 
-      mutate(track_id = glue("{deployment_id}:TRACK")) |> 
-      st_cast("MULTILINESTRING")
-
-    stopifnot(
-      all(!duplicated(tracks$track_id)),
-      all(!duplicated(tracks$deployment_id))
-    )
-    
-    tracks
+    derive_tracks(track_positions, legacy_deployments)
   }),
   tar_target(legacy_tracks_pacm, {
     legacy_tracks |> 
