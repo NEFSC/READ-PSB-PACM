@@ -761,7 +761,14 @@ targets_makara <- list(
           select(site_id, makara_deployment_id),
         by = "makara_deployment_id"
       ) |> 
-      mutate(source = "MAKARA") |>
+      mutate(
+        source = "MAKARA",
+        # PARS-only fields; NA here so every source shares one shape
+        deployment_url = NA_character_,
+        project_funding = NA_character_,
+        recording_duration_secs = NA_real_,
+        recording_interval_secs = NA_real_
+      ) |>
       select(all_of(pacm_names$deployments))
   }),
 

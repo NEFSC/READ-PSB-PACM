@@ -1,5 +1,7 @@
 suppressMessages({
   library(tibble)
+  library(readr)
+  library(stringr)
   library(dplyr)
   # sourced R/ files define targets at the top level, so the test session needs
   # the same packages attached that _targets.R attaches
@@ -18,6 +20,9 @@ suppressMessages({
 source(file.path("..", "..", "R", "functions.R"))
 source(file.path("..", "..", "R", "compare.R"))
 source(file.path("..", "..", "R", "pars-ref.R"))
+source(file.path("..", "..", "R", "pars-parse.R"))
+source(file.path("..", "..", "R", "pars-validate.R"))
+source(file.path("..", "..", "R", "pars-load.R"))
 
 # reference-code fixtures ----------------------------------------------------
 
@@ -104,4 +109,79 @@ fixture_snapshot <- function() {
     deployments = fixture_deployments(),
     analyses = fixture_analyses()
   )
+}
+
+# PARS fixtures --------------------------------------------------------------
+
+test_codes <- function() {
+  list(
+    organizations = c("SYRACUSE", "NEFSC"),
+    platform_types = c("BOTTOM_MOUNTED_MOORING", "ELECTRIC_GLIDER"),
+    device_types = c("SOUNDTRAP", "AMAR"),
+    detectors = c("LFDCS", "MANUAL", "OTHER"),
+    analysis_processing_types = c("POST_PROCESSED", "REAL_TIME"),
+    detection_result_types = c(
+      "DETECTED", "POSSIBLY_DETECTED", "NOT_DETECTED", "NOT_AVAILABLE"
+    ),
+    sound_sources = c("RIWH", "HUWH"),
+    call_types = c("RW_UPCALL", "HUWH_SONG")
+  )
+}
+
+valid_metadata <- function(...) {
+  base <- tibble(
+    row = 1L,
+    deployment_organization_code = "SYRACUSE",
+    deployment_code = "SYRACUSE_LI01",
+    project_name = "SYRACUSE_NYNJB_LI",
+    site_code = "LI01",
+    monitoring_start_datetime = parse_pars_datetime("2025-04-24T17:29:04Z"),
+    monitoring_end_datetime = parse_pars_datetime("2025-08-13T15:02:53Z"),
+    deployment_latitude = 40.58,
+    deployment_longitude = -72.58,
+    deployment_platform_type_code = "BOTTOM_MOUNTED_MOORING",
+    deployment_water_depth_m = 40,
+    recording_device_depth_m = 37,
+    recording_device_code = "SOUNDTRAP-8541",
+    recording_device_type_code = "SOUNDTRAP",
+    recording_duration_secs = 14400,
+    recording_interval_secs = 14400,
+    recording_sample_rate_khz = 48,
+    recording_bit_depth = 16L,
+    recording_n_channels = 1L,
+    recording_timezone = "UTC",
+    points_of_contact = "Susan Parks <sparks@syr.edu>",
+    project_funding = "ASMFC 25-0108"
+  )
+  overrides <- list(...)
+  for (n in names(overrides)) base[[n]] <- overrides[[n]]
+  base
+}
+
+valid_detectiondata <- function(...) {
+  base <- tibble(
+    row = 1L,
+    deployment_code = "SYRACUSE_LI01",
+    analysis_organization_code = "SYRACUSE",
+    analysis_sound_source_codes = "RIWH",
+    analysis_start_datetime = parse_pars_datetime("2025-04-25T00:00:00Z"),
+    analysis_end_datetime = parse_pars_datetime("2025-08-13T00:00:00Z"),
+    analysis_sample_rate_khz = 2,
+    analysis_min_frequency_khz = 0,
+    analysis_max_frequency_khz = 1,
+    analysis_processing_code = "POST_PROCESSED",
+    analysis_protocol_reference = "Davis et al. 2020",
+    analysis_detector_code = "LFDCS",
+    analysis_detector_version = "1.2",
+    detection_start_datetime = parse_pars_datetime("2025-04-25T00:00:00Z"),
+    detection_end_datetime = parse_pars_datetime("2025-04-26T00:00:00Z"),
+    detection_effort_secs = 86400,
+    detection_sound_source_code = "RIWH",
+    detection_call_type_code = "RW_UPCALL",
+    detection_n_validated = 3L,
+    detection_result_code = "DETECTED"
+  )
+  overrides <- list(...)
+  for (n in names(overrides)) base[[n]] <- overrides[[n]]
+  base
 }

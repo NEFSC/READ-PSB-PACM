@@ -199,9 +199,14 @@ targets_legacy <- list(
         by = "deployment_id"
       ) |> 
       mutate(
-        recording_device_lost = FALSE
-      ) |> 
-      rename(deployment_organization_code = organization_code) |> 
+        recording_device_lost = FALSE,
+        # PARS-only fields; NA here so every source shares one shape
+        deployment_url = NA_character_,
+        project_funding = NA_character_,
+        recording_duration_secs = NA_real_,
+        recording_interval_secs = NA_real_
+      ) |>
+      rename(deployment_organization_code = organization_code) |>
       select(all_of(pacm_names$deployments))
   }),
 

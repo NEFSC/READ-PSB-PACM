@@ -29,6 +29,7 @@ list(
 
   targets_makara,
   targets_pars_ref,
+  targets_pars,
   targets_legacy,
 
   targets_pacm

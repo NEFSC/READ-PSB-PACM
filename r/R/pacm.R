@@ -124,7 +124,12 @@ targets_pacm <- list(
         "data_poc",
         "recording_device_lost",
         "dynamic_management_platform",
-        "source"
+        "source",
+        # new with PARS; carried for future UI work (AD-7), NA for other sources
+        "deployment_url",
+        "project_funding",
+        "recording_duration_secs",
+        "recording_interval_secs"
       ),
       analyses = c(
         "deployment_organization_code",
@@ -166,8 +171,9 @@ targets_pacm <- list(
       makara = enframe(makara_pacm),
       towed = enframe(towed_pacm),
       legacy = enframe(legacy_pacm),
+      pars = enframe(pars_pacm),
       .id = "dataset"
-    ) |> 
+    ) |>
       pivot_wider()
   }),
 
