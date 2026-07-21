@@ -8,8 +8,13 @@ staging/
 .Rproj.user
 .Rhistory
 
-data-raw/
+data-raw/**/*.csv
+data-raw/**/*.xlsx
+data-raw/**/*.xls
+data-raw/**/*.gpx
 data/
 *.rds
+*.zip
+*.tar.gz
 
 .env
