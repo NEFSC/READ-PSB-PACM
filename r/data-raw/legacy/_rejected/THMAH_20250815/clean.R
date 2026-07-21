@@ -1,6 +1,6 @@
 library(tidyverse)
 
-dir <- "data-raw/submissions/THMAH_20250815/"
+dir <- "data-raw/legacy/_rejected/THMAH_20250815/"
 
 raw_metadata <- read_csv(file.path(dir, "raw/THMAH_20250815_METADATA.csv"))
 raw_detectiondata <- read_csv(file.path(dir, "raw/THMAH_20250815_DETECTIONDATA.csv"))

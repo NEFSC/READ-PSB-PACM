@@ -1,7 +1,7 @@
 library(tidyverse)
 library(janitor)
 
-dir <- "data-raw/submissions/UCORN_20250325"
+dir <- "data-raw/legacy/UCORN_20250325"
 
 raw_metadata <- read_csv(
   file.path(dir, "raw", "CORNELL_TSS_metadat.csv"),

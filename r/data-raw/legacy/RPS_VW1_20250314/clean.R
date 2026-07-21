@@ -1,6 +1,6 @@
 library(tidyverse)
 
-dir <- "data-raw/submissions/RPS_VW1_20250314"
+dir <- "data-raw/legacy/RPS_VW1_20250314"
 
 
 raw_metadata <- list.files(file.path(dir, "raw"), pattern = "METADATA", full.names = TRUE, recursive = TRUE) |> 

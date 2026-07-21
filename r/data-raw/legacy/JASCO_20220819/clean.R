@@ -1,6 +1,6 @@
 library(tidyverse)
 
-dir <- "data-raw/submissions/JASCO_20220819"
+dir <- "data-raw/legacy/JASCO_20220819"
 
 metadata <- read_csv(file.path(dir, "raw/JASCO_METADATA_20220819.csv"), col_types = cols(.default = col_character())) |> 
   janitor::remove_empty("rows")

@@ -1,6 +1,6 @@
 library(tidyverse)
 
-dir <- "data-raw/submissions/THMAH_20241028/"
+dir <- "data-raw/legacy/_rejected/THMAH_20241028/"
 
 raw_metadata <- readxl::read_excel(file.path(dir, "raw/THMAH_20241028_METADATA.xlsx"))
 raw_detectiondata <- readxl::read_excel(file.path(dir, "raw/THMAH_20241028_DETECTIONDATA.xlsx"))

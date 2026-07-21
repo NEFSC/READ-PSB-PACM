@@ -1,7 +1,7 @@
 library(tidyverse)
 library(janitor)
 
-dir <- "data-raw/submissions/THMAH_20260515"
+dir <- "data-raw/legacy/_rejected/THMAH_20260515"
 
 raw_metadata <- read_csv(
   list.files(file.path(dir, "raw"), pattern = "METADATA", full.names = TRUE),

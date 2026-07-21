@@ -1,6 +1,6 @@
 library(tidyverse)
 
-dir <- "data-raw/submissions/DFOCA_20220818"
+dir <- "data-raw/legacy/_rejected/DFOCA_20220818"
 
 detections <- list.files(file.path(dir, "raw"), pattern = "DETECTIONDATA", full.names = TRUE) |>
   map_dfr(read_csv, col_types = cols(.default = col_character()))

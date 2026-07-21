@@ -1,6 +1,6 @@
 library(tidyverse)
 
-dir <- "data-raw/submissions/UCORN_20220214"
+dir <- "data-raw/legacy/UCORN_20220214"
 
 metadata <- read_csv(file.path(dir, "raw/UCORN_METADATA_20220214.csv"), col_types = cols(.default = col_character()))
 detections <- read_csv(file.path(dir, "raw/UCORN_DETECTIONDATA_20220217.csv"), col_types = cols(.default = col_character()))

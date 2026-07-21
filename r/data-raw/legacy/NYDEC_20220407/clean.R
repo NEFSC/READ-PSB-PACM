@@ -1,6 +1,6 @@
 library(tidyverse)
 
-dir <- "data-raw/submissions/NYDEC_20220407"
+dir <- "data-raw/legacy/NYDEC_20220407"
 
 metadata <- read_csv(file.path(dir, "raw/NYDEC_METADATA_20220407.csv"), col_types = cols(.default = col_character()))
 detections <- read_csv(file.path(dir, "raw/NYDEC_DETECTIONDATA_20220321.csv"), col_types = cols(.default = col_character()))

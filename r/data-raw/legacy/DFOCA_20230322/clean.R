@@ -1,6 +1,6 @@
 library(tidyverse)
 
-dir <- "data-raw/submissions/DFOCA_20230322"
+dir <- "data-raw/legacy/DFOCA_20230322"
 
 metadata <- read_csv(file.path(dir, "raw/DFOCA_METADATA_20230323.csv"), col_types = cols(.default = col_character()))
 detections <- list.files(file.path(dir, "raw"), pattern = "DETECTIONDATA", full.names = TRUE) |>

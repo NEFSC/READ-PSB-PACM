@@ -1,6 +1,6 @@
 library(tidyverse)
 
-dir <- "data-raw/submissions/JASCO_20230809"
+dir <- "data-raw/legacy/JASCO_20230809"
 
 metadata <- read_csv(
   list.files(file.path(dir, "raw"), pattern = "METADATA", full.names = TRUE),

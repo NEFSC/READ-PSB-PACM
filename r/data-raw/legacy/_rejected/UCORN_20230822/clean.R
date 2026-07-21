@@ -1,7 +1,7 @@
 library(tidyverse)
 library(janitor)
 
-dir <- "data-raw/submissions/UCORN_20230822"
+dir <- "data-raw/legacy/_rejected/UCORN_20230822"
 
 metadata_2019 <- read_csv(file.path(dir, "..", "UCORN_20190205", "clean", "metadata.csv"), col_types = cols(.default = col_character()))
 detections_2019 <- read_csv(file.path(dir, "..", "UCORN_20190205", "clean", "detectiondata.csv"), col_types = cols(.default = col_character()))

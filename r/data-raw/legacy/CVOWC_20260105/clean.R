@@ -1,6 +1,6 @@
 library(tidyverse)
 
-dir <- "data-raw/submissions/CVOWC_20260105"
+dir <- "data-raw/legacy/CVOWC_20260105"
 
 analyses <- read_csv(file.path(dir, "raw", "CVOW-C_20260105_analyses.csv"), col_types = cols(.default = col_character())) |> 
   mutate(

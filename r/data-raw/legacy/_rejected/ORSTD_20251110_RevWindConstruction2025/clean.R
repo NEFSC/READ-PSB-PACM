@@ -2,7 +2,7 @@ library(tidyverse)
 library(janitor)
 library(sf)
 
-dir <- "data-raw/submissions/ORSTD_20251110_RevWindConstruction2025"
+dir <- "data-raw/legacy/_rejected/ORSTD_20251110_RevWindConstruction2025"
 
 
 # thayer mahan -----------------------------------------------------------

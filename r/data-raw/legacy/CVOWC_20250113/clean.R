@@ -1,6 +1,6 @@
 library(tidyverse)
 
-dir <- "data-raw/submissions/CVOWC_20250113"
+dir <- "data-raw/legacy/CVOWC_20250113"
 
 metadata <- read_csv(file.path(dir, "raw/CVOW-C_20250113_METADATA.csv"), col_types = cols(.default = col_character()))
 detections <- read_csv(file.path(dir, "raw/CVOW-C_20250113_DETECTIONDATA.csv"), col_types = cols(.default = col_character()))
