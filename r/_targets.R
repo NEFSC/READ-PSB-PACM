@@ -22,11 +22,9 @@ list(
   tar_target(data_dir, "./data-raw"),
   targets_gis,
   targets_ref,
-  
-  targets_towed_tracks,
-  targets_towed_detections,
-  targets_towed,
 
+  # the towed array is now the TOWED_LEGACY PARS submission (T2.5, AD-11);
+  # R/towed/ and its targets_towed_* lists are removed
   targets_makara,
   targets_pars_ref,
   targets_pars,

@@ -164,6 +164,38 @@ test_that("a valid submission loads with no errors and keeps its row counts", {
   expect_true(loaded$detectiondata[[1]]$valid)
 })
 
+test_that("a loaded file reports its error count alongside the errors", {
+  root <- withr::local_tempdir()
+  write_submission(
+    file.path(root, "SUB1"),
+    metadata = select(valid_metadata(deployment_platform_type_code = "SPACE_STATION"), -row),
+    detectiondata = select(valid_detectiondata(), -row)
+  )
+
+  loaded <- load_pars("SUB1", "PARS_1.0", NA, root, test_codes())
+  metadata <- loaded$metadata[[1]]
+
+  # n_errors was silently absent: `nrow(errors)` inside tibble() resolved to the
+  # list-column being created, and a NULL column is dropped without complaint
+  expect_true("n_errors" %in% names(metadata))
+  expect_equal(metadata$n_errors, nrow(metadata$errors[[1]]))
+  expect_gt(metadata$n_errors, 0)
+})
+
+test_that("a valid file reports zero errors rather than a missing count", {
+  root <- withr::local_tempdir()
+  write_submission(
+    file.path(root, "SUB1"),
+    metadata = select(valid_metadata(), -row),
+    detectiondata = select(valid_detectiondata(), -row)
+  )
+
+  loaded <- load_pars("SUB1", "PARS_1.0", NA, root, test_codes())
+
+  expect_equal(loaded$metadata[[1]]$n_errors, 0)
+  expect_equal(loaded$detectiondata[[1]]$n_errors, 0)
+})
+
 test_that("gpsdata is optional and reported as absent", {
   root <- withr::local_tempdir()
   write_submission(

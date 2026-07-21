@@ -56,7 +56,13 @@ empty_diff <- function () {
 normalize_numeric <- function (x, tolerance) {
   digits <- max(0, ceiling(-log10(tolerance)))
   rec <- function (e) {
-    if (is.data.frame(e)) {
+    if (inherits(e, "sfg")) {
+      # sf wraps the components of a MULTILINESTRING differently depending on
+      # how it was built - st_cast() from a LINESTRING leaves the component
+      # classed as an sfg, st_combine() leaves it a bare matrix. only the
+      # coordinates carry meaning, so strip the wrapper and compare the numbers
+      rec(unclass(e))
+    } else if (is.data.frame(e)) {
       e[] <- lapply(e, rec)
       e
     } else if (is.list(e)) {

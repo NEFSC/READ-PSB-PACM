@@ -292,14 +292,19 @@ load_pars_file <- function (filepath, table, codes, profile, parse) {
     validate_pars(parsed, table, codes, profile)
   )
 
+  # counted before the tibble: inside tibble(), `nrow(errors)` would resolve to
+  # the list-column named `errors` being created alongside it, and nrow() of a
+  # list is NULL, so the column would be dropped without a word
+  n_errors <- nrow(errors)
+
   tibble(
     filepath = filepath,
     n_rows = nrow(raw),
     raw = list(raw),
     parsed = list(parsed),
-    valid = nrow(errors) == 0,
+    valid = n_errors == 0,
     errors = list(errors),
-    n_errors = nrow(errors)
+    n_errors = n_errors
   )
 }
 

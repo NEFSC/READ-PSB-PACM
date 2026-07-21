@@ -144,3 +144,106 @@ test_that("extra columns on the position table do not disturb the track", {
   expect_equal(nrow(tracks), 1)
   expect_false("stray_column" %in% names(tracks))
 })
+
+# segmentation on effort gaps (T2.4) -----------------------------------------
+#
+# PARS gpsdata carries no effort flag, so a break in effort is visible only as
+# an absence of positions. Without segmentation a track is drawn straight
+# through port calls and off-effort transits.
+
+segment_count <- function (tracks) {
+  lengths(sf::st_geometry(tracks))
+}
+
+vertex_count <- function (tracks) {
+  sum(vapply(
+    sf::st_geometry(tracks)[[1]], nrow, numeric(1)
+  ))
+}
+
+# shift a block of positions forward, leaving a hole of whole days.
+#
+# `from` must not fall between two positions that share an hour (rows 1-2, 7-8
+# and 11-12 here), or the shift separates them and hourly thinning keeps an
+# extra one - which would change the vertex count for reasons unrelated to
+# segmentation
+with_gap <- function (positions, gap_days, from = 9) {
+  positions |>
+    mutate(datetime = if_else(
+      row_number() >= from, datetime + lubridate::days(gap_days), datetime
+    ))
+}
+
+test_that("a continuously tracked deployment stays a single segment", {
+  tracks <- pars_tracks_table(glider_positions(), glider_deployments())
+
+  expect_equal(unname(segment_count(tracks)), 1)
+})
+
+test_that("a multi-day hole in the positions splits the track", {
+  tracks <- pars_tracks_table(
+    with_gap(glider_positions(), gap_days = 3), glider_deployments()
+  )
+
+  expect_equal(unname(segment_count(tracks)), 2)
+})
+
+test_that("two holes produce three segments", {
+  positions <- glider_positions() |>
+    with_gap(gap_days = 3, from = 6) |>
+    with_gap(gap_days = 6, from = 10)
+
+  tracks <- pars_tracks_table(positions, glider_deployments())
+
+  expect_equal(unname(segment_count(tracks)), 3)
+})
+
+test_that("segmentation keeps every position as a vertex", {
+  positions <- with_gap(glider_positions(), gap_days = 3)
+  # 14 raw positions thin to 11 hourly ones, and splitting must not drop any
+  ungapped <- pars_tracks_table(glider_positions(), glider_deployments())
+  gapped <- pars_tracks_table(positions, glider_deployments())
+
+  expect_equal(vertex_count(gapped), vertex_count(ungapped))
+})
+
+test_that("a long gap within consecutive days does not split the track", {
+  # a break in recording is not a break in effort: towed array legs contain
+  # gaps of up to 26.7 hours, while genuine leg boundaries always skip a day
+  positions <- glider_positions() |>
+    mutate(datetime = if_else(
+      row_number() >= 8, datetime + lubridate::hours(20), datetime
+    ))
+
+  tracks <- pars_tracks_table(positions, glider_deployments())
+
+  expect_equal(unname(segment_count(tracks)), 1)
+})
+
+test_that("a segmented track keeps one row and one id per deployment", {
+  tracks <- pars_tracks_table(
+    with_gap(glider_positions(), gap_days = 3), glider_deployments()
+  )
+
+  expect_equal(nrow(tracks), 1)
+  expect_equal(tracks$track_id, "WHOI:WHOI_MA-RI_202210_WE16:TRACK")
+  expect_s3_class(sf::st_geometry(tracks), "sfc_MULTILINESTRING")
+})
+
+test_that("a segment holding a single position is dropped, not fatal", {
+  # one stray position days after the rest cannot form a line segment
+  positions <- bind_rows(
+    glider_positions(),
+    tibble(
+      submission_id = "GLIDER_SUB",
+      deployment_code = "WHOI_MA-RI_202210_WE16",
+      datetime = parse_pars_datetime("2022-11-15T12:00:00Z"),
+      latitude = 41.0, longitude = -70.5
+    )
+  )
+
+  tracks <- pars_tracks_table(positions, glider_deployments())
+
+  expect_equal(nrow(tracks), 1)
+  expect_equal(unname(segment_count(tracks)), 1)
+})

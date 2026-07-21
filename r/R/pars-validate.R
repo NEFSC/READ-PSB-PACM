@@ -14,8 +14,37 @@
 
 PARS_PROFILES <- c("PARS_1.0", "PARS_LEGACY")
 
-# fields legacy never collected; presence is relaxed under PARS_LEGACY only
-PARS_LEGACY_OPTIONAL <- c("project_funding", "analysis_detector_version")
+# fields legacy never collected; presence is relaxed under PARS_LEGACY only.
+# each entry names the historical data that justifies it - this list stays short
+# and reviewed, never a wildcard
+PARS_LEGACY_OPTIONAL <- c(
+  # PACM_20240820 never collected these
+  "project_funding",
+  "analysis_detector_version",
+
+  # the towed metadata workbook records no analysis frequency band (T2.3)
+  "analysis_min_frequency_khz",
+  "analysis_max_frequency_khz",
+
+  # the 2011-2019 towed array surveys never collected these: the metadata
+  # workbook has 22 columns and not one of them is among these (T2.1).
+  # a towed cruise has no site in the moored sense, and the hydrophone model
+  # occupies recording_device_type_code, leaving no separate device identifier
+  "deployment_water_depth_m",
+  "recording_device_depth_m",
+  "recording_bit_depth",
+  "recording_n_channels",
+  "recording_device_code",
+  "site_code",
+
+  # also towed, found while building the submission (T2.2): the metadata
+  # workbook's "project" column holds the cruise code rather than a project
+  # name, and duty cycle is recorded as the word "continuous" rather than a
+  # duration and interval in seconds
+  "project_name",
+  "recording_duration_secs",
+  "recording_interval_secs"
+)
 
 # a sample rate outside this band is a unit error, not a real configuration.
 # 48000 (Hz submitted in a kHz field) is the case this exists to catch
@@ -66,11 +95,19 @@ PARS_VOCABULARY <- list(
   gpsdata = list()
 )
 
-# columns whose value may be a comma-separated list of codes, by profile
+# columns whose value may be a comma-separated list of codes, by profile.
+# a cardinality relaxation, not a presence one: every element is still checked
+# against its vocabulary, so this widens the shape without weakening the check
 pars_list_valued <- function (profile) {
   listed <- "analysis_sound_source_codes"
   if (profile == "PARS_LEGACY") {
-    listed <- c(listed, "detection_call_type_code")
+    listed <- c(
+      listed,
+      "detection_call_type_code",
+      # towed HB1603 towed two hydrophone models and ran two detectors (T2.1)
+      "recording_device_type_code",
+      "analysis_detector_code"
+    )
   }
   listed
 }

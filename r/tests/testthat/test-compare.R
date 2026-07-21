@@ -198,3 +198,58 @@ test_that("datetimes nested inside a list-column are compared without error", {
 
   expect_equal(nrow(compare_pacm_snapshot(new, baseline)), 0)
 })
+
+# geometry representation (T2.4) ---------------------------------------------
+#
+# sf stores the components of a MULTILINESTRING differently depending on how it
+# was built: st_cast() from a LINESTRING leaves the component classed as an sfg,
+# while st_combine() of LINESTRINGs leaves it a bare matrix. The coordinates are
+# identical and st_equals() agrees, so the comparison must not report a change.
+
+multilinestring_of <- function (component) {
+  structure(list(component), class = c("XY", "MULTILINESTRING", "sfg"))
+}
+
+track_snapshot <- function (component) {
+  list(tracks = sf::st_as_sf(tibble(
+    track_id = "ORG:DEP1:TRACK",
+    deployment_id = "ORG:DEP1",
+    geometry = sf::st_sfc(component, crs = 4326)
+  )))
+}
+
+test_that("geometry compares by coordinates, not by how sf wrapped them", {
+  coords <- matrix(c(-70, 41, -70.5, 41.5, -71, 42), ncol = 2, byrow = TRUE)
+
+  bare <- track_snapshot(multilinestring_of(coords))
+  classed <- track_snapshot(multilinestring_of(sf::st_linestring(coords)))
+
+  expect_equal(nrow(compare_pacm_snapshot(bare, classed)), 0)
+})
+
+test_that("a real change in coordinates is still reported", {
+  coords <- matrix(c(-70, 41, -70.5, 41.5, -71, 42), ncol = 2, byrow = TRUE)
+  moved <- coords
+  moved[3, 1] <- -71.5
+
+  diffs <- compare_pacm_snapshot(
+    track_snapshot(multilinestring_of(coords)),
+    track_snapshot(multilinestring_of(sf::st_linestring(moved)))
+  )
+
+  expect_equal(nrow(diffs), 1)
+  expect_equal(diffs$change, "changed")
+  expect_equal(diffs$column, "geometry")
+})
+
+test_that("a change in the number of segments is reported", {
+  a <- matrix(c(-70, 41, -70.5, 41.5), ncol = 2, byrow = TRUE)
+  b <- matrix(c(-72, 43, -72.5, 43.5), ncol = 2, byrow = TRUE)
+  one <- structure(list(a), class = c("XY", "MULTILINESTRING", "sfg"))
+  two <- structure(list(a, b), class = c("XY", "MULTILINESTRING", "sfg"))
+
+  diffs <- compare_pacm_snapshot(track_snapshot(two), track_snapshot(one))
+
+  expect_equal(nrow(diffs), 1)
+  expect_equal(diffs$column, "geometry")
+})

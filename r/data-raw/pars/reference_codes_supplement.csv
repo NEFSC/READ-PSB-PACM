@@ -6,3 +6,6 @@ call_types,OTHER,Other,legacy call type recorded as OTHER with no more specific 
 device_types,COLMAR,COLMAR Hydrophone,legacy instrument type with no official code; 350 legacy deployments,2026-07-21
 device_types,OBSERVER,Observer,legacy instrument type recorded for visual/human observation rather than a recording device; 99 legacy deployments,2026-07-21
 device_types,AUTOBUOY,Autonomous Buoy,legacy instrument type with no official code; 10 legacy deployments,2026-07-21
+device_types,APC,APC Hydrophone,towed array hydrophone model; kept as a device type so published instrument_type is unchanged (Decision 11); 5 towed deployments; will not be adopted upstream (R-16),2026-07-21
+device_types,HTI-96-MIN,High Tech Inc HTI-96-MIN Hydrophone,towed array hydrophone model; kept as a device type so published instrument_type is unchanged (Decision 11); 4 towed deployments; will not be adopted upstream (R-16),2026-07-21
+device_types,RESON,Teledyne RESON Hydrophone,towed array hydrophone model; kept as a device type so published instrument_type is unchanged (Decision 11); 3 towed deployments; will not be adopted upstream (R-16),2026-07-21

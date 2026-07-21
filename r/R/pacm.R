@@ -169,7 +169,7 @@ targets_pacm <- list(
   tar_target(pacm_data_raw, {
     bind_rows(
       makara = enframe(makara_pacm),
-      towed = enframe(towed_pacm),
+      # towed retired: it is now the TOWED_LEGACY PARS submission (T2.5, AD-11)
       legacy = enframe(legacy_pacm),
       pars = enframe(pars_pacm),
       .id = "dataset"
@@ -299,6 +299,13 @@ targets_pacm <- list(
     #   tabyl(analysis_id)
     
     stopifnot(
+      # published identifiers are unique. this is the guard that catches a
+      # deployment published by two sources at once - the failure mode when
+      # the towed path and its TOWED_LEGACY replacement both run (T2.5)
+      !anyDuplicated(sites$site_id),
+      !anyDuplicated(deployments$deployment_id),
+      !anyDuplicated(tracks$track_id),
+
       # sites
       all(sites$site_id %in% na.omit(deployments$site_id)),
       all(!is.na(sites$site_latitude) & !is.na(sites$site_longitude)),

@@ -425,7 +425,19 @@ derive_sites <- function (deployments, max_distance_km = 10) {
 # build one track per deployment from GPS positions, thinned to the first fix
 # in each hour. positions must already be shaped as
 # deployment_code, datetime, latitude, longitude
-derive_tracks <- function (positions, deployments) {
+#
+# a track is a MULTILINESTRING of one or more segments. segments exist because
+# PARS gpsdata carries no effort flag: a break in effort is visible only as an
+# absence of positions, and without splitting there the track is drawn straight
+# through port calls and off-effort transits.
+#
+# the break is defined in whole days rather than hours because that is what a
+# break in effort actually is - a day with no positions. duration alone does
+# not separate the two cases: in the towed array surveys, gaps *within* a leg
+# reach 26.7 h while genuine leg boundaries start at 29.6 h, so any hour
+# threshold that works does so by sitting in a three-hour window, and would
+# start mis-splitting the moment a survey recorded a slightly longer gap
+derive_tracks <- function (positions, deployments, max_gap_days = 1) {
   track_positions <- positions |>
     arrange(deployment_code, datetime)
 
@@ -439,11 +451,30 @@ derive_tracks <- function (positions, deployments) {
     ungroup() |>
     select(-datetime_hour)
 
-  # convert to sf linestrings
-  track_positions_hourly_sf <- track_positions_hourly |>
-    st_as_sf(coords = c("longitude", "latitude"), crs = 4326, remove = FALSE) |>
+  track_segments <- track_positions_hourly |>
     arrange(deployment_code, datetime) |>
     group_by(deployment_code) |>
+    mutate(
+      gap_days = as.numeric(as_date(datetime) - lag(as_date(datetime))),
+      segment = cumsum(coalesce(gap_days > max_gap_days, FALSE)) + 1
+    ) |>
+    # a lone position cannot form a line; dropping it loses a vertex but never
+    # invents one, and the alternative is a cast failure
+    group_by(deployment_code, segment) |>
+    filter(n() >= 2) |>
+    ungroup() |>
+    select(-gap_days)
+
+  # convert to sf linestrings, one per segment, then collect each deployment's
+  # segments into a single multilinestring.
+  #
+  # do_union = FALSE throughout: st_union would node the lines where a track
+  # crosses itself and drop coincident vertices, reporting more segments than
+  # were surveyed. the towed GU1303 cruise has 7 legs and unioning reports 11
+  track_segments_sf <- track_segments |>
+    st_as_sf(coords = c("longitude", "latitude"), crs = 4326, remove = FALSE) |>
+    arrange(deployment_code, segment, datetime) |>
+    group_by(deployment_code, segment) |>
     summarise(
       start_datetime = min(datetime),
       end_datetime = max(datetime),
@@ -451,10 +482,23 @@ derive_tracks <- function (positions, deployments) {
       start_longitude = first(longitude),
       end_latitude = last(latitude),
       end_longitude = last(longitude),
-      do_union = FALSE
+      do_union = FALSE,
+      .groups = "drop_last"
     ) |>
-    st_cast("LINESTRING") |>
-    ungroup()
+    st_cast("LINESTRING")
+
+  track_positions_hourly_sf <- track_segments_sf |>
+    summarise(
+      start_datetime = min(start_datetime),
+      end_datetime = max(end_datetime),
+      start_latitude = first(start_latitude),
+      start_longitude = first(start_longitude),
+      end_latitude = last(end_latitude),
+      end_longitude = last(end_longitude),
+      do_union = FALSE,
+      .groups = "drop"
+    ) |>
+    st_cast("MULTILINESTRING")
 
   tracks <- track_positions_hourly_sf |>
     left_join(
@@ -462,8 +506,7 @@ derive_tracks <- function (positions, deployments) {
         select(organization_code, deployment_id, deployment_code),
       by = c("deployment_code")
     ) |>
-    mutate(track_id = glue("{deployment_id}:TRACK")) |>
-    st_cast("MULTILINESTRING")
+    mutate(track_id = glue("{deployment_id}:TRACK"))
 
   stopifnot(
     all(!duplicated(tracks$track_id)),

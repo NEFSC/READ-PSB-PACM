@@ -164,6 +164,145 @@ test_that("PARS_LEGACY still rejects an invalid code inside a list", {
   expect_true(any(grepl("detection_call_type_code", errors$name)))
 })
 
+# AD-10 extension for the towed array conversion (T2.1) -----------------------
+#
+# the 2011-2019 towed surveys recorded none of these fields; the metadata
+# workbook has 22 columns and not one of them is among these. relaxation is
+# presence-only - the range rules below prove it
+
+TOWED_RELAXED_METADATA <- c(
+  "deployment_water_depth_m", "recording_device_depth_m", "recording_bit_depth",
+  "recording_n_channels", "recording_device_code", "site_code",
+  # the sheet's "project" column holds the cruise code, not a project name, and
+  # duty cycle is recorded as the word "continuous" rather than a number (T2.2)
+  "project_name", "recording_duration_secs", "recording_interval_secs"
+)
+
+# the towed metadata workbook records no analysis frequency band (T2.3)
+TOWED_RELAXED_DETECTIONDATA <- c(
+  "analysis_min_frequency_khz", "analysis_max_frequency_khz"
+)
+
+for (field in TOWED_RELAXED_DETECTIONDATA) {
+  local({
+    column <- field
+
+    test_that(paste0("PARS_1.0 requires ", column), {
+      x <- valid_detectiondata()
+      x[[column]] <- NA
+      errors <- validate_pars(x, "detectiondata", test_codes(), profile = "PARS_1.0")
+
+      expect_true(any(grepl(column, errors$name)))
+    })
+
+    test_that(paste0("PARS_LEGACY allows ", column, " to be absent"), {
+      x <- valid_detectiondata()
+      x[[column]] <- NA
+      errors <- validate_pars(x, "detectiondata", test_codes(), profile = "PARS_LEGACY")
+
+      expect_equal(nrow(errors), 0)
+    })
+  })
+}
+
+test_that("PARS_LEGACY relaxes presence of the frequency band but not its ordering", {
+  x <- valid_detectiondata(
+    analysis_min_frequency_khz = 10, analysis_max_frequency_khz = 2
+  )
+
+  errors <- validate_pars(x, "detectiondata", test_codes(), profile = "PARS_LEGACY")
+
+  expect_true(any(grepl("analysis_frequency_ordered", errors$name)))
+})
+
+for (field in TOWED_RELAXED_METADATA) {
+  local({
+    column <- field
+
+    test_that(paste0("PARS_1.0 requires ", column), {
+      x <- valid_metadata()
+      x[[column]] <- NA
+      errors <- validate_pars(x, "metadata", test_codes(), profile = "PARS_1.0")
+
+      expect_true(any(grepl(column, errors$name)))
+    })
+
+    test_that(paste0("PARS_LEGACY allows ", column, " to be absent"), {
+      x <- valid_metadata()
+      x[[column]] <- NA
+      errors <- validate_pars(x, "metadata", test_codes(), profile = "PARS_LEGACY")
+
+      expect_equal(nrow(errors), 0)
+    })
+  })
+}
+
+test_that("PARS_LEGACY relaxes presence of recording_bit_depth but not its range", {
+  x <- valid_metadata(recording_bit_depth = -1L)
+
+  errors <- validate_pars(x, "metadata", test_codes(), profile = "PARS_LEGACY")
+
+  expect_true(any(grepl("recording_bit_depth", errors$name)))
+})
+
+test_that("PARS_LEGACY relaxes presence of deployment_water_depth_m but not its range", {
+  x <- valid_metadata(deployment_water_depth_m = -5)
+
+  errors <- validate_pars(x, "metadata", test_codes(), profile = "PARS_LEGACY")
+
+  expect_true(any(grepl("deployment_water_depth_m", errors$name)))
+})
+
+# cardinality: HB1603 recorded two device types and used two detectors --------
+
+test_that("PARS_1.0 rejects a comma-separated recording_device_type_code", {
+  x <- valid_metadata(recording_device_type_code = "SOUNDTRAP,AMAR")
+
+  errors <- validate_pars(x, "metadata", test_codes(), profile = "PARS_1.0")
+
+  expect_true(any(grepl("recording_device_type_code", errors$name)))
+})
+
+test_that("PARS_LEGACY accepts a comma-separated recording_device_type_code of valid codes", {
+  x <- valid_metadata(recording_device_type_code = "SOUNDTRAP,AMAR")
+
+  errors <- validate_pars(x, "metadata", test_codes(), profile = "PARS_LEGACY")
+
+  expect_equal(nrow(errors), 0)
+})
+
+test_that("PARS_LEGACY rejects an invalid code inside a recording_device_type_code list", {
+  x <- valid_metadata(recording_device_type_code = "SOUNDTRAP,NOT_A_DEVICE")
+
+  errors <- validate_pars(x, "metadata", test_codes(), profile = "PARS_LEGACY")
+
+  expect_true(any(grepl("recording_device_type_code", errors$name)))
+})
+
+test_that("PARS_1.0 rejects a comma-separated analysis_detector_code", {
+  x <- valid_detectiondata(analysis_detector_code = "LFDCS,MANUAL")
+
+  errors <- validate_pars(x, "detectiondata", test_codes(), profile = "PARS_1.0")
+
+  expect_true(any(grepl("analysis_detector_code", errors$name)))
+})
+
+test_that("PARS_LEGACY accepts a comma-separated analysis_detector_code of valid codes", {
+  x <- valid_detectiondata(analysis_detector_code = "LFDCS,MANUAL")
+
+  errors <- validate_pars(x, "detectiondata", test_codes(), profile = "PARS_LEGACY")
+
+  expect_equal(nrow(errors), 0)
+})
+
+test_that("PARS_LEGACY rejects an invalid code inside an analysis_detector_code list", {
+  x <- valid_detectiondata(analysis_detector_code = "LFDCS,NOT_A_DETECTOR")
+
+  errors <- validate_pars(x, "detectiondata", test_codes(), profile = "PARS_LEGACY")
+
+  expect_true(any(grepl("analysis_detector_code", errors$name)))
+})
+
 # AD-10: the profile must never weaken a check that catches corruption --------
 
 test_that("PARS_LEGACY does not relax the sample rate range", {
