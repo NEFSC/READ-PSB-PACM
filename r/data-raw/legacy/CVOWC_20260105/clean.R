@@ -34,13 +34,13 @@ sites <- read_csv(file.path(dir, "raw", "CVOW-C_20260105_sites.csv"), col_types 
 
 # export for makara validation -------------------------------------------
 
-dir.create(file.path(dir, "clean-makara"), showWarnings = FALSE)
-write_csv(analyses, file.path(dir, "clean-makara", "analyses.csv"), na = "")
-write_csv(devices, file.path(dir, "clean-makara", "devices.csv"), na = "")
-write_csv(detections, file.path(dir, "clean-makara", "detections.csv"), na = "")
-write_csv(deployments, file.path(dir, "clean-makara", "deployments.csv"), na = "")
-write_csv(recordings, file.path(dir, "clean-makara", "recordings.csv"), na = "")
-write_csv(sites, file.path(dir, "clean-makara", "sites.csv"), na = "")
+# dir.create(file.path(dir, "clean-makara"), showWarnings = FALSE)
+# write_csv(analyses, file.path(dir, "clean-makara", "analyses.csv"), na = "")
+# write_csv(devices, file.path(dir, "clean-makara", "devices.csv"), na = "")
+# write_csv(detections, file.path(dir, "clean-makara", "detections.csv"), na = "")
+# write_csv(deployments, file.path(dir, "clean-makara", "deployments.csv"), na = "")
+# write_csv(recordings, file.path(dir, "clean-makara", "recordings.csv"), na = "")
+# write_csv(sites, file.path(dir, "clean-makara", "sites.csv"), na = "")
 
 
 # export for pacm --------------------------------------------------------
