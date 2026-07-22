@@ -212,21 +212,39 @@ error_frame <- function (row, name, expression, actual) {
 
 # every deployment_code referenced by detectiondata or gpsdata must exist in
 # metadata, and metadata must not name the same deployment twice
+# within-submission check: a submission must not define the same deployment
+# twice. this is genuinely local (a self-contained property of one file), so it
+# stays per-submission in load_pars
+pars_metadata_errors <- function (metadata) {
+  if (is.null(metadata)) {
+    return(error_frame(integer(0), character(0), character(0), character(0)))
+  }
+
+  known <- metadata$deployment_code
+  duplicated_codes <- unique(known[duplicated(known)])
+  if (length(duplicated_codes) == 0) {
+    return(error_frame(integer(0), character(0), character(0), character(0)))
+  }
+
+  error_frame(
+    row = metadata$row[known %in% duplicated_codes],
+    name = "deployment_code_unique",
+    expression = "deployment_code is unique within metadata",
+    actual = known[known %in% duplicated_codes]
+  )
+}
+
+# orphan check: every detection/gps deployment_code must exist in metadata.
+# this is GLOBAL, not per-submission (Decision 15) - a detection may analyse a
+# deployment another submission deployed (JASCO analysed DFO's recorders), so
+# `metadata` here is the combined pool, not one submission's file
 pars_referential_errors <- function (metadata, detectiondata, gpsdata) {
-  if (is.null(metadata)) return(error_frame(integer(0), character(0), character(0), character(0)))
+  if (is.null(metadata)) {
+    return(error_frame(integer(0), character(0), character(0), character(0)))
+  }
 
   known <- metadata$deployment_code
   errors <- list()
-
-  duplicated_codes <- unique(known[duplicated(known)])
-  if (length(duplicated_codes) > 0) {
-    errors[[length(errors) + 1]] <- error_frame(
-      row = metadata$row[known %in% duplicated_codes],
-      name = "deployment_code_unique",
-      expression = "deployment_code is unique within metadata",
-      actual = known[known %in% duplicated_codes]
-    )
-  }
 
   for (child in c("detectiondata", "gpsdata")) {
     x <- if (child == "detectiondata") detectiondata else gpsdata
@@ -316,37 +334,52 @@ load_pars <- function (id, format, skip, root_dir, codes) {
 
   profile <- pars_profile_for_format(format)
 
+  # where the loader reads from (AD-3):
+  #   - clean/ once clean.R has produced it - the corrected files
+  #   - raw/ directly when the submission is CONFORMING: no corrections, so no
+  #     clean.R and no clean/. a conforming submission needs no clean.R at all.
+  #   - but a submission that HAS a clean.R whose clean/ was never generated is a
+  #     mistake, not a conforming one: reading raw/ would silently ingest the
+  #     very values clean.R exists to fix (the USYRA sample-rate error), so that
+  #     case stops and tells you to run clean_pars().
   clean_dir <- file.path(root_dir, id, "clean")
-  if (!dir.exists(clean_dir)) {
+  raw_dir <- file.path(root_dir, id, "raw")
+  has_clean_script <- file.exists(file.path(root_dir, id, "clean.R"))
+
+  data_dir <- if (dir.exists(clean_dir)) {
+    clean_dir
+  } else if (has_clean_script) {
     stop(glue(
-      "No clean/ directory for PARS submission {id} (expected {clean_dir}). ",
-      "Run clean_pars('{id}') if the submission has a clean.R."
+      "PARS submission {id} has a clean.R but no clean/ directory. ",
+      "Run clean_pars('{id}') to generate it."
+    ))
+  } else if (dir.exists(raw_dir)) {
+    raw_dir
+  } else {
+    stop(glue(
+      "No data directory for PARS submission {id} ",
+      "(expected {clean_dir} or {raw_dir})."
     ))
   }
 
   metadata <- load_pars_file(
-    file.path(clean_dir, "metadata.csv"), "metadata", codes, profile,
+    file.path(data_dir, "metadata.csv"), "metadata", codes, profile,
     parse_pars_metadata
   )
   detectiondata <- load_pars_file(
-    file.path(clean_dir, "detectiondata.csv"), "detectiondata", codes, profile,
+    file.path(data_dir, "detectiondata.csv"), "detectiondata", codes, profile,
     parse_pars_detectiondata
   )
   gpsdata <- load_pars_file(
-    file.path(clean_dir, "gpsdata.csv"), "gpsdata", codes, profile,
+    file.path(data_dir, "gpsdata.csv"), "gpsdata", codes, profile,
     parse_pars_gpsdata
   )
 
-  # cross-file checks: these cannot be done per file, so they live on the
-  # submission rather than on any one of its tables
-  errors <- bind_rows(
-    pars_referential_errors(
-      metadata$parsed[[1]],
-      detectiondata$parsed[[1]],
-      gpsdata$parsed[[1]]
-    ),
-    pars_gpsdata_errors(metadata$parsed[[1]], gpsdata$parsed[[1]])
-  )
+  # only within-submission checks live on the submission. referential integrity
+  # (detection/gps orphans, mobile<->gps) is GLOBAL, over the combined pool
+  # (Decision 15) - a submission may analyse a deployment another submission
+  # provided - so it runs in the pipeline (`pars_referential`), not here
+  errors <- pars_metadata_errors(metadata$parsed[[1]])
 
   # a tibble rather than a list: tar_combine binds these with bind_rows(), and
   # a bare list of list-columns is not unambiguously coercible to a row

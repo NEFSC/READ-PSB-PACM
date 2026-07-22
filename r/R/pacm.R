@@ -167,10 +167,12 @@ targets_pacm <- list(
   }),
 
   tar_target(pacm_data_raw, {
+    # the migration is complete: the only sources are Makara and PARS. The towed
+    # array (T2.5, AD-11), the 34 PACM_20240820 submissions (T3.2, AD-12) and the
+    # 2 MAKARA_1.2 GARDLINE submissions (T3.3) are all PARS submissions under
+    # data-raw/pars/ now; the legacy loader was removed at the T3.5 gate
     bind_rows(
       makara = enframe(makara_pacm),
-      # towed retired: it is now the TOWED_LEGACY PARS submission (T2.5, AD-11)
-      legacy = enframe(legacy_pacm),
       pars = enframe(pars_pacm),
       .id = "dataset"
     ) |>

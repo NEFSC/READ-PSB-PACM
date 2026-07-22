@@ -26,6 +26,22 @@ PARS_LEGACY_OPTIONAL <- c(
   "analysis_min_frequency_khz",
   "analysis_max_frequency_khz",
 
+  # legacy gaps (T3.1): UCORN_20250325 recorded neither a processing code nor
+  # an analysis sample rate; CVOWC_20250113 omits the processing code on 672
+  # rows. both are published as NA today, so relaxing presence changes nothing
+  "analysis_processing_code",
+  "analysis_sample_rate_khz",
+
+  # more legacy gaps (T3.1): CVOWC_20260105 recorded no soundfiles timezone or
+  # point of contact; JASCO_20250715's electric gliders carry no fixed
+  # deployment coordinates - all published as NA today. mobile deployments may
+  # legitimately have no fixed position; pacm_data still asserts that STATIONARY
+  # deployments have coordinates, which is the real backstop
+  "recording_timezone",
+  "points_of_contact",
+  "deployment_latitude",
+  "deployment_longitude",
+
   # the 2011-2019 towed array surveys never collected these: the metadata
   # workbook has 22 columns and not one of them is among these (T2.1).
   # a towed cruise has no site in the moored sense, and the hydrophone model
@@ -43,7 +59,16 @@ PARS_LEGACY_OPTIONAL <- c(
   # duration and interval in seconds
   "project_name",
   "recording_duration_secs",
-  "recording_interval_secs"
+  "recording_interval_secs",
+
+  # the GARDLINE MAKARA_1.2 submissions (ORSTED Sunrise) provided deployments and
+  # positive detections only - no recording configuration and no analysis
+  # parameters ("fill in missing recordings, analyses"). these relax to NA under
+  # the accepted-gap decision (T3.3); every other source still supplies them
+  "recording_device_type_code",
+  "recording_sample_rate_khz",
+  "analysis_protocol_reference",
+  "analysis_detector_code"
 )
 
 # a sample rate outside this band is a unit error, not a real configuration.
@@ -148,7 +173,11 @@ PARS_RANGE_RULES <- list(
   )
 )
 
-# fields required only when the row reports a detection
+# fields required only when the row reports a detection. the species and call
+# type are real information legacy always recorded, so they hold under both
+# profiles; a validated *count* was frequently not recorded (50,077 of 57,301
+# legacy detections lack it) and is never published, so its conditional rule is
+# relaxed under PARS_LEGACY - a presence relaxation, consistent with AD-10 (T3.1)
 PARS_CONDITIONAL_RULES <- c(
   detection_sound_source_code_required = paste(
     "!(detection_result_code %in% c('DETECTED', 'POSSIBLY_DETECTED'))",
@@ -157,7 +186,11 @@ PARS_CONDITIONAL_RULES <- c(
   detection_call_type_code_required = paste(
     "!(detection_result_code %in% c('DETECTED', 'POSSIBLY_DETECTED'))",
     "| !is.na(detection_call_type_code)"
-  ),
+  )
+)
+
+# conditional rules that apply only to strict PARS_1.0 submissions
+PARS_STRICT_CONDITIONAL_RULES <- c(
   detection_n_validated_required = paste(
     "!(detection_result_code %in% c('DETECTED', 'POSSIBLY_DETECTED'))",
     "| !is.na(detection_n_validated)"
@@ -205,6 +238,9 @@ pars_rules <- function (table, profile = "PARS_1.0", columns = NULL) {
   expressions <- c(presence, PARS_RANGE_RULES[[table]])
   if (table == "detectiondata") {
     expressions <- c(expressions, PARS_CONDITIONAL_RULES)
+    if (profile == "PARS_1.0") {
+      expressions <- c(expressions, PARS_STRICT_CONDITIONAL_RULES)
+    }
   }
 
   if (!is.null(columns)) {
@@ -279,7 +315,10 @@ validate_pars <- function (x, table, codes, profile = "PARS_1.0") {
   }
 
   rules <- pars_rules(table, profile, columns = names(x))
-  rule_errors <- if (is.null(rules)) {
+  # a 0-row table has no values to check, and `validate` raises rather than
+  # returning an empty result on empty input (DFOCA_20220712 is a metadata-only
+  # deployment with no detections). the column-presence check above still runs
+  rule_errors <- if (is.null(rules) || nrow(x) == 0) {
     NULL
   } else {
     extract_validation_errors(validate_data(x, rules, codes), x)

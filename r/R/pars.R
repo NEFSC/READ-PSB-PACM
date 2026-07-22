@@ -71,7 +71,23 @@ targets_pars <- list(
       unnest(errors) |>
       mutate(table = "submission")
 
-    bind_rows(per_file, cross_file)
+    bind_rows(per_file, cross_file, mutate(pars_referential, id = NA_character_))
+  }),
+
+  # global referential integrity, over the combined pool (Decision 15): every
+  # detection/gps deployment_code must exist in some submission's metadata, and
+  # mobile<->gps expectations hold across submissions. this cannot be per-file,
+  # because one submission may analyse another's deployments
+  tar_target(pars_referential, {
+    md <- mutate(pars_metadata, row = row_number())
+    dd <- mutate(pars_detectiondata, row = row_number())
+    gp <- if (is.null(pars_gpsdata)) NULL else mutate(pars_gpsdata, row = row_number())
+
+    bind_rows(
+      pars_referential_errors(md, dd, gp),
+      pars_gpsdata_errors(md, gp)
+    ) |>
+      mutate(table = "referential")
   }),
 
   tar_target(pars_metadata, {

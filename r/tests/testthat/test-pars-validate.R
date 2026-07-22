@@ -114,6 +114,38 @@ test_that("a NOT_DETECTED row may omit the species", {
   expect_equal(nrow(validate_pars(x, "detectiondata", test_codes())), 0)
 })
 
+test_that("PARS_1.0 requires a validated count on a DETECTED row", {
+  x <- valid_detectiondata(detection_n_validated = NA_integer_)
+
+  errors <- validate_pars(x, "detectiondata", test_codes(), profile = "PARS_1.0")
+
+  expect_true(any(grepl("detection_n_validated", errors$name)))
+})
+
+test_that("PARS_LEGACY allows a DETECTED row with no validated count", {
+  # legacy analysts confirmed presence without always counting individual
+  # detections; the field is not published (T3.1)
+  x <- valid_detectiondata(detection_n_validated = NA_integer_)
+
+  errors <- validate_pars(x, "detectiondata", test_codes(), profile = "PARS_LEGACY")
+
+  expect_equal(nrow(errors), 0)
+})
+
+test_that("PARS_LEGACY still requires a species and call type on a DETECTED row", {
+  # only the validated-count conditional is relaxed; presence of the detected
+  # species and its call type is real information legacy did record
+  x <- valid_detectiondata(
+    detection_sound_source_code = NA_character_,
+    detection_call_type_code = NA_character_
+  )
+
+  errors <- validate_pars(x, "detectiondata", test_codes(), profile = "PARS_LEGACY")
+
+  expect_true(any(grepl("detection_sound_source_code", errors$name)))
+  expect_true(any(grepl("detection_call_type_code", errors$name)))
+})
+
 # profiles --------------------------------------------------------------------
 
 test_that("PARS_1.0 requires project_funding", {
@@ -162,6 +194,38 @@ test_that("PARS_LEGACY still rejects an invalid code inside a list", {
   errors <- validate_pars(x, "detectiondata", test_codes(), profile = "PARS_LEGACY")
 
   expect_true(any(grepl("detection_call_type_code", errors$name)))
+})
+
+test_that("PARS_LEGACY allows a missing processing code and analysis sample rate", {
+  # UCORN_20250325 recorded neither; both are legacy gaps, not corruption (T3.1)
+  x <- valid_detectiondata(
+    analysis_processing_code = NA_character_,
+    analysis_sample_rate_khz = NA_real_
+  )
+
+  errors <- validate_pars(x, "detectiondata", test_codes(), profile = "PARS_LEGACY")
+
+  expect_equal(nrow(errors), 0)
+})
+
+test_that("PARS_1.0 still requires a processing code and analysis sample rate", {
+  x <- valid_detectiondata(
+    analysis_processing_code = NA_character_,
+    analysis_sample_rate_khz = NA_real_
+  )
+
+  errors <- validate_pars(x, "detectiondata", test_codes(), profile = "PARS_1.0")
+
+  expect_true(any(grepl("analysis_processing_code", errors$name)))
+  expect_true(any(grepl("analysis_sample_rate_khz", errors$name)))
+})
+
+test_that("validation of an empty table returns no errors rather than crashing", {
+  # DFOCA_20220712 is a metadata-only deployment: 0 detection rows (T3.1)
+  empty <- valid_detectiondata()[0, ]
+
+  expect_no_error(validate_pars(empty, "detectiondata", test_codes(), "PARS_LEGACY"))
+  expect_equal(nrow(validate_pars(empty, "detectiondata", test_codes(), "PARS_LEGACY")), 0)
 })
 
 # AD-10 extension for the towed array conversion (T2.1) -----------------------

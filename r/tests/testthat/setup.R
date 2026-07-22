@@ -118,13 +118,19 @@ test_codes <- function() {
     organizations = c("SYRACUSE", "NEFSC"),
     platform_types = c("BOTTOM_MOUNTED_MOORING", "ELECTRIC_GLIDER"),
     device_types = c("SOUNDTRAP", "AMAR"),
-    detectors = c("LFDCS", "MANUAL", "OTHER"),
+    detectors = c(
+      "LFDCS", "MANUAL", "OTHER", "JASCO_CONTOUR_CLICK", "JASCO_PAMLAB", "RPS",
+      "CHORUS_BIOSOUND"
+    ),
     analysis_processing_types = c("POST_PROCESSED", "REAL_TIME"),
     detection_result_types = c(
       "DETECTED", "POSSIBLY_DETECTED", "NOT_DETECTED", "NOT_AVAILABLE"
     ),
     sound_sources = c("RIWH", "HUWH"),
-    call_types = c("RW_UPCALL", "HUWH_SONG")
+    call_types = c(
+      "RW_UPCALL", "HUWH_SONG", "OD_CLICK_NBHF", "BLWH_ARCHD", "BLWH_SONG",
+      "OD_WHIS", "OD_CLICK"
+    )
   )
 }
 

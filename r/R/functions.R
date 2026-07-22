@@ -11,34 +11,6 @@ read_raw_file <- function (filepath) {
     select(-starts_with("..."))
 }
 
-load_clean_file <- function (id, filepath, rules, codes, parse, clean = identity) {
-  if (!file.exists(filepath)) {
-    return(NULL)
-  }
-
-  raw <- read_raw_file(filepath)
-
-  parsed <- raw |>
-    clean() |>
-    parse()
-
-  validation <- validate_data(parsed, rules, codes)
-  errors <- extract_validation_errors(validation, parsed)
-
-  tibble(
-    filepath = filepath,
-    n_rows = nrow(raw),
-    raw = list(raw),
-    parsed = list(parsed),
-    valid = nrow(errors) == 0,
-    validation = list(validation),
-    errors = list(errors),
-    n_errors = nrow(errors)
-  )
-}
-
-email_pattern <- "^[_a-z0-9-]+(\\.[_a-z0-9-]+)*@[a-z0-9-]+(\\.[a-z0-9-]+)*(\\.[a-z]{2,})$"
-
 remap <- function (x, mapping, upper = TRUE) {
   if (upper) {
     x <- toupper(x)
@@ -46,173 +18,11 @@ remap <- function (x, mapping, upper = TRUE) {
   ifelse(x %in% names(mapping), mapping[x], x)
 }
 
-load_legacy <- function (id, format, skip, root_dir, codes) {
-  if (!is.na(skip)) {
-    warning(glue("Skipping submission {id} with format {format}"))
-    return(NULL)
-  } else if (format == "PACM_20240820") {
-    return(load_legacy_pacm(id, format, root_dir, codes))
-  } else if (format == "MAKARA_1.2") {
-    warning(glue("No loader implemented for submission {id} with format {format}, skipping"))
-    return(NULL)
-  } else {
-    stop(glue("Unsupported submission format: {format}"))
-  }
-}
-
-load_legacy_pacm <- function (id, format, root_dir, codes) {
-  clean_dir <- file.path(root_dir, id, "clean")
-  stopifnot(dir.exists(clean_dir))
-
-  metadata <- load_clean_file(
-    id,
-    filepath = file.path(clean_dir, "metadata.csv"),
-    rules = submission_rules$metadata,
-    codes = codes,
-    parse = parse_metadata,
-    clean = clean_metadata
-  )
-
-  detectiondata <- load_clean_file(
-    id,
-    filepath = file.path(clean_dir, "detectiondata.csv"),
-    rules = submission_rules$detectiondata,
-    codes = codes,
-    parse = parse_detectiondata,
-    clean = clean_detectiondata
-  )
-
-  gpsdata <- load_clean_file(
-    id,
-    filepath = file.path(clean_dir, "gpsdata.csv"),
-    rules = submission_rules$gpsdata,
-    codes = codes,
-    parse = parse_gpsdata,
-    clean = clean_gpsdata
-  )
-
-  list(
-    id = id,
-    metadata = list(metadata),
-    detectiondata = list(detectiondata),
-    gpsdata = list(gpsdata)
-  )
-}
-
-
 # validators -------------------------------------------------------------
 
-submission_rules <- list(
-  metadata = validate::validator(
-    UNIQUE_ID.missing = !is.na(UNIQUE_ID),
-    UNIQUE_ID.duplicated = is_unique(UNIQUE_ID),
-    # PROJECT.missing = !is.na(PROJECT),
-    # DATA_POC_NAME.missing = !is.na(DATA_POC_NAME),
-    # DATA_POC_AFFILIATION.missing = !is.na(DATA_POC_AFFILIATION),
-    # DATA_POC_EMAIL.missing = !is.na(DATA_POC_EMAIL),
-    # DATA_POC_EMAIL.invalid_email = grepl(email_pattern, DATA_POC_EMAIL),
-    # STATIONARY_OR_MOBILE.missing = !is.na(STATIONARY_OR_MOBILE),
-    # STATIONARY_OR_MOBILE.invalid_code = STATIONARY_OR_MOBILE %vin% codes[["STATIONARY_OR_MOBILE"]],
-    PLATFORM_TYPE.missing = !is.na(PLATFORM_TYPE),
-    PLATFORM_TYPE.invalid_code = PLATFORM_TYPE %vin% codes[["platform_types"]],
-    # SITE_ID.missing = !is.na(SITE_ID),
-    INSTRUMENT_TYPE.missing = !is.na(INSTRUMENT_TYPE),
-    # INSTRUMENT_ID.missing = !is.na(INSTRUMENT_ID),
-    # CHANNEL.missing_or_nonnumeric = !is.na(CHANNEL),
-    MONITORING_START_DATETIME.missing_or_invalid_format = !is.na(MONITORING_START_DATETIME),
-    MONITORING_START_DATETIME.out_of_range = in_range(
-      MONITORING_START_DATETIME, min = ymd_hm(199001010000), max = now()
-    ),
-    MONITORING_START_DATETIME.start_greater_than_end = MONITORING_START_DATETIME <= MONITORING_END_DATETIME,
-    MONITORING_END_DATETIME.missing_or_invalid_format = !is.na(MONITORING_END_DATETIME),
-    MONITORING_END_DATETIME.out_of_range = in_range(
-      MONITORING_END_DATETIME, min = ymd_hm(199001010000), max = now()
-    ),
-    # SOUNDFILES_TIMEZONE.missing = !is.na(SOUNDFILES_TIMEZONE),
-    # SOUNDFILES_TIMEZONE.invalid_code = SOUNDFILES_TIMEZONE %in% codes[["TIMEZONE_ID"]],
-    LATITUDE.missing_or_nonnumeric = if (STATIONARY_OR_MOBILE == "STATIONARY") !is.na(LATITUDE),
-    LATITUDE.out_of_range = if (STATIONARY_OR_MOBILE == "STATIONARY") in_range(LATITUDE, -90, 90),
-    LONGITUDE.missing_or_nonnumeric = if (STATIONARY_OR_MOBILE == "STATIONARY") !is.na(LONGITUDE),
-    LONGITUDE.out_of_range = if (STATIONARY_OR_MOBILE == "STATIONARY") in_range(LONGITUDE, -180, 180),
-    WATER_DEPTH_METERS.missing_or_nonnumeric = if (STATIONARY_OR_MOBILE == "STATIONARY") !is.na(WATER_DEPTH_METERS),
-    WATER_DEPTH_METERS.is_negative = if (STATIONARY_OR_MOBILE == "STATIONARY") in_range(WATER_DEPTH_METERS, 0, Inf),
-    RECORDER_DEPTH_METERS.is_negative = is.na(RECORDER_DEPTH_METERS) | in_range(RECORDER_DEPTH_METERS, 0, Inf),
-    SAMPLING_RATE_HZ.missing_or_nonnumeric = !is.na(SAMPLING_RATE_HZ),
-    SAMPLING_RATE_HZ.is_negative = in_range(RECORDER_DEPTH_METERS, 0, Inf),
-    # RECORDING_DURATION_SECONDS.missing = !is.na(RECORDING_DURATION_SECONDS),
-    # RECORDING_DURATION_SECONDS.is_negative = in_range(RECORDING_DURATION_SECONDS, 0, Inf),
-    # RECORDING_INTERVAL_SECONDS.missing = !is.na(RECORDING_INTERVAL_SECONDS),
-    # RECORDING_INTERVAL_SECONDS.is_negative = in_range(RECORDING_INTERVAL_SECONDS, 0, Inf),
-    SAMPLE_BITS.nonnumeric = is.na(SAMPLE_BITS) | !is.na(as.numeric(SAMPLE_BITS))
-    # SUBMITTER_NAME.missing = !is.na(SUBMITTER_NAME),
-    # SUBMITTER_AFFILIATION.missing = !is.na(SUBMITTER_AFFILIATION),
-    # SUBMITTER_EMAIL.missing = !is.na(SUBMITTER_EMAIL),
-    # SUBMITTER_EMAIL.invalid_email = grepl(email_pattern, SUBMITTER_EMAIL),
-    # SUBMISSION_DATE.missing_or_invalid_format = !is.na(SUBMISSION_DATE),
-    # SUBMISSION_DATE.out_of_range = in_range(
-    #   SUBMISSION_DATE, min = ymd(20200101), max = today()
-    # )
-  ),
-  detectiondata = validate::validator(
-    UNIQUE_ID.missing = !is.na(UNIQUE_ID),
-    # UNIQUE_ID.invalid_code = UNIQUE_ID %vin% codes[["UNIQUE_ID"]],
-    ANALYSIS_PERIOD_START_DATETIME.missing_or_invalid_format = !is.na(ANALYSIS_PERIOD_START_DATETIME),
-    ANALYSIS_PERIOD_START_DATETIME.outside_monitoring_period = in_range(
-      ANALYSIS_PERIOD_START_DATETIME, 
-      min = floor_date(METADATA.MONITORING_START_DATETIME, "day") - days(1),
-      max = floor_date(METADATA.MONITORING_END_DATETIME, "day") + days(2)
-    ),
-    ANALYSIS_PERIOD_START_DATETIME.start_greater_than_end = ANALYSIS_PERIOD_START_DATETIME <= ANALYSIS_PERIOD_END_DATETIME,
-    ANALYSIS_PERIOD_END_DATETIME.missing_or_invalid_format = !is.na(ANALYSIS_PERIOD_END_DATETIME),
-    # ANALYSIS_PERIOD_END_DATETIME.outside_monitoring_period = in_range(
-    #   ANALYSIS_PERIOD_END_DATETIME, 
-    #   min = floor_date(METADATA.MONITORING_START_DATETIME, "day") - days(1),
-    #   max = floor_date(METADATA.MONITORING_END_DATETIME, "day") + days(2)
-    # ),
-    # ANALYSIS_TIME_ZONE.missing = !is.na(ANALYSIS_TIME_ZONE),
-    # ANALYSIS_TIME_ZONE.invalid_code = ANALYSIS_TIME_ZONE %in% codes[["TIMEZONE_ID"]],
-    SPECIES_CODE.missing = !is.na(SPECIES_CODE),
-    SPECIES_CODE.invalid_code = SPECIES_CODE %vin% codes[["sound_sources"]],
-    ACOUSTIC_PRESENCE.missing = !is.na(ACOUSTIC_PRESENCE),
-    ACOUSTIC_PRESENCE.invalid_code = ACOUSTIC_PRESENCE %vin% codes[["detection_result_types"]],
-    N_VALIDATED_DETECTIONS.is_negative = is.na(N_VALIDATED_DETECTIONS) | in_range(N_VALIDATED_DETECTIONS, 0, Inf),
-    # CALL_TYPE_CODE.missing = ACOUSTIC_PRESENCE %vin% c("DETECTED", "POSSIBLY_DETECTED") & !is.na(CALL_TYPE_CODE),
-    CALL_TYPE_CODE.invalid_code = all(unlist(strsplit(CALL_TYPE_CODE, ","))) %vin% codes[["call_types"]],
-    # CALL_TYPE_CODE.invalid_code_for_species = CALL_TYPE_CODE %vin% codes[["call_types"]][[codes[["SPECIES_CODE"]] == SPECIES_CODE]],
-    DETECTION_METHOD.missing = !is.na(DETECTION_METHOD),
-    PROTOCOL_REFERENCE.missing = !is.na(PROTOCOL_REFERENCE),
-    DETECTION_SOFTWARE_NAME.missing = !is.na(DETECTION_SOFTWARE_NAME),
-    MIN_ANALYSIS_FREQUENCY_RANGE_HZ.missing_or_nonnumeric = !is.na(MIN_ANALYSIS_FREQUENCY_RANGE_HZ),
-    MIN_ANALYSIS_FREQUENCY_RANGE_HZ.out_of_range = in_range(
-      MIN_ANALYSIS_FREQUENCY_RANGE_HZ, 
-      min = 0,
-      max = METADATA.SAMPLING_RATE_HZ
-    ),
-    # MIN_ANALYSIS_FREQUENCY_RANGE_HZ.min_greater_than_max = MIN_ANALYSIS_FREQUENCY_RANGE_HZ <= MAX_ANALYSIS_FREQUENCY_RANGE_HZ,
-    MAX_ANALYSIS_FREQUENCY_RANGE_HZ.missing_or_nonnumeric = !is.na(MAX_ANALYSIS_FREQUENCY_RANGE_HZ),
-    MAX_ANALYSIS_FREQUENCY_RANGE_HZ.out_of_range = in_range(
-      MAX_ANALYSIS_FREQUENCY_RANGE_HZ, 
-      min = 0,
-      max = METADATA.SAMPLING_RATE_HZ
-    )
-    # QC_PROCESSING.missing = !is.na(QC_PROCESSING),
-    # QC_PROCESSING.invalid_code = QC_PROCESSING %in% codes[["QC_PROCESSING"]]
-  ),
-  gpsdata = validate::validator(
-    UNIQUE_ID.missing = !is.na(UNIQUE_ID),
-    # UNIQUE_ID.invalid_code = UNIQUE_ID %vin% codes[["UNIQUE_ID"]],
-    DATETIME.missing_or_invalid_format = !is.na(DATETIME),
-    # DATETIME.out_of_range = in_range(
-    #   DATETIME, 
-    #   min = floor_date(METADATA.MONITORING_START_DATETIME, "day") - days(30),
-    #   max = floor_date(METADATA.MONITORING_END_DATETIME, "day") + days(30)
-    # ),
-    LATITUDE.missing_or_nonnumeric = !is.na(LATITUDE),
-    LATITUDE.out_of_range = in_range(LATITUDE, -90, 90),
-    LONGITUDE.missing_or_nonnumeric = !is.na(LONGITUDE),
-    LONGITUDE.out_of_range = in_range(LONGITUDE, -180, 180)
-  )
-)
+# retained: validate_data() and extract_validation_errors() below are shared
+# with the PARS validator (pars-validate.R). the legacy `submission_rules` and
+# the PACM/MAKARA loader they served were removed at the T3.5 gate
 
 validate_data <- function (x, rules, codes) {
   out <- confront(
@@ -514,6 +324,262 @@ derive_tracks <- function (positions, deployments, max_gap_days = 1) {
   )
 
   tracks
+}
+
+
+# legacy PACM_20240820 -> PARS conversion (T3.1) -------------------------
+#
+# These take *parsed* legacy frames - the output of clean_*() |> parse_*() (the
+# same chain the removed legacy loader used), with datetimes already resolved to
+# UTC POSIXct and numeric fields numeric. Working from the resolved values (not
+# the raw CSV strings) reuses that tested timezone handling, which is what makes
+# the parity gate achievable: the PARS path then derives dates from exactly the
+# instants the legacy path
+# published from. Numeric fields stay numeric so coordinate precision survives;
+# only datetimes and codes become strings. Functions are pure - frames in and
+# out, no file access (AD-9); each clean.R supplies its own organization_code
+# and project_funding.
+
+# a resolved POSIXct as a UTC ISO-8601 string with an explicit +0000 offset.
+# the instant is already correct, so this only labels it (never re-shifts it)
+legacy_stamp_utc <- function (x) {
+  out <- format(x, "%Y-%m-%dT%H:%M:%S+0000", tz = "UTC")
+  out[is.na(x)] <- NA_character_
+  out
+}
+
+# free-text DETECTION_METHOD -> a `detectors` vocabulary code. two steps: the
+# normalisation pacm.R already applies before publication (ported so the PARS
+# path publishes the same value), then the T0.3 code mapping. iconv repairs the
+# invalid UTF-8 in this column (87 rows) before any string work - without it
+# toupper/str_detect raise on those bytes (see field-mapping spec 5e)
+# the normalised detector string maps to a PARS detectors code. two kinds:
+# official codes (RPS/JASCO/etc. carried as supplements until upstream adopts
+# them), and legacy detectors with no official code that we PRESERVE verbatim as
+# supplement codes rather than collapsing to OTHER - so the published
+# detection_method keeps the granularity the legacy dataset had (the detectors
+# below survive pacm_data's normalisation untouched, matching the baseline)
+LEGACY_DETECTOR_CODES <- c(
+  "RPS" = "RPS",
+  "JASCO" = "JASCO_CONTOUR_CLICK",
+  "CHORUS_BIOSOUND" = "CHORUS_BIOSOUND",
+  "PAMLAB/MANUAL" = "JASCO_PAMLAB",
+  "MANUAL" = "MANUAL",
+  # preserved legacy detectors (no official PARS code); kept distinct per the
+  # T3.2 parity decision, mirroring the device_type supplements (Decision 11)
+  "AUTOMATIC" = "AUTOMATIC",
+  "AUTOMATIC/MANUAL" = "AUTOMATIC/MANUAL",
+  "MATLAB" = "MATLAB",
+  "MATCHED_FILTER" = "MATCHED_FILTER",
+  "GILLESPIE_EDGE" = "GILLESPIE_EDGE",
+  "TRITON/DFO TWD" = "TRITON/DFO TWD"
+)
+
+legacy_detector_code <- function (detection_method) {
+  dm <- iconv(detection_method, "UTF-8", "UTF-8", sub = "")
+  dm <- toupper(dm)
+  published <- case_when(
+    str_detect(dm, "JASCO") ~ "JASCO",
+    dm == "AUTOMATIC AND MANUAL" ~ "AUTOMATIC/MANUAL",
+    dm == "CUSTOM AUTOMATIC DETECTOR" ~ "AUTOMATIC",
+    str_starts(dm, "PAMGUARD WHISTLE") ~ "PAMGUARD",
+    dm == "PAMLAB, MANUAL" ~ "PAMLAB/MANUAL",
+    dm == "PAMGUARD,MANUAL" ~ "PAMGUARD/MANUAL",
+    str_detect(dm, "RPS CONTOUR AND CLICK DETECTORS") ~ "RPS",
+    str_detect(dm, "MATLAB-BASED AUTOMATED DETECTOR ALGORITHM") ~ "MATLAB",
+    str_detect(dm, "MATCHED-FILTER DATA-TEMPLATE DETECTION ALGORITHM") ~ "MATCHED_FILTER",
+    TRUE ~ dm
+  )
+  # anything still not recognised -> OTHER (supplement), to be hand-remapped in a
+  # submission's clean.R later
+  unname(coalesce(LEGACY_DETECTOR_CODES[published], "OTHER"))
+}
+
+# CALL_TYPE_CODE elements that legacy abbreviated; every other value is already
+# a valid code and passes through. lists are split, each element mapped, then
+# rejoined in submitted order (order is meaningful - see field-mapping spec 5c)
+LEGACY_CALL_TYPE_CODES <- c(
+  "NBHF" = "OD_CLICK_NBHF",
+  "HBMIX" = "HUWH_MIX",
+  "BLARCH" = "BLWH_ARCHD",
+  "BLSONG" = "BLWH_SONG"
+)
+
+legacy_call_type_code <- function (call_type_code) {
+  vapply(call_type_code, function (value) {
+    if (is.na(value)) return(NA_character_)
+    parts <- str_trim(str_split(value, ",")[[1]])
+    str_c(unname(coalesce(LEGACY_CALL_TYPE_CODES[parts], parts)), collapse = ",")
+  }, character(1), USE.NAMES = FALSE)
+}
+
+legacy_to_pars_metadata <- function (metadata, organization_code,
+                                     project_funding = NA_character_) {
+  # most raw files name the platform identifier PLATFORM_NO, a few PLATFORM_ID;
+  # ensure both exist so the coalesce below never references an absent column
+  for (col in setdiff(c("PLATFORM_ID", "PLATFORM_NO"), names(metadata))) {
+    metadata[[col]] <- NA_character_
+  }
+
+  metadata |>
+    transmute(
+      deployment_organization_code = organization_code,
+      deployment_code = UNIQUE_ID,
+      project_name = PROJECT,
+      site_code = SITE_ID,
+      monitoring_start_datetime = legacy_stamp_utc(MONITORING_START_DATETIME),
+      monitoring_end_datetime = legacy_stamp_utc(MONITORING_END_DATETIME),
+      deployment_platform_type_code = PLATFORM_TYPE,
+      deployment_platform_id = coalesce(PLATFORM_ID, PLATFORM_NO),
+      deployment_water_depth_m = WATER_DEPTH_METERS,
+      deployment_latitude = LATITUDE,
+      deployment_longitude = LONGITUDE,
+      dynamic_management_platform = NA_character_,
+      deployment_url = NA_character_,
+      recording_device_code = INSTRUMENT_ID,
+      recording_device_type_code = INSTRUMENT_TYPE,
+      recording_duration_secs = RECORDING_DURATION_SECONDS,
+      recording_interval_secs = RECORDING_INTERVAL_SECONDS,
+      recording_sample_rate_khz = SAMPLING_RATE_HZ / 1000,
+      recording_bit_depth = SAMPLE_BITS,
+      recording_n_channels = CHANNEL,
+      recording_timezone = SOUNDFILES_TIMEZONE,
+      recording_device_depth_m = RECORDER_DEPTH_METERS,
+      points_of_contact = if_else(
+        is.na(DATA_POC_NAME), NA_character_,
+        paste0(DATA_POC_NAME, " <", DATA_POC_EMAIL, ">")
+      ),
+      project_funding = project_funding
+    )
+}
+
+# optional detectiondata columns that some raw files omit entirely (e.g. the
+# localization block, absent when a submission has no localized detections).
+# the combined legacy frame hides this because bind_rows unions columns, so a
+# per-submission converter must add them as NA (T3.2)
+LEGACY_DETECTIONDATA_OPTIONAL <- c(
+  "CALL_TYPE_CODE", "N_VALIDATED_DETECTIONS", "DETECTION_METHOD",
+  "PROTOCOL_REFERENCE", "DETECTION_SOFTWARE_VERSION",
+  "MIN_ANALYSIS_FREQUENCY_RANGE_HZ", "MAX_ANALYSIS_FREQUENCY_RANGE_HZ",
+  "ANALYSIS_SAMPLING_RATE_HZ", "QC_PROCESSING",
+  "LOCALIZED_LATITUDE", "LOCALIZED_LONGITUDE", "DETECTION_DISTANCE_M"
+)
+
+legacy_to_pars_detectiondata <- function (detectiondata, organization_code,
+                                          analysis_citations = NA_character_) {
+  for (col in setdiff(LEGACY_DETECTIONDATA_OPTIONAL, names(detectiondata))) {
+    detectiondata[[col]] <- NA_character_
+  }
+
+  detectiondata |>
+    mutate(species = SPECIES_CODE) |>
+    # the analysis-level fields are grouping keys in PARS, so they must be
+    # constant across an analysis. legacy has no analysis record, so each is
+    # aggregated over the deployment x species group - the same reduction the
+    # legacy pipeline applies (min/max/max)
+    group_by(UNIQUE_ID, species) |>
+    mutate(
+      grp_start = legacy_stamp_utc(min(ANALYSIS_PERIOD_START_DATETIME)),
+      grp_end = legacy_stamp_utc(max(ANALYSIS_PERIOD_END_DATETIME)),
+      grp_sample_rate = suppressWarnings(max(as.numeric(ANALYSIS_SAMPLING_RATE_HZ), na.rm = TRUE)),
+      grp_min_freq = suppressWarnings(min(as.numeric(MIN_ANALYSIS_FREQUENCY_RANGE_HZ), na.rm = TRUE)),
+      grp_max_freq = suppressWarnings(max(as.numeric(MAX_ANALYSIS_FREQUENCY_RANGE_HZ), na.rm = TRUE))
+    ) |>
+    ungroup() |>
+    transmute(
+      analysis_organization_code = organization_code,
+      deployment_code = UNIQUE_ID,
+      analysis_sound_source_codes = species,
+      analysis_start_datetime = grp_start,
+      analysis_end_datetime = grp_end,
+      # an empty group reduces to +/-Inf; restore NA so the field is blank
+      analysis_sample_rate_khz = if_else(is.finite(grp_sample_rate), grp_sample_rate / 1000, NA_real_),
+      analysis_min_frequency_khz = if_else(is.finite(grp_min_freq), grp_min_freq / 1000, NA_real_),
+      analysis_max_frequency_khz = if_else(is.finite(grp_max_freq), grp_max_freq / 1000, NA_real_),
+      analysis_processing_code = case_when(
+        QC_PROCESSING == "ARCHIVAL" ~ "POST_PROCESSED",
+        QC_PROCESSING == "REAL-TIME" ~ "REAL_TIME",
+        TRUE ~ QC_PROCESSING
+      ),
+      analysis_protocol_reference = PROTOCOL_REFERENCE,
+      analysis_citations = analysis_citations,
+      analysis_detector_code = legacy_detector_code(DETECTION_METHOD),
+      analysis_detector_version = DETECTION_SOFTWARE_VERSION,
+      detection_start_datetime = legacy_stamp_utc(ANALYSIS_PERIOD_START_DATETIME),
+      detection_end_datetime = legacy_stamp_utc(ANALYSIS_PERIOD_END_DATETIME),
+      detection_effort_secs = as.numeric(ANALYSIS_PERIOD_EFFORT_SECONDS),
+      detection_sound_source_code = species,
+      detection_call_type_code = legacy_call_type_code(CALL_TYPE_CODE),
+      detection_n_validated = as.numeric(N_VALIDATED_DETECTIONS),
+      detection_result_code = ACOUSTIC_PRESENCE,
+      localization_method_code = NA_character_,
+      localization_latitude = as.numeric(LOCALIZED_LATITUDE),
+      localization_longitude = as.numeric(LOCALIZED_LONGITUDE),
+      localization_distance_m = as.numeric(DETECTION_DISTANCE_M)
+    )
+}
+
+legacy_to_pars_gpsdata <- function (gpsdata) {
+  gpsdata |>
+    transmute(
+      deployment_code = UNIQUE_ID,
+      datetime = legacy_stamp_utc(DATETIME),
+      latitude = LATITUDE,
+      longitude = LONGITUDE
+    )
+}
+
+# convert one legacy submission's raw frames into PARS files under dir/clean/.
+# `metadata`/`detectiondata`/`gpsdata` are the raw character frames *after* any
+# submission-specific fixes; this applies the shared clean_*() + parse_*() chain
+# (so timezone and code handling are byte-identical to the legacy loader) then
+# the T3.1 converters. `gpsdata` is written only when supplied. Called from each
+# submission's clean.R with its own organization_code / project_funding (AD-12)
+convert_legacy_submission <- function (dir, metadata, detectiondata = NULL,
+                                       gpsdata = NULL, organization_code,
+                                       project_funding = NA_character_) {
+  # the clean/parse chain expects the all-character shape a clean/*.csv holds,
+  # but a submission's clean.R may hand over frames with typed columns (a numeric
+  # RECORDING_DURATION_SECONDS, a POSIXct datetime). normalise to character first
+  # so parse_* sees the same input whether the frame came from a CSV or in memory
+  as_raw <- function (x) mutate(x, across(everything(), as.character))
+
+  pars_metadata <- metadata |>
+    as_raw() |>
+    clean_metadata() |>
+    parse_metadata() |>
+    legacy_to_pars_metadata(organization_code, project_funding)
+
+  clean_dir <- file.path(dir, "clean")
+  dir.create(clean_dir, showWarnings = FALSE, recursive = TRUE)
+  write_csv(pars_metadata, file.path(clean_dir, "metadata.csv"), na = "")
+
+  # a metadata-only submission is legitimate: it deploys recorders whose
+  # detections another submission analysed and submitted (DFOCA_20220712, whose
+  # baleen detections JASCO holds). global referential integrity (Decision 15)
+  # lets those detections resolve against this metadata, so no detectiondata.csv
+  # is written and the deployments simply carry no analyses of their own
+  if (!is.null(detectiondata)) {
+    pars_detectiondata <- detectiondata |>
+      as_raw() |>
+      clean_detectiondata() |>
+      parse_detectiondata() |>
+      legacy_to_pars_detectiondata(organization_code)
+    write_csv(
+      pars_detectiondata, file.path(clean_dir, "detectiondata.csv"), na = ""
+    )
+  }
+
+  if (!is.null(gpsdata)) {
+    pars_gpsdata <- gpsdata |>
+      as_raw() |>
+      clean_gpsdata() |>
+      parse_gpsdata() |>
+      legacy_to_pars_gpsdata()
+    write_csv(pars_gpsdata, file.path(clean_dir, "gpsdata.csv"), na = "")
+  }
+
+  invisible(clean_dir)
 }
 
 
