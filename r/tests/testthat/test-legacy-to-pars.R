@@ -484,3 +484,38 @@ test_that("convert writes both metadata and detectiondata when given detections"
   expect_true(file.exists(file.path(dir, "clean", "metadata.csv")))
   expect_true(file.exists(file.path(dir, "clean", "detectiondata.csv")))
 })
+
+test_that("a detections-only submission writes detectiondata but no metadata", {
+  # the DFOCA LF sei-whale submissions carry detections whose deployments another
+  # submission provided; convert must accept metadata = NULL and emit only
+  # detectiondata.csv, letting global referential integrity resolve the deployment
+  dir <- withr::local_tempdir()
+
+  convert_legacy_submission(
+    dir,
+    metadata = NULL,
+    detectiondata = tibble::tibble(
+      UNIQUE_ID = "EMBD_2015_05_LF",
+      ANALYSIS_PERIOD_START_DATETIME = "2015-05-24 00:00:00",
+      ANALYSIS_PERIOD_END_DATETIME = "2015-05-25 00:00:00",
+      ANALYSIS_PERIOD_EFFORT_SECONDS = "86400",
+      ANALYSIS_TIME_ZONE = "UTC",
+      SPECIES = "SEWH",
+      CALL_TYPE = "SWDS",
+      QC_PROCESSING = "Archival",
+      ACOUSTIC_PRESENCE = "D",
+      DETECTION_METHOD = "JASCO AA"
+    ),
+    organization_code = "DFO"
+  )
+
+  expect_false(file.exists(file.path(dir, "clean", "metadata.csv")))
+  expect_true(file.exists(file.path(dir, "clean", "detectiondata.csv")))
+
+  out <- readr::read_csv(
+    file.path(dir, "clean", "detectiondata.csv"), show_col_types = FALSE
+  )
+  expect_equal(out$deployment_code, "EMBD_2015_05_LF")
+  expect_equal(out$detection_sound_source_code, "SEWH")
+  expect_equal(out$detection_call_type_code, "SEWH_DS80HZ")
+})

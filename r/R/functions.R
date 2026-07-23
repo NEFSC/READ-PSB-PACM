@@ -524,7 +524,7 @@ legacy_to_pars_gpsdata <- function (gpsdata) {
 # (so timezone and code handling are byte-identical to the legacy loader) then
 # the converters above. `gpsdata` is written only when supplied. Called from each
 # submission's clean.R with its own organization_code / project_funding
-convert_legacy_submission <- function (dir, metadata, detectiondata = NULL,
+convert_legacy_submission <- function (dir, metadata = NULL, detectiondata = NULL,
                                        gpsdata = NULL, organization_code,
                                        project_funding = NA_character_) {
   # the clean/parse chain expects the all-character shape a clean/*.csv holds,
@@ -533,21 +533,26 @@ convert_legacy_submission <- function (dir, metadata, detectiondata = NULL,
   # so parse_* sees the same input whether the frame came from a CSV or in memory
   as_raw <- function (x) mutate(x, across(everything(), as.character))
 
-  pars_metadata <- metadata |>
-    as_raw() |>
-    clean_metadata() |>
-    parse_metadata() |>
-    legacy_to_pars_metadata(organization_code, project_funding)
-
   clean_dir <- file.path(dir, "clean")
   dir.create(clean_dir, showWarnings = FALSE, recursive = TRUE)
-  write_csv(pars_metadata, file.path(clean_dir, "metadata.csv"), na = "")
 
-  # a metadata-only submission is legitimate: it deploys recorders whose
-  # detections another submission analysed and submitted (DFOCA_20220712, whose
-  # baleen detections JASCO holds). global referential integrity
-  # lets those detections resolve against this metadata, so no detectiondata.csv
-  # is written and the deployments simply carry no analyses of their own
+  # metadata and detectiondata are each optional, and legitimately so - global
+  # referential integrity (matched on deployment_code across the whole pool) lets
+  # a submission carry only one side:
+  #   - metadata-only: deploys recorders whose detections another submission
+  #     analysed and submitted (DFOCA_20220712, whose baleen detections JASCO holds)
+  #   - detections-only: analyses deployments another submission provided (the
+  #     DFOCA LF sei-whale submissions, resolving against DFO/JASCO metadata)
+  # each writes only its own clean/*.csv; the missing side resolves globally.
+  if (!is.null(metadata)) {
+    pars_metadata <- metadata |>
+      as_raw() |>
+      clean_metadata() |>
+      parse_metadata() |>
+      legacy_to_pars_metadata(organization_code, project_funding)
+    write_csv(pars_metadata, file.path(clean_dir, "metadata.csv"), na = "")
+  }
+
   if (!is.null(detectiondata)) {
     pars_detectiondata <- detectiondata |>
       as_raw() |>

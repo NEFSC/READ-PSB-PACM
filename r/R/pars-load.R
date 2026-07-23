@@ -396,7 +396,12 @@ load_pars <- function (id, format, skip, root_dir, codes) {
   # (detection/gps orphans, mobile<->gps) is GLOBAL, over the combined pool -
   # a submission may analyse a deployment another submission
   # provided - so it runs in the pipeline (`pars_referential`), not here
-  errors <- pars_metadata_errors(metadata$parsed[[1]])
+  #
+  # metadata is NULL for a detections-only submission (no metadata.csv); guard the
+  # $parsed[[1]] subscript - pars_metadata_errors itself already tolerates NULL
+  errors <- pars_metadata_errors(
+    if (is.null(metadata)) NULL else metadata$parsed[[1]]
+  )
 
   # a tibble rather than a list: tar_combine binds these with bind_rows(), and
   # a bare list of list-columns is not unambiguously coercible to a row
