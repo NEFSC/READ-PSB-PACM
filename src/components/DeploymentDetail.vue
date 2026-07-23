@@ -413,7 +413,7 @@ export default {
 
         const source = this.normalizeSource(deployment.source)
         const organizationCodes = [
-          deployment.deployment_organization_code,
+          deployment.deployment_organization_code
         ]
         if (deployment.analysis_organization_code) {
           organizationCodes.push(deployment.analysis_organization_code)

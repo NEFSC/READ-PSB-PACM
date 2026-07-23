@@ -87,7 +87,6 @@
         Data can be submitted for display on PACM by any organization who uses standard scientific protocols to collect and analyze PAM data through the <a class="text-decoration-underline" href="https://passiveacoustics.fisheries.noaa.gov/pars/">Passive Acoustic Reporting System</a>. NOAA scientists and staff can also contribute data to PACM using the Makara Passive Acoustics Database, which is only accessible within NOAA.
       </p>
 
-
       <h2 class="text-h6 mb-2">Accessing Data in PACM</h2>
       <p>
         Although PACM does not support direct data downloads, a copy of any data shown on PACM can be requested through the <a href="https://www.narwc.org/accessing-narwc-data.html">North Atlantic Right Whale Consortion (NARWC) Data Access Request Form</a>. Data requests must include a clear description of the specific data being requested (e.g., species, location, time period) and along with a brief proposal explaining the intended use of the data. Data requests are reviewed by the NARWC Board members and may be subject to additional data sharing agreements or requirements depending on the specific datasets being requested and the intended use of the data.
