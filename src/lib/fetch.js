@@ -47,6 +47,16 @@ function fetchOrganizations () {
   return getJson(dataUrl('organizations.json'))
 }
 
+export function fetchSpecies () {
+  console.log('fetchSpecies')
+  return getJson(dataUrl('species.json'))
+}
+
+export function fetchPlatformTypes () {
+  console.log('fetchPlatformTypes')
+  return getJson(dataUrl('platform_types.json'))
+}
+
 function fetchCitations () {
   console.log('fetchCitations')
   return getJson(dataUrl('citations.json'))

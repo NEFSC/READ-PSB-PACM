@@ -9,9 +9,10 @@
 # sites/citations carry none - they are 1:1 derivable (site_id -> deployments,
 # code -> analyses).
 #
-# Output goes to data/export/, a SIBLING of data/pacm/. scripts/copy-data.sh and
-# scripts/deploy-data.sh act on data/pacm/*, so these exports are never published
-# to the app or the GCS tarball.
+# Output goes to output/export/, a SIBLING of output/www/. The app (via the
+# ../public/data symlink to output/www) and scripts/deploy-data.sh act on
+# output/www/* only, so these exports are never published to the app or the
+# GCS tarball.
 
 # write a data frame to <dir>/<filename> using the pipeline's CSV conventions
 # (blank for NA), creating the directory on first use. returns the path, so the
@@ -133,7 +134,7 @@ export_citations_table <- function (citations) {
 }
 
 targets_export <- list(
-  tar_target(export_dir, "data/export"),
+  tar_target(export_dir, "output/export"),
 
   tar_target(
     export_deployments_file,

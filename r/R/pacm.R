@@ -104,7 +104,7 @@ create_theme <- function (data, species) {
 }
 
 targets_pacm <- list(
-  tar_target(pacm_dir, "data/pacm"),
+  tar_target(pacm_dir, "output/www"),
 
   tar_target(pacm_names, {
     list(

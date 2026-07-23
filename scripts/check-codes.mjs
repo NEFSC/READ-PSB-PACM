@@ -5,7 +5,7 @@
 //
 //   node scripts/check-codes.mjs [dataDir]
 //
-// dataDir defaults to r/data/pacm (the pipeline output). Exits non-zero on any
+// dataDir defaults to r/output/www (the pipeline output). Exits non-zero on any
 // unresolved code or theme/dir mismatch so it can gate a build.
 
 import fs from 'node:fs'
@@ -13,17 +13,17 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
-const dataDir = process.argv[2] || path.join(root, 'r/data/pacm')
+const dataDir = process.argv[2] || path.join(root, 'r/output/www')
 
 const readJson = (p) => JSON.parse(fs.readFileSync(p, 'utf8'))
 
-// label maps the app imports
-const speciesMap = new Map(readJson(path.join(root, 'src/lib/species.json')).map((d) => [d.code, d.name]))
-const platformMap = new Map(readJson(path.join(root, 'src/lib/platform_types.json')).map((d) => [d.code, d.name]))
+// label maps served alongside the data; the app fetches these at startup
+const speciesMap = new Map(readJson(path.join(dataDir, 'species.json')).map((d) => [d.code, d.name]))
+const platformMap = new Map(readJson(path.join(dataDir, 'platform_types.json')).map((d) => [d.code, d.name]))
 
 // theme ids + presence enum, parsed from constants.js so the check tracks the app source
 const constants = fs.readFileSync(path.join(root, 'src/lib/constants.js'), 'utf8')
-const themeBlock = constants.slice(constants.indexOf('export const themes'), constants.indexOf('export const species'))
+const themeBlock = constants.slice(constants.indexOf('export const themes'), constants.indexOf('export let species'))
 const themeIds = [...themeBlock.matchAll(/id:\s*'([^']+)'/g)].map((m) => m[1])
 const presenceBlock = constants.slice(constants.indexOf('export const detectionTypes'))
 const presenceCodes = new Set([...presenceBlock.matchAll(/id:\s*'([^']+)'/g)].map((m) => m[1]))

@@ -1,7 +1,7 @@
 #!/bin/bash
 # package and copy data to gcs
 
-DIR=${1:-"./data/pacm"}
+DIR=${1:-"./output/www"}
 DATE=$(date +%Y%m%d)
 FILENAME="pacm-data-$DATE.tar.gz"
 

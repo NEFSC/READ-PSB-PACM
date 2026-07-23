@@ -1,5 +1,4 @@
-import speciesData from './species.json'
-import platformTypesData from './platform_types.json'
+import { fetchSpecies, fetchPlatformTypes } from './fetch'
 
 export const themes = [
   {
@@ -107,10 +106,25 @@ export const themes = [
   }
 ]
 
-export const species = Object.freeze(speciesData)
-export const speciesMap = new Map(species.map(d => [d.code, d.name]))
-export const platformTypes = Object.freeze(platformTypesData)
-export const platformTypesMap = new Map(platformTypes.map(d => [d.code, d.name]))
+// species and platform_types are served alongside the data (public/data in
+// dev, the deployed data dir in production) rather than bundled with the app.
+// initConstants() must resolve before the app mounts (see main.js); these are
+// live bindings, so importers always see the loaded values.
+export let species = []
+export let speciesMap = new Map()
+export let platformTypes = []
+export let platformTypesMap = new Map()
+
+export async function initConstants () {
+  const [speciesData, platformTypesData] = await Promise.all([
+    fetchSpecies(),
+    fetchPlatformTypes()
+  ])
+  species = Object.freeze(speciesData)
+  speciesMap = new Map(species.map(d => [d.code, d.name]))
+  platformTypes = Object.freeze(platformTypesData)
+  platformTypesMap = new Map(platformTypes.map(d => [d.code, d.name]))
+}
 
 export const detectionTypes = [
   {

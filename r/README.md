@@ -40,7 +40,9 @@ r/
 ├── data-raw/
 │   ├── pars/               # PARS submissions + manifest + reference-code snapshot/supplement
 │   └── pars/_rejected/     # excluded historical submissions (not loaded)
-├── data/pacm/              # generated theme files (published output)
+├── output/
+│   ├── www/                # generated theme files (published output; ../public/data symlinks here)
+│   └── export/             # flat CSV exports (never published)
 └── tests/testthat/         # unit + characterization tests
 ```
 
@@ -48,13 +50,14 @@ r/
 
 ```r
 # in R, from r/
-targets::tar_make()          # full build; writes data/pacm/<theme>/*.json
+targets::tar_make()          # full build; writes output/www/<theme>/*.json
 targets::tar_outdated()      # what would rebuild
 ```
 
-```sh
-scripts/copy-data.sh         # publish data/pacm/* to ../public/data/ and enum JSONs to ../src/lib/
-```
+There is no separate publish step: `../public/data` is a symlink to
+`output/www`, so the app serves `tar_make()` output directly (the app fetches
+everything it needs from there at runtime, including `species.json` and
+`platform_types.json`).
 
 Makara connection details are read from `.env` (`MAKARA_*`). The PARS path needs
 **no database** — its reference vocabulary is a vendored snapshot
@@ -74,12 +77,13 @@ dataset** (`pacm_data`) as flat CSVs — one per table — for downstream analys
 
 ```r
 # in R, from r/
-tar_make(export)          # builds all six CSVs into data/export/
+tar_make(export)          # builds all six CSVs into output/export/
 ```
 
-Output goes to `data/export/`, a **sibling** of `data/pacm/`. `copy-data.sh` and
-`deploy-data.sh` act on `data/pacm/*`, so these exports are **never** published to
-the app or the GCS tarball. Individual tables build via their file targets
+Output goes to `output/export/`, a **sibling** of `output/www/`. `deploy-data.sh`
+and the app (which serves `output/www` via the `../public/data` symlink) act on
+`output/www/*` only, so these exports are **never** published to the app or the
+GCS tarball. Individual tables build via their file targets
 (`export_deployments_file`, `export_analyses_file`, …).
 
 | File | Grain | `submission_id`? |
@@ -100,7 +104,7 @@ deployments/analyses), so they carry no `submission_id` — recover it by joinin
 
 Because `submission_id` reaches the app files only through frames the theme
 writers build with explicit column lists (which omit it), the published
-`data/pacm/**` output is unchanged by these exports — see the export functions in
+`output/www/**` output is unchanged by these exports — see the export functions in
 [`R/export.R`](R/export.R).
 
 ---
@@ -125,9 +129,9 @@ takes four steps and **no code**:
 # 3. load it and confirm it validates clean (in R, from r/)
 make_pars("<submission_id>")
 tar_read(pars_errors)            # must be 0 rows
-# 4. rebuild + publish
-tar_make()                       # regenerates data/pacm/<theme>/*.json
-# then, in shell:  scripts/copy-data.sh
+# 4. rebuild
+tar_make()                       # regenerates output/www/<theme>/*.json
+# (../public/data symlinks to output/www, so the app picks this up directly)
 ```
 
 If validation reports errors that are genuine data problems in the submission,
@@ -326,20 +330,19 @@ Retire a supplement code once it is adopted upstream.
 #### 6. Rebuild and publish
 
 ```r
-tar_make()            # rebuilds pacm_data and the theme files under data/pacm/
+tar_make()            # rebuilds pacm_data and the theme files under output/www/
 ```
 
 `tar_make()` regenerates
-`data/pacm/<theme>/{sites,deployments,detections,tracks}.json` via the
-`pacm_themes_files` target. To push them to the app:
+`output/www/<theme>/{sites,deployments,detections,tracks}.json` via the
+`pacm_themes_files` target. `../public/data` is a symlink to `output/www`, so
+the app serves the rebuilt files directly — no publish step.
 
-```sh
-scripts/copy-data.sh  # copies data/pacm/* -> ../public/data/, and the two enum JSONs -> ../src/lib/
-```
-
-Then verify in the running app. New PARS reference values (species, platform
-types, and any new supplement codes) may also need syncing into the web-app enums
-— see `../src/lib/constants.js` and the `../scripts/check-codes.mjs` assertion.
+Then verify in the running app. The app fetches `species.json` and
+`platform_types.json` from the data directory at startup, so new species and
+platform-type labels travel with the data automatically. A new *theme* still
+needs a menu entry in `../src/lib/constants.js` — the
+`../scripts/check-codes.mjs` assertion checks both.
 
 ### The `tar_cue(mode = "never")` pattern
 
@@ -379,7 +382,7 @@ why editing `pars-load.R` does not silently re-parse every historical submission
 | Inspect reference-code drift (needs DB) | `tar_read(pars_codes_drift)` |
 | Regenerate the vendored snapshot (needs DB) | `refresh_reference_code_snapshot()` |
 | Full rebuild + write theme files | `tar_make()` |
-| Publish to the app (shell) | `scripts/copy-data.sh` |
+| Publish to the app | nothing — `../public/data` symlinks to `output/www` |
 
 ### Current submissions
 
