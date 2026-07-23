@@ -23,6 +23,7 @@ source(file.path("..", "..", "R", "pars-ref.R"))
 source(file.path("..", "..", "R", "pars-parse.R"))
 source(file.path("..", "..", "R", "pars-validate.R"))
 source(file.path("..", "..", "R", "pars-load.R"))
+source(file.path("..", "..", "R", "export.R"))
 
 # reference-code fixtures ----------------------------------------------------
 

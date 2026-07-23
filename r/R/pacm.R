@@ -116,6 +116,7 @@ targets_pacm <- list(
         "site_longitude"
       ),
       deployments = c(
+        "submission_id",
         "deployment_organization_code",
         "deployment_id",
         "deployment_code",
@@ -143,6 +144,7 @@ targets_pacm <- list(
         "recording_interval_secs"
       ),
       analyses = c(
+        "submission_id",
         "deployment_organization_code",
         "deployment_id",
         "analysis_organization_code",
@@ -320,6 +322,8 @@ targets_pacm <- list(
       # deployments
       all(na.omit(deployments$site_id) %in% sites$site_id),
       all(deployments$deployment_type == "MOBILE" | (!is.na(deployments$latitude) & !is.na(deployments$longitude))),
+      # every published deployment carries its source submission (MAKARA for makara)
+      all(!is.na(deployments$submission_id)),
 
       # tracks
       all(tracks$deployment_id %in% deployments$deployment_id),
@@ -327,6 +331,8 @@ targets_pacm <- list(
       # analyses
       all(analyses$deployment_id %in% deployments$deployment_id),
       all(map_int(analyses$detections, nrow) > 0),
+      # every published analysis carries its source submission (MAKARA for makara)
+      all(!is.na(analyses$submission_id)),
       all(
         analyses |> 
           select(citations) |> 

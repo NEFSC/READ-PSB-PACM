@@ -760,6 +760,7 @@ targets_makara <- list(
         by = "makara_deployment_id"
       ) |> 
       mutate(
+        submission_id = "MAKARA",
         source = "MAKARA",
         # PARS-only fields; NA here so every source shares one shape
         deployment_url = NA_character_,
@@ -775,23 +776,6 @@ targets_makara <- list(
       select(all_of(pacm_names$tracks))
   }),
 
-  # tar_target(makara_analyses_pacm_realtime_file, "data-raw/realtime/realtime-analyses.rds", format = "file"),
-  # tar_target(makara_analyses_pacm_realtime, {
-  #   read_rds(makara_analyses_pacm_realtime_file) |> 
-  #     mutate(
-  #       detections = map(detections, function (detections) {
-  #         if (is.null(detections)) return(NULL)
-  #         detections |> 
-  #           mutate(
-  #             locations = map(locations, function (locations) {
-  #               if (is.null(locations)) return(NULL)
-  #               locations |> 
-  #                 filter(!is.na(latitude) & !is.na(longitude))
-  #             })
-  #           )
-  #       })
-  #     )
-  # }),
   tar_target(makara_analyses_pacm, {
     x <- makara_analyses |> 
       select(
@@ -840,7 +824,10 @@ targets_makara <- list(
     x |>
       # makara records detector_codes but no detector version; the field is
       # new with PARS, NA here
-      mutate(analysis_detector_version = NA_character_) |>
+      mutate(
+        submission_id = "MAKARA",
+        analysis_detector_version = NA_character_
+      ) |>
       select(all_of(pacm_names$analyses))
   }),
 

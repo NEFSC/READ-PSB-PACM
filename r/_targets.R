@@ -31,5 +31,6 @@ list(
   targets_pars_ref,
   targets_pars,
 
-  targets_pacm
+  targets_pacm,
+  targets_export
 )

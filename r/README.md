@@ -67,6 +67,42 @@ Makara connection details are read from `.env` (`MAKARA_*`). The PARS path needs
 testthat::test_dir("tests/testthat")
 ```
 
+## Exports (flat CSVs)
+
+Alongside the per-theme app files, the pipeline exports the **entire published
+dataset** (`pacm_data`) as flat CSVs — one per table — for downstream analysis.
+
+```r
+# in R, from r/
+tar_make(export)          # builds all six CSVs into data/export/
+```
+
+Output goes to `data/export/`, a **sibling** of `data/pacm/`. `copy-data.sh` and
+`deploy-data.sh` act on `data/pacm/*`, so these exports are **never** published to
+the app or the GCS tarball. Individual tables build via their file targets
+(`export_deployments_file`, `export_analyses_file`, …).
+
+| File | Grain | `submission_id`? |
+|---|---|---|
+| `deployments.csv` | one row per deployment | yes |
+| `analyses.csv` | one row per analysis | yes |
+| `detections.csv` | one row per (analysis, day); `latitude`/`longitude` for mobile localizations | yes |
+| `tracks.csv` | one row per track vertex (`seq`-ordered) | yes |
+| `sites.csv` | one row per site | no — join to `deployments.csv` on `site_id` |
+| `citations.csv` | one row per citation code | no — join to `analyses.csv` on `code` |
+
+**`submission_id`** identifies the source of each row: the PARS submission id, or
+the literal `MAKARA` for data from the Makara database. It is threaded through
+`pacm_names` for `deployments` and `analyses` (so it is a first-class column of
+`pacm_data`), inherited by `detections` on unnest, and joined from the deployment
+for `tracks`. `sites` and `citations` are derived/reference tables (1:1 with
+deployments/analyses), so they carry no `submission_id` — recover it by joining.
+
+Because `submission_id` reaches the app files only through frames the theme
+writers build with explicit column lists (which omit it), the published
+`data/pacm/**` output is unchanged by these exports — see the export functions in
+[`R/export.R`](R/export.R).
+
 ---
 
 ## Adding a submission
