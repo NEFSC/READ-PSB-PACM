@@ -118,7 +118,7 @@ import moment from 'moment'
 import evt from '@/lib/events'
 import { xf } from '@/lib/crossfilter'
 import { detectionTypes, detectionTypesMap } from '@/lib/constants'
-import { monitoringPeriodLabels } from '@/lib/tip'
+import { monitoringPeriodLabels, dutyCycleLabel } from '@/lib/tip'
 import { createContributorCitation, parseCitationCodes } from '@/lib/citations'
 
 export default {
@@ -218,6 +218,8 @@ export default {
         instrumentType: uniqueArray('instrument_type'),
         samplingRate: unique('sampling_rate_hz'),
         detectionMethod: unique('detection_method'),
+        detectorVersion: unique('analysis_detector_version'),
+        projectFunding: unique('project_funding'),
         qcData: unique('qc_data'),
         recorderDepth: range('recorder_depth_meters', 'm'),
         waterDepth: range('water_depth_meters', 'm'),
@@ -267,7 +269,9 @@ export default {
         { label: 'Sampling Rate', value: `${m.samplingRate} Hz` },
         showAnalysis && { label: 'Analysis Organization', value: m.analysisOrganizationCode },
         showAnalysis && { label: 'Detection Method', value: m.detectionMethod },
+        showAnalysis && m.detectorVersion !== 'N/A' && { label: 'Detector Version', value: m.detectorVersion },
         showAnalysis && { label: 'Analysis QAQC', value: m.qcData },
+        m.projectFunding !== 'N/A' && { label: 'Project Funding', value: m.projectFunding },
         { label: 'Recorder Depth', value: m.recorderDepth },
         { label: 'Water Depth', value: m.waterDepth },
         { label: 'Monitoring Period', value: `${m.monitoringStart} to ${m.monitoringEnd}` },
@@ -283,6 +287,10 @@ export default {
       const showSite = this.deploymentType === 'station' || this.deploymentType === 'glider'
       const period = this.monitoringPeriod
       const depth = value => value ? `${(+value).toFixed(0)} m` : 'N/A'
+      const dutyCycle = dutyCycleLabel(d.recording_duration_secs, d.recording_interval_secs)
+      // new PARS fields (AD-7): shown only when the value is present, so
+      // makara records without them stay uncluttered
+      const hasDmp = d.dynamic_management_platform === true || d.dynamic_management_platform === false
       return [
         { label: 'Monitoring Organization', value: d.deployment_organization_code },
         { label: 'Deployment', value: d.deployment_code },
@@ -291,13 +299,18 @@ export default {
         { label: 'Platform Type', value: d.platform_type || 'N/A' },
         { label: 'Recorder Type', value: d.instrument_type || 'N/A' },
         { label: 'Sampling Rate', value: d.sampling_rate_hz + ' Hz' || 'N/A' },
+        dutyCycle && { label: 'Duty Cycle', value: dutyCycle },
         showAnalysis && { label: 'Analysis Organization', value: d.analysis_organization_code ? d.analysis_organization_code : 'N/A' },
         showAnalysis && { label: 'Detection Method', value: d.detection_method ? d.detection_method : 'N/A' },
+        showAnalysis && d.analysis_detector_version && { label: 'Detector Version', value: d.analysis_detector_version },
         showAnalysis && { label: 'Analysis QAQC', value: d.qc_data ? d.qc_data : 'N/A' },
         isStationary && { label: 'Recorder Depth', value: depth(d.recorder_depth_meters) },
         isStationary && { label: 'Water Depth', value: depth(d.water_depth_meters) },
         { label: 'Deployed', value: `${period.start || 'N/A'} to ${period.end || 'N/A'}` },
         { label: 'Duration', value: isFinite(period.duration) ? period.duration.toLocaleString() + ' days' : 'N/A' },
+        hasDmp && { label: 'Dynamic Mgmt Platform', value: d.dynamic_management_platform ? 'Yes' : 'No' },
+        d.project_funding && { label: 'Project Funding', value: d.project_funding },
+        d.deployment_url && { label: 'Data URL', value: d.deployment_url },
         { label: 'Point of Contact', value: d.data_poc },
         showAnalysis && { label: 'Protocol', value: d.protocol_reference }
       ].filter(Boolean)
@@ -306,12 +319,19 @@ export default {
       return this.isSiteView ? this.siteMetadataFields : this.deploymentMetadataFields
     },
     deploymentType () {
-      if (this.selectedDeployment.platform_type === 'mooring' || this.selectedDeployment.platform_type === 'buoy') {
+      // platform_type uses uppercase codes from platform_types.json
+      // (BOTTOM_MOUNTED_MOORING, ELECTRIC_GLIDER, TOWED_ARRAY, ...). Classify
+      // from the authoritative STATIONARY/MOBILE deployment_type so this stays
+      // correct as new platform codes are added; only towed vs glider needs the
+      // specific code. This drives showSite (stations and gliders have sites).
+      const d = this.selectedDeployment
+      if (!d) return 'unknown'
+      if (d.deployment_type === 'STATIONARY') {
         return 'station'
-      } else if (this.selectedDeployment.platform_type === 'slocum' || this.selectedDeployment.platform_type === 'wave') {
-        return 'glider'
-      } else if (this.selectedDeployment.platform_type === 'towed') {
+      } else if (d.platform_type === 'TOWED_ARRAY') {
         return 'towed'
+      } else if (d.deployment_type === 'MOBILE') {
+        return 'glider'
       }
       return 'unknown'
     },

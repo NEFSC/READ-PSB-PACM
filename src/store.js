@@ -85,15 +85,22 @@ export default createStore({
       commit('SET_SELECTED_DEPLOYMENTS', [])
       return fetchData(theme)
         .then(([sites, tracks, deployments, detections, organizations, citations]) => {
-          const deploymentsMap = Object.fromEntries(deployments.map(d => [d.id, d]))
+          // deployments.json is analysis-grained for species themes (one row per
+          // analysis), so its metadata must be keyed by analysis_id, not by
+          // deployment id. Keying by id collapsed multi-analysis deployments via
+          // Object.fromEntries and mis-attributed their detections' analysis
+          // metadata (T5.2). Every theme's detections and deployments now carry
+          // a unique analysis_id, so this one code path works for all of them.
+          const deploymentsByAnalysis = Object.fromEntries(deployments.map(d => [d.analysis_id, d]))
           detections.forEach((d, i) => {
             d.$index = i
-            d.site_id = deploymentsMap[d.id].site_id || '__none__'
-            d.platform_type = deploymentsMap[d.id].platform_type
-            d.analysis_organization_code = deploymentsMap[d.id].analysis_organization_code
-            d.deployment_organization_code = deploymentsMap[d.id].deployment_organization_code
-            d.instrument_type = deploymentsMap[d.id].instrument_type || 'UNKNOWN'
-            d.dynamic_management_platform = deploymentsMap[d.id].dynamic_management_platform || false
+            const dep = deploymentsByAnalysis[d.analysis_id]
+            d.site_id = dep.site_id || '__none__'
+            d.platform_type = dep.platform_type
+            d.analysis_organization_code = dep.analysis_organization_code
+            d.deployment_organization_code = dep.deployment_organization_code
+            d.instrument_type = dep.instrument_type || 'UNKNOWN'
+            d.dynamic_management_platform = dep.dynamic_management_platform || false
           })
 
           // Store raw detections and aggregate for multi-species themes

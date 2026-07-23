@@ -200,18 +200,30 @@ targets_pars <- list(
       select(all_of(pacm_names$tracks))
   }),
 
+  # the citation reference table for the PARS source (code -> reference text),
+  # minted from the submitted free-text analysis_citations. shape matches
+  # makara_citations_pacm so both bind into pacm_data$citations
+  tar_target(pars_citations_pacm, {
+    pars_citation_codes(pars_analyses) |>
+      select(code, reference)
+  }),
+
   tar_target(pars_analyses_pacm, {
+    # published `citations` holds reference *codes* that resolve against
+    # pacm_data$citations. PARS analysis_citations is free-text prose, so mint a
+    # code per distinct blob (pars_citations_pacm) and publish the code here
+    codes <- pars_citation_codes(pars_analyses)
+
     pars_analyses |>
+      left_join(
+        codes, by = c("analysis_organization_code", "citations" = "reference")
+      ) |>
       mutate(
         deployment_organization_code = organization_code,
         detections = map(
           detections, ~ select(., all_of(pacm_names$analyses_detections))
         ),
-        # published `citations` holds reference *codes* that must resolve against
-        # pacm_data$citations, but PARS analysis_citations is free-text prose.
-        # the submitted text is kept on pars_analyses; publishing it here would
-        # break the app's code lookup. minting codes from prose is follow-on work
-        citations = NA_character_
+        citations = code
       ) |>
       select(all_of(pacm_names$analyses))
   }),
@@ -240,7 +252,8 @@ targets_pars <- list(
       sites = pars_sites_pacm,
       deployments = pars_deployments_pacm,
       analyses = pars_analyses_pacm,
-      tracks = pars_tracks_pacm
+      tracks = pars_tracks_pacm,
+      citations = pars_citations_pacm
     )
   })
 )

@@ -836,10 +836,13 @@ targets_makara <- list(
       )
     
     # TODO: find missing detection data
-    x_no_detections <- x |> 
+    x_no_detections <- x |>
       filter(n_detections == 0)
-    
-    x |> 
+
+    x |>
+      # makara records detector_codes but no detector version; the field is
+      # new with PARS (AD-7), NA here
+      mutate(analysis_detector_version = NA_character_) |>
       select(all_of(pacm_names$analyses))
   }),
 

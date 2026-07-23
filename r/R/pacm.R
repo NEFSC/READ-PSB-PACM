@@ -18,10 +18,15 @@ create_theme <- function (data, species) {
           water_depth_meters,
           dynamic_management_platform,
           data_poc,
-          source
+          source,
+          # new PARS fields surfaced in the UI (AD-7); NA for makara rows
+          recording_duration_secs,
+          recording_interval_secs,
+          project_funding,
+          deployment_url
         ),
       by = "deployment_id"
-    ) |> 
+    ) |>
     transmute(
       id = deployment_id,
       analysis_id,
@@ -43,13 +48,19 @@ create_theme <- function (data, species) {
       deployment_type,
       water_depth_meters,
       dynamic_management_platform,
-      
+      # new PARS fields surfaced in the UI (AD-7); NA for makara rows
+      recording_duration_secs,
+      recording_interval_secs,
+      project_funding,
+      deployment_url,
+
       recorder_depth_meters,
       instrument_type,
       sampling_rate_hz,
       detection_method,
+      analysis_detector_version,
       source,
-      
+
       # TODO: excluding these for now, CVOWC used different freq/call type within BLWH causing duplicate IDs
       call_type = NA_character_,
       analysis_sampling_rate_hz = NA_real_,
@@ -142,6 +153,8 @@ targets_pacm <- list(
         "sampling_rate_hz",
 
         "detection_method",
+        # new with PARS; carried from pars_analyses, NA for makara (AD-7)
+        "analysis_detector_version",
         "call_type",
         "qc_data",
         "analysis_sampling_rate_hz",
@@ -376,6 +389,10 @@ targets_pacm <- list(
       transmute(
         deployment_organization_code,
         id = deployment_id,
+        # the deployments theme has no analyses; give each deployment a trivial
+        # analysis_id (= id) so detections join to deployments.json by analysis_id
+        # uniformly across every theme, matching the species-theme grain (T5.2)
+        analysis_id = deployment_id,
         deployment_code,
         project,
         site_id,
@@ -393,8 +410,13 @@ targets_pacm <- list(
         data_poc,
         source,
         recording_device_lost = coalesce(recording_device_lost, FALSE),
-        dynamic_management_platform = coalesce(dynamic_management_platform, FALSE)
-      ) |> 
+        dynamic_management_platform = coalesce(dynamic_management_platform, FALSE),
+        # new PARS fields surfaced in the UI (AD-7); NA for makara rows
+        recording_duration_secs,
+        recording_interval_secs,
+        project_funding,
+        deployment_url
+      ) |>
       mutate(
         start = as_date(monitoring_start_datetime),
         end = as_date(monitoring_end_datetime)
@@ -405,18 +427,19 @@ targets_pacm <- list(
       filter(is.na(end), !recording_device_lost)
     
     detections <- deployments |>
-      transmute(id, start, end = coalesce(end, start)) |> 
-      rowwise() |> 
+      transmute(id, analysis_id = id, deployment_id = id, start, end = coalesce(end, start)) |>
+      rowwise() |>
       mutate(
         date = list(seq.Date(start, end, by = "day"))
-      ) |> 
-      unnest(date) |> 
-      select(-start, -end) |> 
+      ) |>
+      unnest(date) |>
       mutate(
         species = NA_character_,
         presence = "d",
         locations = "null"
-      )
+      ) |>
+      # one detections.csv schema across every theme (T5.2)
+      select(id, analysis_id, deployment_id, species, date, presence, locations)
     
     sites <- pacm_data$sites |> 
       filter(site_id %in% deployments$site_id)
@@ -478,7 +501,6 @@ targets_pacm <- list(
       dolphin = "UNDO",
       fin = "FIWH",
       gray = "GRWH",
-      harbor = "HAPO",
       humpback = "HUWH",
       kogia = "UNKO",
       minke = "MIWH",

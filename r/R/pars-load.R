@@ -186,6 +186,24 @@ pars_analyses_table <- function (detectiondata, deployments) {
     )
 }
 
+# mint a stable citation code for each distinct submitted citation text,
+# namespaced by the analysis organization - mirroring the makara ORG:CODE model
+# (makara_citations_pacm), so PARS and makara citations share one reference-table
+# shape (code, reference). PARS analysis_citations is free-text prose with no
+# reliable delimiter, so each distinct blob becomes one citation rather than
+# trying to split prose into individual references. Codes are internal join keys
+# (the app shows the reference text, not the code) regenerated each build, so an
+# index-based suffix is fine - there is no external consumer to keep stable (AD-8).
+pars_citation_codes <- function (analyses) {
+  analyses |>
+    filter(!is.na(citations)) |>
+    distinct(analysis_organization_code, reference = citations) |>
+    arrange(analysis_organization_code, reference) |>
+    group_by(analysis_organization_code) |>
+    mutate(code = paste0(analysis_organization_code, ":PARS_", row_number())) |>
+    ungroup()
+}
+
 # build mobile-platform tracks from PARS gpsdata using the derivation shared
 # with the legacy path (AD-5). gpsdata already arrives in the shape
 # derive_tracks() expects, so only the extra submission columns are dropped.

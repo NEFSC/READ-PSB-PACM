@@ -87,6 +87,14 @@ export const themes = [
     label: 'Pacific White-sided Dolphin'
   },
   {
+    id: 'pilot',
+    label: 'Pilot Whale'
+  },
+  {
+    id: 'unid',
+    label: 'Unidentified Whale'
+  },
+  {
     props: { divider: true }
   },
   {

@@ -41,6 +41,15 @@ export function monitoringPeriodLabels (props) {
   }
 }
 
+// PARS recording duty cycle (AD-7): duration recorded per interval. Returns null
+// when either value is absent so callers can omit the row entirely.
+export function dutyCycleLabel (durationSecs, intervalSecs) {
+  if (!durationSecs || !intervalSecs) return null
+  if (+durationSecs >= +intervalSecs) return 'Continuous'
+  const pct = Math.round((+durationSecs / +intervalSecs) * 100)
+  return `${pct}% (${+durationSecs}s on / ${+intervalSecs}s cycle)`
+}
+
 const htmlTable = (rows, padding) => {
   let p = padding
   if (!padding) {
@@ -164,6 +173,7 @@ const siteHtml = (d, siteDeployments, deploymentsOnly) => {
 const deploymentHtml = (d, deployment, deploymentsOnly) => {
   const props = deployment
   const monitoring = monitoringPeriodLabels(props)
+  const duty = dutyCycleLabel(props.recording_duration_secs, props.recording_interval_secs)
 
   let metaHtml = [
     ['Monitoring Organization', `${orNa(d.deployment_organization_code)}`],
@@ -172,6 +182,7 @@ const deploymentHtml = (d, deployment, deploymentsOnly) => {
     ['Platform Type', `${orNa(props.platform_type)}`],
     ['Recorder Type', `${orNa(props.instrument_type)}`],
     ['Sampling Rate', props.sampling_rate_hz ? `${props.sampling_rate_hz} Hz` : 'N/A'],
+    ...(duty ? [['Duty Cycle', duty]] : []),
     ['Recorder Depth', props.recorder_depth_meters ? `${(+props.recorder_depth_meters).toFixed(0)} m` : 'N/A'],
     ['Water Depth', props.water_depth_meters ? `${(+props.water_depth_meters).toFixed(0)} m` : 'N/A'],
     ['Monitoring Period', `${orNa(monitoring.start)} to ${orNa(monitoring.end)}`],
@@ -180,6 +191,7 @@ const deploymentHtml = (d, deployment, deploymentsOnly) => {
   if (!deploymentsOnly) {
     metaHtml.push(['Analysis Organization', `${orNa(props.analysis_organization_code)}`])
     metaHtml.push(['Detection Method', `${orNa(props.detection_method)}`])
+    if (props.analysis_detector_version) metaHtml.push(['Detector Version', props.analysis_detector_version])
     metaHtml.push(['Analysis QAQC', `${orNa(props.qc_data)}`])
     metaHtml = htmlTable(metaHtml)
   } else {
@@ -216,6 +228,9 @@ const trackHtml = (d, deployment, deploymentsOnly) => {
     ['Platform Type', `${orNa(props.platform_type)}`],
     ['Recorder Type', `${orNa(props.instrument_type)}`],
     ['Sampling Rate', `${orNa(props.sampling_rate_hz)} Hz`],
+    ...(dutyCycleLabel(props.recording_duration_secs, props.recording_interval_secs)
+      ? [['Duty Cycle', dutyCycleLabel(props.recording_duration_secs, props.recording_interval_secs)]]
+      : []),
     ['Deployed', `${orNa(monitoring.start)} to ${orNa(monitoring.end)}`],
     ['Duration', `${monitoring.duration ? monitoring.duration + ' days' : 'N/A'} `]
   ]
@@ -223,6 +238,7 @@ const trackHtml = (d, deployment, deploymentsOnly) => {
   if (!deploymentsOnly) {
     trackHtml.push(['Analysis Organization', `${orNa(props.analysis_organization_code)}`])
     trackHtml.push(['Detection Method', `${orNa(props.detection_method)}`])
+    if (props.analysis_detector_version) trackHtml.push(['Detector Version', props.analysis_detector_version])
     trackHtml.push(['Analysis QAQC', `${orNa(props.qc_data)}`])
     trackHtml = htmlTable(trackHtml)
   } else {
