@@ -1,6 +1,6 @@
 # characterization tests for the source-agnostic derivations lifted out of
-# legacy.R (T0.4). these pin the existing behaviour so the PARS path can reuse
-# it and produce identical site ids and tracks.
+# legacy.R. these pin the existing behaviour so the PARS path can reuse it
+# and produce identical site ids and tracks.
 
 stationary_deployments <- function(...) {
   rows <- bind_rows(...)

@@ -41,7 +41,7 @@ export function monitoringPeriodLabels (props) {
   }
 }
 
-// PARS recording duty cycle (AD-7): duration recorded per interval. Returns null
+// PARS recording duty cycle: duration recorded per interval. Returns null
 // when either value is absent so callers can omit the row entirely.
 export function dutyCycleLabel (durationSecs, intervalSecs) {
   if (!durationSecs || !intervalSecs) return null

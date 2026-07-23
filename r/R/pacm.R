@@ -19,7 +19,7 @@ create_theme <- function (data, species) {
           dynamic_management_platform,
           data_poc,
           source,
-          # new PARS fields surfaced in the UI (AD-7); NA for makara rows
+          # new PARS fields surfaced in the UI; NA for makara rows
           recording_duration_secs,
           recording_interval_secs,
           project_funding,
@@ -48,7 +48,7 @@ create_theme <- function (data, species) {
       deployment_type,
       water_depth_meters,
       dynamic_management_platform,
-      # new PARS fields surfaced in the UI (AD-7); NA for makara rows
+      # new PARS fields surfaced in the UI; NA for makara rows
       recording_duration_secs,
       recording_interval_secs,
       project_funding,
@@ -136,7 +136,7 @@ targets_pacm <- list(
         "recording_device_lost",
         "dynamic_management_platform",
         "source",
-        # new with PARS; carried for future UI work (AD-7), NA for other sources
+        # new with PARS; carried for future UI work, NA for other sources
         "deployment_url",
         "project_funding",
         "recording_duration_secs",
@@ -153,7 +153,7 @@ targets_pacm <- list(
         "sampling_rate_hz",
 
         "detection_method",
-        # new with PARS; carried from pars_analyses, NA for makara (AD-7)
+        # new with PARS; carried from pars_analyses, NA for makara
         "analysis_detector_version",
         "call_type",
         "qc_data",
@@ -181,9 +181,9 @@ targets_pacm <- list(
 
   tar_target(pacm_data_raw, {
     # the migration is complete: the only sources are Makara and PARS. The towed
-    # array (T2.5, AD-11), the 34 PACM_20240820 submissions (T3.2, AD-12) and the
-    # 2 MAKARA_1.2 GARDLINE submissions (T3.3) are all PARS submissions under
-    # data-raw/pars/ now; the legacy loader was removed at the T3.5 gate
+    # array, the 34 PACM_20240820 submissions, and the 2 MAKARA_1.2 GARDLINE
+    # submissions are all PARS submissions under data-raw/pars/ now; the legacy
+    # loader has been removed
     bind_rows(
       makara = enframe(makara_pacm),
       pars = enframe(pars_pacm),
@@ -258,10 +258,7 @@ targets_pacm <- list(
             )
         })
       )
-    
-    # analyses_data |> 
-    #   tabyl(detection_method)
-    
+
     # fill analyses with non-detect on missing days
     analyses_fill <- analyses_data |>
       mutate(
@@ -299,7 +296,6 @@ targets_pacm <- list(
         by = "deployment_id"
       ) |>
       unnest(detections)
-    # tabyl(detections, species, presence)
 
     stationary_detections <- detections |> 
       filter(deployment_type == "STATIONARY")
@@ -308,15 +304,11 @@ targets_pacm <- list(
       rename(daily_presence = presence) |> 
       select(analysis_id, deployment_id, date, locations) |>
       unnest(locations)
-    # skimr::skim(mobile_detections)
-    # mobile_detections |> 
-    #   filter(is.na(latitude)) |> 
-    #   tabyl(analysis_id)
-    
+
     stopifnot(
       # published identifiers are unique. this is the guard that catches a
       # deployment published by two sources at once - the failure mode when
-      # the towed path and its TOWED_LEGACY replacement both run (T2.5)
+      # the towed path and its TOWED_LEGACY replacement both run
       !anyDuplicated(sites$site_id),
       !anyDuplicated(deployments$deployment_id),
       !anyDuplicated(tracks$track_id),
@@ -391,7 +383,7 @@ targets_pacm <- list(
         id = deployment_id,
         # the deployments theme has no analyses; give each deployment a trivial
         # analysis_id (= id) so detections join to deployments.json by analysis_id
-        # uniformly across every theme, matching the species-theme grain (T5.2)
+        # uniformly across every theme, matching the species-theme grain
         analysis_id = deployment_id,
         deployment_code,
         project,
@@ -411,7 +403,7 @@ targets_pacm <- list(
         source,
         recording_device_lost = coalesce(recording_device_lost, FALSE),
         dynamic_management_platform = coalesce(dynamic_management_platform, FALSE),
-        # new PARS fields surfaced in the UI (AD-7); NA for makara rows
+        # new PARS fields surfaced in the UI; NA for makara rows
         recording_duration_secs,
         recording_interval_secs,
         project_funding,
@@ -438,7 +430,7 @@ targets_pacm <- list(
         presence = "d",
         locations = "null"
       ) |>
-      # one detections.csv schema across every theme (T5.2)
+      # one detections.csv schema across every theme
       select(id, analysis_id, deployment_id, species, date, presence, locations)
     
     sites <- pacm_data$sites |> 

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Assert that every code in the published PACM data resolves to a label in the
 // app's reference constants, and that the theme menu matches the exported theme
-// directories (T5.3). Run after regenerating the data / before publishing:
+// directories. Run after regenerating the data / before publishing:
 //
 //   node scripts/check-codes.mjs [dataDir]
 //

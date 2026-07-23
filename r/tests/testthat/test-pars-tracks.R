@@ -1,5 +1,5 @@
-# No PARS submission has yet included gpsdata (I-4): USYRA is entirely
-# stationary. These fixtures use real positions from the guide's glider example
+# No PARS submission has yet included gpsdata: USYRA is entirely stationary.
+# These fixtures use real positions from the guide's glider example
 # (WHOI_MA-RI_202210_WE16) so the track path is exercised against realistic
 # data rather than invented coordinates.
 
@@ -145,7 +145,7 @@ test_that("extra columns on the position table do not disturb the track", {
   expect_false("stray_column" %in% names(tracks))
 })
 
-# segmentation on effort gaps (T2.4) -----------------------------------------
+# segmentation on effort gaps ------------------------------------------------
 #
 # PARS gpsdata carries no effort flag, so a break in effort is visible only as
 # an absence of positions. Without segmentation a track is drawn straight

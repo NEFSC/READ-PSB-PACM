@@ -199,7 +199,7 @@ test_that("datetimes nested inside a list-column are compared without error", {
   expect_equal(nrow(compare_pacm_snapshot(new, baseline)), 0)
 })
 
-# geometry representation (T2.4) ---------------------------------------------
+# geometry representation ----------------------------------------------------
 #
 # sf stores the components of a MULTILINESTRING differently depending on how it
 # was built: st_cast() from a LINESTRING leaves the component classed as an sfg,

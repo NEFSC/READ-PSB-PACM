@@ -570,8 +570,6 @@ targets_makara <- list(
       st_cast("LINESTRING") |> 
       ungroup()
 
-    # mapview::mapview(track_positions_hourly_sf, legend = FALSE)
-
     tracks_sf <- makara_db$tracks |> 
       filter(!organization_code %in% makara_exclude_organizations) |> 
       select(deployment_organization_code = organization_code, deployment_id, track_id = id, track_code) |> 
@@ -841,7 +839,7 @@ targets_makara <- list(
 
     x |>
       # makara records detector_codes but no detector version; the field is
-      # new with PARS (AD-7), NA here
+      # new with PARS, NA here
       mutate(analysis_detector_version = NA_character_) |>
       select(all_of(pacm_names$analyses))
   }),

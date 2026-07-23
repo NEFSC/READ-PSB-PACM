@@ -23,10 +23,10 @@ list(
   targets_gis,
   targets_ref,
 
-  # the towed array is now the TOWED_LEGACY PARS submission (T2.5, AD-11), and
-  # every legacy submission has been converted to a PARS submission under
-  # data-raw/pars/ (T3.2/T3.3), so R/towed/, R/legacy.R and their target lists
-  # are removed - all non-Makara data now flows through targets_pars
+  # the towed array is now the TOWED_LEGACY PARS submission, and every legacy
+  # submission has been converted to a PARS submission under data-raw/pars/,
+  # so R/towed/, R/legacy.R and their target lists are removed - all
+  # non-Makara data now flows through targets_pars
   targets_makara,
   targets_pars_ref,
   targets_pars,

@@ -1,4 +1,4 @@
-# the I-1 acceptance test -----------------------------------------------------
+# sample-rate unit confusion --------------------------------------------------
 
 test_that("a sample rate submitted in Hz is caught by the plausibility range", {
   # this is exactly the USYRA_20260713 error: 48000 in a kHz field
@@ -124,7 +124,7 @@ test_that("PARS_1.0 requires a validated count on a DETECTED row", {
 
 test_that("PARS_LEGACY allows a DETECTED row with no validated count", {
   # legacy analysts confirmed presence without always counting individual
-  # detections; the field is not published (T3.1)
+  # detections; the field is not published
   x <- valid_detectiondata(detection_n_validated = NA_integer_)
 
   errors <- validate_pars(x, "detectiondata", test_codes(), profile = "PARS_LEGACY")
@@ -197,7 +197,7 @@ test_that("PARS_LEGACY still rejects an invalid code inside a list", {
 })
 
 test_that("PARS_LEGACY allows a missing processing code and analysis sample rate", {
-  # UCORN_20250325 recorded neither; both are legacy gaps, not corruption (T3.1)
+  # UCORN_20250325 recorded neither; both are legacy gaps, not corruption
   x <- valid_detectiondata(
     analysis_processing_code = NA_character_,
     analysis_sample_rate_khz = NA_real_
@@ -221,14 +221,14 @@ test_that("PARS_1.0 still requires a processing code and analysis sample rate", 
 })
 
 test_that("validation of an empty table returns no errors rather than crashing", {
-  # DFOCA_20220712 is a metadata-only deployment: 0 detection rows (T3.1)
+  # DFOCA_20220712 is a metadata-only deployment: 0 detection rows
   empty <- valid_detectiondata()[0, ]
 
   expect_no_error(validate_pars(empty, "detectiondata", test_codes(), "PARS_LEGACY"))
   expect_equal(nrow(validate_pars(empty, "detectiondata", test_codes(), "PARS_LEGACY")), 0)
 })
 
-# AD-10 extension for the towed array conversion (T2.1) -----------------------
+# relaxed rules for the towed array conversion --------------------------------
 #
 # the 2011-2019 towed surveys recorded none of these fields; the metadata
 # workbook has 22 columns and not one of them is among these. relaxation is
@@ -238,11 +238,11 @@ TOWED_RELAXED_METADATA <- c(
   "deployment_water_depth_m", "recording_device_depth_m", "recording_bit_depth",
   "recording_n_channels", "recording_device_code", "site_code",
   # the sheet's "project" column holds the cruise code, not a project name, and
-  # duty cycle is recorded as the word "continuous" rather than a number (T2.2)
+  # duty cycle is recorded as the word "continuous" rather than a number
   "project_name", "recording_duration_secs", "recording_interval_secs"
 )
 
-# the towed metadata workbook records no analysis frequency band (T2.3)
+# the towed metadata workbook records no analysis frequency band
 TOWED_RELAXED_DETECTIONDATA <- c(
   "analysis_min_frequency_khz", "analysis_max_frequency_khz"
 )
@@ -367,7 +367,7 @@ test_that("PARS_LEGACY rejects an invalid code inside an analysis_detector_code 
   expect_true(any(grepl("analysis_detector_code", errors$name)))
 })
 
-# AD-10: the profile must never weaken a check that catches corruption --------
+# the profile must never weaken a check that catches corruption ---------------
 
 test_that("PARS_LEGACY does not relax the sample rate range", {
   x <- valid_metadata(recording_sample_rate_khz = 48000)

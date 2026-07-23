@@ -1,9 +1,9 @@
-# Legacy PACM_20240820 -> PARS conversion (T3.1)
+# Legacy PACM_20240820 -> PARS conversion
 #
 # The converters take *parsed* legacy frames - the schema the legacy loader
 # produces, with POSIXct datetimes already resolved to UTC and numeric fields
 # numeric. Working from the resolved values (not raw strings) reuses the tested
-# timezone handling and is what makes the T3.5 parity gate achievable.
+# timezone handling and keeps conversion output in parity with the legacy data.
 
 legacy_metadata_fixture <- function (...) {
   base <- tibble(
@@ -129,7 +129,7 @@ test_that("project_funding is an explicit parameter, not a silent blank", {
 
 test_that("platform id is taken from PLATFORM_NO when PLATFORM_ID is absent", {
   # most raw files name this column PLATFORM_NO; a few use PLATFORM_ID. the
-  # combined legacy frame hid the difference (T3.2)
+  # combined legacy frame hid the difference
   x <- legacy_metadata_fixture()
   x$PLATFORM_ID <- NULL
   x$PLATFORM_NO <- "MOORING_9"
@@ -275,8 +275,8 @@ test_that("an unrecognised detector maps to the OTHER supplement code", {
 })
 
 test_that("known legacy detectors are preserved, not collapsed to OTHER", {
-  # T3.2 parity decision: detectors with no official PARS code keep their value
-  # as a supplement code so published detection_method matches the baseline
+  # detectors with no official PARS code keep their value as a supplement
+  # code so published detection_method matches the legacy baseline
   cases <- c(
     "Custom automatic detector" = "AUTOMATIC",
     "Automatic and manual" = "AUTOMATIC/MANUAL",
@@ -326,7 +326,7 @@ test_that("call type list order is preserved, not sorted", {
 
 test_that("a submission missing the localization columns still converts", {
   # some raw detectiondata files omit localization entirely; the combined
-  # legacy frame hid this because bind_rows unions columns (T3.2)
+  # legacy frame hid this because bind_rows unions columns
   x <- legacy_detectiondata_fixture()
   x$LOCALIZED_LATITUDE <- NULL
   x$LOCALIZED_LONGITUDE <- NULL
@@ -428,7 +428,7 @@ legacy_metadata_raw_fixture <- function (...) {
 
 test_that("a metadata-only submission writes metadata but no detectiondata", {
   # DFOCA_20220712 deploys recorders whose detections another submission holds;
-  # convert must accept detectiondata = NULL and emit only metadata.csv (T3.2)
+  # convert must accept detectiondata = NULL and emit only metadata.csv
   dir <- withr::local_tempdir()
 
   convert_legacy_submission(

@@ -1,5 +1,5 @@
 # GARDLINE_20250915 - ORSTED Sunrise Wind, submitted via GARDLINE in MAKARA_1.2
-# format, converted to PARS (T3.3).
+# format, converted to PARS.
 #
 # raw/ holds the makara-format METADATA/DETECTIONDATA workbooks (immutable). This
 # clean.R reshapes them to PARS:
@@ -15,7 +15,7 @@
 #   - recovery_datetime is absent, so monitoring_end is bounded by the last
 #     recording start and the last detection
 #   - only positive (DETECTED) event detections were submitted, so analyses carry
-#     detected days with no absence coverage (accepted gap, T3.3)
+#     detected days with no absence coverage
 
 library(tidyverse)
 library(readxl)

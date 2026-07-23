@@ -89,7 +89,7 @@ export default createStore({
           // analysis), so its metadata must be keyed by analysis_id, not by
           // deployment id. Keying by id collapsed multi-analysis deployments via
           // Object.fromEntries and mis-attributed their detections' analysis
-          // metadata (T5.2). Every theme's detections and deployments now carry
+          // metadata. Every theme's detections and deployments now carry
           // a unique analysis_id, so this one code path works for all of them.
           const deploymentsByAnalysis = Object.fromEntries(deployments.map(d => [d.analysis_id, d]))
           detections.forEach((d, i) => {

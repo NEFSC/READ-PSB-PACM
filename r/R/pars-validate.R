@@ -1,11 +1,11 @@
 # PARS submission validation
 #
-# two profiles (AD-10): `PARS_1.0` validates new submissions strictly;
+# two profiles: `PARS_1.0` validates new submissions strictly;
 # `PARS_LEGACY` applies to submissions converted from the legacy format and
 # relaxes exactly two things - the presence of fields legacy never collected,
 # and the cardinality of detection_call_type_code. it must never relax a check
 # that catches corruption (type, range, vocabulary, referential integrity),
-# because those are what caught the USYRA sample-rate error (I-1).
+# because those are what caught the USYRA sample-rate error.
 #
 # checks are split by kind: `validate` handles presence, ranges, and
 # comparisons, while vocabulary membership is checked in plain R. that split is
@@ -22,17 +22,17 @@ PARS_LEGACY_OPTIONAL <- c(
   "project_funding",
   "analysis_detector_version",
 
-  # the towed metadata workbook records no analysis frequency band (T2.3)
+  # the towed metadata workbook records no analysis frequency band
   "analysis_min_frequency_khz",
   "analysis_max_frequency_khz",
 
-  # legacy gaps (T3.1): UCORN_20250325 recorded neither a processing code nor
+  # legacy gaps: UCORN_20250325 recorded neither a processing code nor
   # an analysis sample rate; CVOWC_20250113 omits the processing code on 672
   # rows. both are published as NA today, so relaxing presence changes nothing
   "analysis_processing_code",
   "analysis_sample_rate_khz",
 
-  # more legacy gaps (T3.1): CVOWC_20260105 recorded no soundfiles timezone or
+  # more legacy gaps: CVOWC_20260105 recorded no soundfiles timezone or
   # point of contact; JASCO_20250715's electric gliders carry no fixed
   # deployment coordinates - all published as NA today. mobile deployments may
   # legitimately have no fixed position; pacm_data still asserts that STATIONARY
@@ -43,7 +43,7 @@ PARS_LEGACY_OPTIONAL <- c(
   "deployment_longitude",
 
   # the 2011-2019 towed array surveys never collected these: the metadata
-  # workbook has 22 columns and not one of them is among these (T2.1).
+  # workbook has 22 columns and not one of them is among these.
   # a towed cruise has no site in the moored sense, and the hydrophone model
   # occupies recording_device_type_code, leaving no separate device identifier
   "deployment_water_depth_m",
@@ -53,7 +53,7 @@ PARS_LEGACY_OPTIONAL <- c(
   "recording_device_code",
   "site_code",
 
-  # also towed, found while building the submission (T2.2): the metadata
+  # also towed, found while building the submission: the metadata
   # workbook's "project" column holds the cruise code rather than a project
   # name, and duty cycle is recorded as the word "continuous" rather than a
   # duration and interval in seconds
@@ -63,8 +63,8 @@ PARS_LEGACY_OPTIONAL <- c(
 
   # the GARDLINE MAKARA_1.2 submissions (ORSTED Sunrise) provided deployments and
   # positive detections only - no recording configuration and no analysis
-  # parameters ("fill in missing recordings, analyses"). these relax to NA under
-  # the accepted-gap decision (T3.3); every other source still supplies them
+  # parameters ("fill in missing recordings, analyses"). these relax to NA as
+  # an accepted gap; every other source still supplies them
   "recording_device_type_code",
   "recording_sample_rate_khz",
   "analysis_protocol_reference",
@@ -101,7 +101,7 @@ PARS_REQUIRED <- list(
 )
 
 # column -> reference table. detection_call_type_code accepts a comma-separated
-# list under PARS_LEGACY (AD-10); every element is still validated
+# list under PARS_LEGACY; every element is still validated
 PARS_VOCABULARY <- list(
   metadata = list(
     deployment_organization_code = "organizations",
@@ -129,7 +129,7 @@ pars_list_valued <- function (profile) {
     listed <- c(
       listed,
       "detection_call_type_code",
-      # towed HB1603 towed two hydrophone models and ran two detectors (T2.1)
+      # towed HB1603 towed two hydrophone models and ran two detectors
       "recording_device_type_code",
       "analysis_detector_code"
     )
@@ -177,7 +177,7 @@ PARS_RANGE_RULES <- list(
 # type are real information legacy always recorded, so they hold under both
 # profiles; a validated *count* was frequently not recorded (50,077 of 57,301
 # legacy detections lack it) and is never published, so its conditional rule is
-# relaxed under PARS_LEGACY - a presence relaxation, consistent with AD-10 (T3.1)
+# relaxed under PARS_LEGACY - a presence relaxation
 PARS_CONDITIONAL_RULES <- c(
   detection_sound_source_code_required = paste(
     "!(detection_result_code %in% c('DETECTED', 'POSSIBLY_DETECTED'))",

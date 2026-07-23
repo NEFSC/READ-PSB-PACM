@@ -74,7 +74,7 @@ targets_pars <- list(
     bind_rows(per_file, cross_file, mutate(pars_referential, id = NA_character_))
   }),
 
-  # global referential integrity, over the combined pool (Decision 15): every
+  # global referential integrity over the combined pool: every
   # detection/gps deployment_code must exist in some submission's metadata, and
   # mobile<->gps expectations hold across submissions. this cannot be per-file,
   # because one submission may analyse another's deployments
@@ -147,7 +147,7 @@ targets_pars <- list(
       select(all_of(pacm_names$deployments))
   }),
 
-  # site derivation is shared with the legacy path (AD-5), which is what keeps
+  # site derivation is shared with the legacy path, which is what keeps
   # site ids identical across the migration
   tar_target(pars_sites, derive_sites(pars_deployments)),
   tar_target(pars_sites_map, {
@@ -177,7 +177,7 @@ targets_pars <- list(
 
     x
   }),
-  # no PARS submission has gpsdata yet (I-4), so these are NULL until a mobile
+  # no PARS submission has gpsdata yet, so these are NULL until a mobile
   # platform is submitted; the path is covered by a glider fixture in tests
   tar_target(pars_tracks, {
     x <- pars_tracks_table(pars_gpsdata, pars_deployments)

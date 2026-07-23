@@ -1,5 +1,5 @@
 # PARS submissions ingest natively: raw/ holds the files exactly as submitted,
-# clean.R applies any corrections, and clean/ is what the loader reads (AD-3).
+# clean.R applies any corrections, and clean/ is what the loader reads.
 # a conforming submission needs no clean.R at all.
 
 # platform types that require gpsdata. mirrors the `mobile` flag on
@@ -9,7 +9,7 @@ PARS_MOBILE_PLATFORM_TYPES <- c(
   "DRIFTING_BUOY", "ELECTRIC_GLIDER", "TOWED_ARRAY", "WAVE_GLIDER"
 )
 
-# the manifest `format` column selects the validation profile (AD-10)
+# the manifest `format` column selects the validation profile
 pars_profile_for_format <- function (format) {
   if (format == "PARS_LEGACY") {
     return("PARS_LEGACY")
@@ -41,7 +41,6 @@ clean_pars <- function (submission_id, root_dir = "data-raw/pars") {
 }
 
 # clean multiple submissions
-# clean_pars_all(pars_manifest$submission_id)
 clean_pars_all <- function (ids) {
   walk(ids, clean_pars)
 }
@@ -79,7 +78,7 @@ pars_deployments_table <- function (metadata) {
       dynamic_management_platform,
       source = "PARS",
 
-      # new with PARS; carried but not surfaced in the UI yet (AD-7)
+      # new with PARS; carried but not surfaced in the UI yet
       deployment_url,
       project_funding,
       recording_duration_secs,
@@ -193,7 +192,7 @@ pars_analyses_table <- function (detectiondata, deployments) {
 # reliable delimiter, so each distinct blob becomes one citation rather than
 # trying to split prose into individual references. Codes are internal join keys
 # (the app shows the reference text, not the code) regenerated each build, so an
-# index-based suffix is fine - there is no external consumer to keep stable (AD-8).
+# index-based suffix is fine - there is no external consumer to keep stable.
 pars_citation_codes <- function (analyses) {
   analyses |>
     filter(!is.na(citations)) |>
@@ -205,7 +204,7 @@ pars_citation_codes <- function (analyses) {
 }
 
 # build mobile-platform tracks from PARS gpsdata using the derivation shared
-# with the legacy path (AD-5). gpsdata already arrives in the shape
+# with the legacy path. gpsdata already arrives in the shape
 # derive_tracks() expects, so only the extra submission columns are dropped.
 pars_tracks_table <- function (gpsdata, deployments) {
   if (is.null(gpsdata) || nrow(gpsdata) == 0) {
@@ -253,7 +252,7 @@ pars_metadata_errors <- function (metadata) {
 }
 
 # orphan check: every detection/gps deployment_code must exist in metadata.
-# this is GLOBAL, not per-submission (Decision 15) - a detection may analyse a
+# this is GLOBAL, not per-submission - a detection may analyse a
 # deployment another submission deployed (JASCO analysed DFO's recorders), so
 # `metadata` here is the combined pool, not one submission's file
 pars_referential_errors <- function (metadata, detectiondata, gpsdata) {
@@ -352,7 +351,7 @@ load_pars <- function (id, format, skip, root_dir, codes) {
 
   profile <- pars_profile_for_format(format)
 
-  # where the loader reads from (AD-3):
+  # where the loader reads from:
   #   - clean/ once clean.R has produced it - the corrected files
   #   - raw/ directly when the submission is CONFORMING: no corrections, so no
   #     clean.R and no clean/. a conforming submission needs no clean.R at all.
@@ -394,8 +393,8 @@ load_pars <- function (id, format, skip, root_dir, codes) {
   )
 
   # only within-submission checks live on the submission. referential integrity
-  # (detection/gps orphans, mobile<->gps) is GLOBAL, over the combined pool
-  # (Decision 15) - a submission may analyse a deployment another submission
+  # (detection/gps orphans, mobile<->gps) is GLOBAL, over the combined pool -
+  # a submission may analyse a deployment another submission
   # provided - so it runs in the pipeline (`pars_referential`), not here
   errors <- pars_metadata_errors(metadata$parsed[[1]])
 

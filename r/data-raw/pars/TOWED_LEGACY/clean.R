@@ -2,13 +2,9 @@
 #
 # Converts the survey's original workbooks in raw/ into PARS-format files in
 # clean/. This replaces R/towed/, where the same conversion was spread across
-# ~60 targets, one per source file (AD-11).
+# ~60 targets, one per source file.
 #
 # raw/ is immutable submitted data and is never written to.
-#
-# This file produces metadata.csv and gpsdata.csv (T2.2). detectiondata.csv is
-# added in T2.3, and only then can the submission be un-skipped in
-# data-raw/pars/submissions.csv.
 
 library(tidyverse)
 library(readxl)
@@ -308,9 +304,9 @@ metadata <- metadata_raw |>
     deployment_organization_code = str_sub(project, 1, 5),
     deployment_code = project,
     # the sheet's "project" column holds the cruise code, not a project name,
-    # and inventing one is not this script's job (Decision 13 reasoning)
+    # and inventing one is not this script's job
     project_name = NA_character_,
-    # a towed cruise has no site in the moored sense (Decision 13)
+    # a towed cruise has no site in the moored sense
     site_code = NA_character_,
     monitoring_start_datetime = stamp_utc(monitoring_start_datetime),
     monitoring_end_datetime = stamp_utc(monitoring_end_datetime),
@@ -320,8 +316,8 @@ metadata <- metadata_raw |>
     dynamic_management_platform = NA,
     deployment_url = NA_character_,
     # the hydrophone model is published as the device type so that
-    # instrument_type is unchanged by the conversion (Decision 11); there is no
-    # separate device identifier in the source
+    # instrument_type is unchanged by the conversion; there is no separate
+    # device identifier in the source
     recording_device_code = NA_character_,
     # continuous recording, recorded as the word rather than a duty cycle
     recording_duration_secs = NA_real_,
@@ -410,7 +406,7 @@ analyses <- metadata_raw |>
       call_type == "Narrow band high frequency click" ~ "OD_CLICK_NBHF",
       call_type == "Usual click" ~ "SPWH_USC"
     ),
-    # all three analyses are click detection (Decision 12)
+    # all three analyses are click detection
     analysis_detector_code = "PAMGUARD_CLICK",
     analysis_protocol_reference = protocol_reference
   )

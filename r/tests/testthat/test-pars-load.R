@@ -17,10 +17,10 @@ test_that("an unrecognised format is rejected rather than defaulting", {
 
 # referential integrity ------------------------------------------------------
 #
-# Referential integrity is GLOBAL, not per-submission (Decision 15): a detection
-# may analyse a deployment whose metadata another submission provided - the DFO
-# recorders JASCO analysed. `pars_referential_errors` therefore runs on the
-# combined pool. Only within-submission deployment_code uniqueness stays local.
+# Referential integrity is GLOBAL, not per-submission: a detection may analyse
+# a deployment whose metadata another submission provided - the DFO recorders
+# JASCO analysed. `pars_referential_errors` therefore runs on the combined
+# pool. Only within-submission deployment_code uniqueness stays local.
 
 ref_metadata <- function(codes = c("D1", "D2")) {
   tibble(row = seq_along(codes), deployment_code = codes)
@@ -166,7 +166,7 @@ test_that("a submission with neither clean/ nor raw/ fails naming the submission
 })
 
 test_that("a conforming submission (raw/ only, no clean.R) loads directly from raw/", {
-  # AD-3: a submission needing no corrections has no clean.R and no clean/;
+  # a submission needing no corrections has no clean.R and no clean/;
   # the loader reads raw/ directly rather than demanding a clean/ that a
   # conforming submission would never produce
   root <- withr::local_tempdir()
@@ -312,10 +312,10 @@ test_that("an invalid value in a loaded submission is surfaced as an error", {
 })
 
 test_that("a cross-submission reference is NOT a per-submission error", {
-  # referential integrity is global (Decision 15): a detection may analyse a
-  # deployment another submission provided, so load_pars must not flag a
-  # deployment_code absent from THIS submission's own metadata. the orphan check
-  # runs on the combined pool (pars_referential_errors, tested above)
+  # referential integrity is global: a detection may analyse a deployment
+  # another submission provided, so load_pars must not flag a deployment_code
+  # absent from THIS submission's own metadata. the orphan check runs on the
+  # combined pool (pars_referential_errors, tested above)
   root <- withr::local_tempdir()
   write_submission(
     file.path(root, "SUB1"),

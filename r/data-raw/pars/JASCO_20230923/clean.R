@@ -1,4 +1,4 @@
-# JASCO_20230923 - legacy PACM_20240820 submission, converted to PARS (T3.2, AD-12).
+# JASCO_20230923 - legacy PACM_20240820 submission, converted to PARS.
 #
 # raw/ is the immutable submitted data. The munging below is unchanged from
 # the pre-migration clean.R; only the final write is replaced by the shared

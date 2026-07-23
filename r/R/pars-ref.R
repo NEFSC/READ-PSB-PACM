@@ -3,8 +3,8 @@
 # submission validation must run without a database connection, so the codes
 # come from a vendored snapshot of Makara's reference_codes rather than a live
 # query. legacy values that have no official code yet are carried in a
-# supplement CSV, and the vocabulary used for validation is the union of the two
-# (AD-4). the supplement is reported at build time so it stays visible instead
+# supplement CSV, and the vocabulary used for validation is the union of the
+# two. the supplement is reported at build time so it stays visible instead
 # of becoming shadow vocabulary.
 
 PARS_CODES_SNAPSHOT_PATH <- "data-raw/pars/reference_codes_makara.json"

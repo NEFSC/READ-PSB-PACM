@@ -22,7 +22,7 @@ remap <- function (x, mapping, upper = TRUE) {
 
 # retained: validate_data() and extract_validation_errors() below are shared
 # with the PARS validator (pars-validate.R). the legacy `submission_rules` and
-# the PACM/MAKARA loader they served were removed at the T3.5 gate
+# the PACM/MAKARA loader they served were removed
 
 validate_data <- function (x, rules, codes) {
   out <- confront(
@@ -31,12 +31,7 @@ validate_data <- function (x, rules, codes) {
     ref = list(codes = codes),
     key = "row"
   )
-  
-  # summarise by rule
-  # aggregate(out, by = "rule") |>
-  #   select(npass, nfail, nNA) |>
-  #   print()
-  
+
   out
 }
 
@@ -121,7 +116,6 @@ clean_metadata <- function (x) {
         "OBSERVER" = "OBSERVER",
         "RSA-ORCA" = "RSA_ORCA"
       ))
-      # SUBMISSION_DATE = str_sub(SUBMISSION_DATE, 1, 10)
     )
 }
 
@@ -144,10 +138,6 @@ clean_detectiondata <- function (x) {
         "MEME" = "MMME",
         "UNMY" = "UNBA" # unid mysticete -> unid baleen whale
       )),
-      # CALL_TYPE_CODE = case_when(
-      #   CALL_TYPE_CODE == "ODCLICK" & SPECIES_CODE == "UNDO" ~ "OD_CLICK_IMP", # use generic
-      #   TRUE ~ CALL_TYPE_CODE
-      # ),
       CALL_TYPE_CODE = remap(CALL_TYPE_CODE, c(
         BLARCH = "BLWH_ARCHD",
         BLMIX = "BLWH_MIX",
@@ -327,17 +317,16 @@ derive_tracks <- function (positions, deployments, max_gap_days = 1) {
 }
 
 
-# legacy PACM_20240820 -> PARS conversion (T3.1) -------------------------
+# legacy PACM_20240820 -> PARS conversion -------------------------
 #
 # These take *parsed* legacy frames - the output of clean_*() |> parse_*() (the
 # same chain the removed legacy loader used), with datetimes already resolved to
 # UTC POSIXct and numeric fields numeric. Working from the resolved values (not
-# the raw CSV strings) reuses that tested timezone handling, which is what makes
-# the parity gate achievable: the PARS path then derives dates from exactly the
-# instants the legacy path
+# the raw CSV strings) reuses that tested timezone handling, so the PARS path
+# derives dates from exactly the instants the legacy path
 # published from. Numeric fields stay numeric so coordinate precision survives;
 # only datetimes and codes become strings. Functions are pure - frames in and
-# out, no file access (AD-9); each clean.R supplies its own organization_code
+# out, no file access; each clean.R supplies its own organization_code
 # and project_funding.
 
 # a resolved POSIXct as a UTC ISO-8601 string with an explicit +0000 offset.
@@ -350,9 +339,9 @@ legacy_stamp_utc <- function (x) {
 
 # free-text DETECTION_METHOD -> a `detectors` vocabulary code. two steps: the
 # normalisation pacm.R already applies before publication (ported so the PARS
-# path publishes the same value), then the T0.3 code mapping. iconv repairs the
+# path publishes the same value), then the code mapping below. iconv repairs the
 # invalid UTF-8 in this column (87 rows) before any string work - without it
-# toupper/str_detect raise on those bytes (see field-mapping spec 5e)
+# toupper/str_detect raise on those bytes
 # the normalised detector string maps to a PARS detectors code. two kinds:
 # official codes (RPS/JASCO/etc. carried as supplements until upstream adopts
 # them), and legacy detectors with no official code that we PRESERVE verbatim as
@@ -365,8 +354,8 @@ LEGACY_DETECTOR_CODES <- c(
   "CHORUS_BIOSOUND" = "CHORUS_BIOSOUND",
   "PAMLAB/MANUAL" = "JASCO_PAMLAB",
   "MANUAL" = "MANUAL",
-  # preserved legacy detectors (no official PARS code); kept distinct per the
-  # T3.2 parity decision, mirroring the device_type supplements (Decision 11)
+  # preserved legacy detectors (no official PARS code); kept distinct,
+  # mirroring the device_type supplements
   "AUTOMATIC" = "AUTOMATIC",
   "AUTOMATIC/MANUAL" = "AUTOMATIC/MANUAL",
   "MATLAB" = "MATLAB",
@@ -397,7 +386,7 @@ legacy_detector_code <- function (detection_method) {
 
 # CALL_TYPE_CODE elements that legacy abbreviated; every other value is already
 # a valid code and passes through. lists are split, each element mapped, then
-# rejoined in submitted order (order is meaningful - see field-mapping spec 5c)
+# rejoined in submitted order (order is meaningful)
 LEGACY_CALL_TYPE_CODES <- c(
   "NBHF" = "OD_CLICK_NBHF",
   "HBMIX" = "HUWH_MIX",
@@ -456,7 +445,7 @@ legacy_to_pars_metadata <- function (metadata, organization_code,
 # optional detectiondata columns that some raw files omit entirely (e.g. the
 # localization block, absent when a submission has no localized detections).
 # the combined legacy frame hides this because bind_rows unions columns, so a
-# per-submission converter must add them as NA (T3.2)
+# per-submission converter must add them as NA
 LEGACY_DETECTIONDATA_OPTIONAL <- c(
   "CALL_TYPE_CODE", "N_VALIDATED_DETECTIONS", "DETECTION_METHOD",
   "PROTOCOL_REFERENCE", "DETECTION_SOFTWARE_VERSION",
@@ -533,8 +522,8 @@ legacy_to_pars_gpsdata <- function (gpsdata) {
 # `metadata`/`detectiondata`/`gpsdata` are the raw character frames *after* any
 # submission-specific fixes; this applies the shared clean_*() + parse_*() chain
 # (so timezone and code handling are byte-identical to the legacy loader) then
-# the T3.1 converters. `gpsdata` is written only when supplied. Called from each
-# submission's clean.R with its own organization_code / project_funding (AD-12)
+# the converters above. `gpsdata` is written only when supplied. Called from each
+# submission's clean.R with its own organization_code / project_funding
 convert_legacy_submission <- function (dir, metadata, detectiondata = NULL,
                                        gpsdata = NULL, organization_code,
                                        project_funding = NA_character_) {
@@ -556,7 +545,7 @@ convert_legacy_submission <- function (dir, metadata, detectiondata = NULL,
 
   # a metadata-only submission is legitimate: it deploys recorders whose
   # detections another submission analysed and submitted (DFOCA_20220712, whose
-  # baleen detections JASCO holds). global referential integrity (Decision 15)
+  # baleen detections JASCO holds). global referential integrity
   # lets those detections resolve against this metadata, so no detectiondata.csv
   # is written and the deployments simply carry no analyses of their own
   if (!is.null(detectiondata)) {

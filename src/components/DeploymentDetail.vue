@@ -288,7 +288,7 @@ export default {
       const period = this.monitoringPeriod
       const depth = value => value ? `${(+value).toFixed(0)} m` : 'N/A'
       const dutyCycle = dutyCycleLabel(d.recording_duration_secs, d.recording_interval_secs)
-      // new PARS fields (AD-7): shown only when the value is present, so
+      // new PARS fields: shown only when the value is present, so
       // makara records without them stay uncluttered
       const hasDmp = d.dynamic_management_platform === true || d.dynamic_management_platform === false
       return [
