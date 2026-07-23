@@ -226,6 +226,11 @@ derive_sites <- function (deployments, max_distance_km = 10) {
 # in each hour. positions must already be shaped as
 # deployment_code, datetime, latitude, longitude
 #
+# the returned tracks carry a `positions` list-column - one row per geometry
+# vertex (segment, datetime, latitude, longitude), in vertex order - so each
+# vertex's timestamp survives alongside the geometry until the GeoJSON write
+# drops it (linestrings carry only coordinates)
+#
 # a track is a MULTILINESTRING of one or more segments. segments exist because
 # PARS gpsdata carries no effort flag: a break in effort is visible only as an
 # absence of positions, and without splitting there the track is drawn straight
@@ -264,6 +269,12 @@ derive_tracks <- function (positions, deployments, max_gap_days = 1) {
     filter(n() >= 2) |>
     ungroup() |>
     select(-gap_days)
+
+  # per-vertex attribute table, one row per geometry vertex in vertex order.
+  # nested after the lone-vertex filter above so positions and geometry stay 1:1
+  track_positions_nested <- track_segments |>
+    arrange(deployment_code, segment, datetime) |>
+    nest(positions = c(segment, datetime, latitude, longitude))
 
   # convert to sf linestrings, one per segment, then collect each deployment's
   # segments into a single multilinestring.
@@ -306,11 +317,13 @@ derive_tracks <- function (positions, deployments, max_gap_days = 1) {
         select(organization_code, deployment_id, deployment_code),
       by = c("deployment_code")
     ) |>
+    left_join(track_positions_nested, by = c("deployment_code")) |>
     mutate(track_id = glue("{deployment_id}:TRACK"))
 
   stopifnot(
     all(!duplicated(tracks$track_id)),
-    all(!duplicated(tracks$deployment_id))
+    all(!duplicated(tracks$deployment_id)),
+    all(map_int(tracks$positions, nrow) == map_int(st_geometry(tracks), ~ nrow(st_coordinates(.x))))
   )
 
   tracks

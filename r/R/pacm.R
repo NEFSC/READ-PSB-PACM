@@ -176,7 +176,10 @@ targets_pacm <- list(
       tracks = c(
         "deployment_organization_code",
         "deployment_id",
-        "track_id"
+        "track_id",
+        # nested per-vertex (segment, datetime, latitude, longitude); dropped
+        # only at the GeoJSON write - linestrings carry coordinates alone
+        "positions"
       )
     )
   }),
@@ -374,7 +377,8 @@ targets_pacm <- list(
       )
   }),
   tar_target(pacm_tracks_map, {
-    pacm_data$tracks |> 
+    pacm_data$tracks |>
+      select(-any_of("positions")) |>
       mapview::mapview(
         label = "track_id",
         zcol = "deployment_organization_code",
@@ -585,7 +589,10 @@ targets_pacm <- list(
           
           tracks_file <- file.path(theme_dir, "tracks.json")
           if (!is.null(tracks)) {
-            tracks |> 
+            tracks |>
+              # the per-vertex positions stop here: GeoJSON linestrings carry
+              # only coordinates, and GDAL cannot serialize a list-column
+              select(-any_of("positions")) |>
               write_sf(
                 tracks_file,
                 driver = "GeoJSON", 

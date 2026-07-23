@@ -87,7 +87,7 @@ the app or the GCS tarball. Individual tables build via their file targets
 | `deployments.csv` | one row per deployment | yes |
 | `analyses.csv` | one row per analysis | yes |
 | `detections.csv` | one row per (analysis, day); `latitude`/`longitude` for mobile localizations | yes |
-| `tracks.csv` | one row per track vertex (`seq`-ordered) | yes |
+| `tracks.csv` | one row per track vertex, ordered by `datetime` within each track | yes |
 | `sites.csv` | one row per site | no — join to `deployments.csv` on `site_id` |
 | `citations.csv` | one row per citation code | no — join to `analyses.csv` on `code` |
 

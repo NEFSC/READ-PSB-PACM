@@ -567,23 +567,33 @@ targets_makara <- list(
         end_longitude = last(longitude),
         do_union = FALSE
       ) |> 
-      st_cast("LINESTRING") |> 
+      st_cast("LINESTRING") |>
       ungroup()
 
-    tracks_sf <- makara_db$tracks |> 
-      filter(!organization_code %in% makara_exclude_organizations) |> 
-      select(deployment_organization_code = organization_code, deployment_id, track_id = id, track_code) |> 
+    # per-vertex attribute table, one row per geometry vertex in vertex order
+    # (hourly-thinned, datetime-ordered). segment is constant 1: a makara track
+    # is a single unsegmented linestring. carried until the GeoJSON write
+    track_positions_nested <- track_positions_hourly |>
+      arrange(track_id, datetime) |>
+      mutate(segment = 1L) |>
+      nest(positions = c(segment, datetime, latitude, longitude))
+
+    tracks_sf <- makara_db$tracks |>
+      filter(!organization_code %in% makara_exclude_organizations) |>
+      select(deployment_organization_code = organization_code, deployment_id, track_id = id, track_code) |>
       inner_join(
         track_positions_hourly_sf,
         by = c("track_id")
-      ) |> 
+      ) |>
+      left_join(track_positions_nested, by = c("track_id")) |>
       st_as_sf() |>
-      st_cast("MULTILINESTRING") |> 
+      st_cast("MULTILINESTRING") |>
       relocate(deployment_organization_code, deployment_id, track_id, track_code)
 
     stopifnot(
       all(!duplicated(tracks_sf$track_id)),
-      all(!duplicated(tracks_sf$deployment_id))
+      all(!duplicated(tracks_sf$deployment_id)),
+      all(map_int(tracks_sf$positions, nrow) == map_int(st_geometry(tracks_sf), ~ nrow(st_coordinates(.x))))
     )
     
     tracks_sf |> 

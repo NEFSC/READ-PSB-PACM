@@ -145,6 +145,42 @@ test_that("extra columns on the position table do not disturb the track", {
   expect_false("stray_column" %in% names(tracks))
 })
 
+# per-vertex positions --------------------------------------------------------
+#
+# the nested positions list-column carries each vertex's datetime through the
+# pipeline; it is dropped only when the geometry is written to GeoJSON
+
+test_that("a track nests one position row per geometry vertex", {
+  tracks <- pars_tracks_table(glider_positions(), glider_deployments())
+  positions <- tracks$positions[[1]]
+
+  expect_equal(
+    names(positions), c("segment", "datetime", "latitude", "longitude")
+  )
+  expect_equal(nrow(positions), nrow(sf::st_coordinates(tracks)))
+})
+
+test_that("nested positions carry the thinned vertex datetimes in order", {
+  raw <- glider_positions()
+  tracks <- pars_tracks_table(raw, glider_deployments())
+  positions <- tracks$positions[[1]]
+
+  # the first fix in each of the 11 distinct hours (see the thinning test)
+  kept <- c(1, 3, 4, 5, 6, 7, 9, 10, 11, 13, 14)
+  expect_equal(positions$datetime, raw$datetime[kept])
+  expect_equal(positions$latitude, raw$latitude[kept])
+  expect_equal(positions$longitude, raw$longitude[kept])
+})
+
+test_that("nested positions match the geometry vertex-for-vertex", {
+  tracks <- pars_tracks_table(glider_positions(), glider_deployments())
+  coords <- sf::st_coordinates(tracks)
+  positions <- tracks$positions[[1]]
+
+  expect_equal(positions$longitude, unname(coords[, "X"]))
+  expect_equal(positions$latitude, unname(coords[, "Y"]))
+})
+
 # segmentation on effort gaps ------------------------------------------------
 #
 # PARS gpsdata carries no effort flag, so a break in effort is visible only as
@@ -220,6 +256,19 @@ test_that("a long gap within consecutive days does not split the track", {
   expect_equal(unname(segment_count(tracks)), 1)
 })
 
+test_that("segment labels in positions follow the effort-gap split", {
+  tracks <- pars_tracks_table(
+    with_gap(glider_positions(), gap_days = 3), glider_deployments()
+  )
+  positions <- tracks$positions[[1]]
+
+  # per-segment vertex counts match the geometry's component linestrings
+  expect_equal(
+    as.integer(table(positions$segment)),
+    vapply(sf::st_geometry(tracks)[[1]], nrow, integer(1))
+  )
+})
+
 test_that("a segmented track keeps one row and one id per deployment", {
   tracks <- pars_tracks_table(
     with_gap(glider_positions(), gap_days = 3), glider_deployments()
@@ -246,4 +295,6 @@ test_that("a segment holding a single position is dropped, not fatal", {
 
   expect_equal(nrow(tracks), 1)
   expect_equal(unname(segment_count(tracks)), 1)
+  # the dropped vertex is absent from the nested positions too
+  expect_equal(nrow(tracks$positions[[1]]), 11)
 })

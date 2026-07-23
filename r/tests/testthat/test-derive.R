@@ -208,6 +208,31 @@ test_that("tracks are multilinestrings", {
   expect_true(all(sf::st_geometry_type(tracks) == "MULTILINESTRING"))
 })
 
+test_that("a track nests one position row per geometry vertex", {
+  positions <- track_positions(n = 4, by_secs = 3600)
+
+  tracks <- derive_tracks(positions, track_deployments())
+
+  expect_equal(
+    names(tracks$positions[[1]]),
+    c("segment", "datetime", "latitude", "longitude")
+  )
+  expect_equal(nrow(tracks$positions[[1]]), nrow(sf::st_coordinates(tracks)))
+  expect_equal(tracks$positions[[1]]$datetime, positions$datetime)
+})
+
+test_that("nested positions are the hourly-thinned vertices, in vertex order", {
+  # 4 positions 30 min apart -> the first fix of each hour is rows 1 and 3
+  positions <- track_positions(n = 4, by_secs = 1800)
+
+  tracks <- derive_tracks(positions, track_deployments())
+  coords <- sf::st_coordinates(tracks)
+
+  expect_equal(tracks$positions[[1]]$datetime, positions$datetime[c(1, 3)])
+  expect_equal(tracks$positions[[1]]$longitude, unname(coords[, "X"]))
+  expect_equal(tracks$positions[[1]]$latitude, unname(coords[, "Y"]))
+})
+
 test_that("a deployment appearing twice is rejected rather than silently duplicated", {
   deployments <- bind_rows(track_deployments("D1"), track_deployments("D1"))
 

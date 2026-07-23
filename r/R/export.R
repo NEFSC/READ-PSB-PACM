@@ -69,16 +69,19 @@ export_detections_table <- function (analyses) {
     arrange(deployment_id, analysis_id, species, date)
 }
 
-# tracks: one row per ordered vertex of each track's line geometry. submission_id
-# is not on the published tracks (they are 1:1 with deployments), so it is joined
-# from the deployment. Returns a plain tibble (no sf geometry).
+# tracks: one row per vertex of each track's line geometry, with each vertex's
+# datetime taken from the nested `positions` the pipeline carries alongside the
+# geometry. datetime orders the vertices within a track (positions are thinned
+# to one per hour, so it is unique per track). submission_id is not on the
+# published tracks (they are 1:1 with deployments), so it is joined from the
+# deployment. Returns a plain tibble (no sf geometry).
 export_tracks_table <- function (tracks, deployments) {
   empty <- tibble(
     submission_id = character(),
     deployment_organization_code = character(),
     deployment_id = character(),
     track_id = character(),
-    seq = integer(),
+    datetime = as.POSIXct(character(), tz = "UTC"),
     longitude = double(),
     latitude = double()
   )
@@ -86,29 +89,32 @@ export_tracks_table <- function (tracks, deployments) {
     return(empty)
   }
 
-  attrs <- tracks |>
+  vertices <- tracks |>
     st_drop_geometry() |>
-    mutate(.row = row_number()) |>
     left_join(
       distinct(deployments, deployment_id, submission_id),
       by = "deployment_id"
-    )
-
-  coords <- st_coordinates(tracks) |>
-    as_tibble()
-  # st_coordinates returns X, Y and one or more L* index columns; the last L*
-  # indexes the feature (row of `tracks`) for both LINESTRING and MULTILINESTRING
-  feature_col <- names(coords)[ncol(coords)]
-
-  coords |>
-    transmute(longitude = X, latitude = Y, .row = .data[[feature_col]]) |>
-    left_join(attrs, by = ".row") |>
-    group_by(track_id) |>
-    mutate(seq = row_number()) |>
-    ungroup() |>
+    ) |>
     select(
       submission_id, deployment_organization_code, deployment_id, track_id,
-      seq, longitude, latitude
+      positions
+    ) |>
+    unnest(positions)
+
+  # the nested positions must mirror the geometry vertex-for-vertex; compare
+  # against the line coordinates so any drift fails here rather than pairing
+  # a datetime with the wrong vertex
+  coords <- st_coordinates(tracks)
+  stopifnot(
+    nrow(coords) == nrow(vertices),
+    all(coords[, "X"] == vertices$longitude),
+    all(coords[, "Y"] == vertices$latitude)
+  )
+
+  vertices |>
+    select(
+      submission_id, deployment_organization_code, deployment_id, track_id,
+      datetime, longitude, latitude
     )
 }
 
