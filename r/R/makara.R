@@ -782,7 +782,8 @@ targets_makara <- list(
   }),
 
   tar_target(makara_tracks_pacm, {
-    makara_tracks |> 
+    makara_tracks |>
+      mutate(submission_id = "MAKARA") |>
       select(all_of(pacm_names$tracks))
   }),
 

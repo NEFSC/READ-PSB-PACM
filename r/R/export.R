@@ -73,10 +73,15 @@ export_detections_table <- function (analyses) {
 # tracks: one row per vertex of each track's line geometry, with each vertex's
 # datetime taken from the nested `positions` the pipeline carries alongside the
 # geometry. datetime orders the vertices within a track (positions are thinned
-# to one per hour, so it is unique per track). submission_id is not on the
-# published tracks (they are 1:1 with deployments), so it is joined from the
-# deployment. Returns a plain tibble (no sf geometry).
-export_tracks_table <- function (tracks, deployments) {
+# to one per hour, so it is unique per track).
+#
+# submission_id comes from the TRACK, not from its deployment. Supersession
+# makes the difference real: a recorder deployed by one submission may have its
+# positions resent by a later one, and attributing the track to the deployment's
+# submission would then report the wrong provenance.
+#
+# Returns a plain tibble (no sf geometry).
+export_tracks_table <- function (tracks) {
   empty <- tibble(
     submission_id = character(),
     deployment_organization_code = character(),
@@ -92,10 +97,6 @@ export_tracks_table <- function (tracks, deployments) {
 
   vertices <- tracks |>
     st_drop_geometry() |>
-    left_join(
-      distinct(deployments, deployment_id, submission_id),
-      by = "deployment_id"
-    ) |>
     select(
       submission_id, deployment_organization_code, deployment_id, track_id,
       positions
@@ -169,7 +170,7 @@ targets_export <- list(
   tar_target(
     export_tracks_file,
     write_export_csv(
-      export_tracks_table(pacm_data$tracks, pacm_data$deployments),
+      export_tracks_table(pacm_data$tracks),
       export_dir,
       "tracks.csv"
     ),

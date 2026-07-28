@@ -1,6 +1,9 @@
 source("packages.R")
 
-pars_manifest <- read_csv("data-raw/pars/submissions.csv", show_col_types = FALSE)
+# read at pipeline-definition time because tar_map needs its values before the
+# DAG exists. the `pars_submissions` target below reads the same file again, so
+# that a manifest edit invalidates the supersession filters that depend on it
+pars_manifest <- read_pars_submissions()
 
 # re-load all submissions
 # make_pars(pars_manifest$submission_id)
@@ -32,6 +35,13 @@ pars_targets <- tar_map(
 
 targets_pars <- list(
   tar_target(pars_dir, "data-raw/pars"),
+
+  # file-tracked so that editing a submission_date invalidates the supersession
+  # filters downstream. the pars_sub_* loads are unaffected - they take their
+  # values from the definition-time read above and carry tar_cue(mode = "never")
+  tar_target(pars_submissions_file, PARS_SUBMISSIONS_PATH, format = "file"),
+  tar_target(pars_submissions, read_pars_submissions(pars_submissions_file)),
+
   pars_targets,
   tar_combine(
     pars,
@@ -119,16 +129,34 @@ targets_pars <- list(
       select(-row)
   }),
 
-  tar_target(pars_deployments, {
+  # pars_metadata is one row per (deployment, submission), so resolving on
+  # deployment_id keeps the latest version of each. pars_referential
+  # deliberately keeps checking against the UNresolved pars_metadata: a
+  # superseded deployment's code still exists in the winner, so orphan
+  # detection is unaffected and detections keep resolving across submissions
+  tar_target(pars_deployments_resolved, {
     x <- pars_deployments_table(pars_metadata)
 
-    stopifnot(
-      all(!is.na(x$organization_code)),
-      anyDuplicated(x$deployment_id) == 0
-    )
+    stopifnot(all(!is.na(x$organization_code)))
+
+    pars_supersede(x, "deployment_id", "deployment", pars_submissions)
+  }),
+  tar_target(pars_deployments, {
+    x <- pars_deployments_resolved$current
+
+    # unreachable once supersession resolves; retained because it is what would
+    # catch a resolver bug, and it is the same guard the other entities keep
+    stopifnot(anyDuplicated(x$deployment_id) == 0)
+
+    # pars_analyses_table joins detections to this table by bare
+    # deployment_code, so the code must identify one deployment on its own
+    pars_check_deployment_codes(x)
 
     x
   }),
+  tar_target(
+    pars_deployments_superseded, pars_deployments_resolved$superseded
+  ),
   tar_target(pars_deployments_map, {
     pars_deployments |>
       filter(deployment_type == "STATIONARY") |>
@@ -164,24 +192,41 @@ targets_pars <- list(
       select(all_of(pacm_names$sites))
   }),
 
-  tar_target(pars_analyses, {
+  # pars_analyses_table already nests detections with submission_id among the
+  # analysis keys, so its output is one row per (analysis, submission) and only
+  # needs resolving. the cross-organization guard lives in there too
+  tar_target(pars_analyses_resolved, {
     x <- pars_analyses_table(pars_detectiondata, pars_deployments)
 
-    stopifnot(
-      all(!is.na(x$deployment_id)),
-      anyDuplicated(x$analysis_id) == 0
-    )
+    stopifnot(all(!is.na(x$deployment_id)))
+
+    pars_analyses_supersede(x, pars_submissions)
+  }),
+  tar_target(pars_analyses, {
+    x <- pars_analyses_resolved$current
+
+    # kept AFTER resolution: two analyses of one deployment and species within a
+    # single submission tie by date, so the resolver passes them through and
+    # this is what rejects them - exactly as before supersession existed
+    stopifnot(anyDuplicated(x$analysis_id) == 0)
 
     tabyl(x, species)
     tabyl(x, detection_method)
 
     x
   }),
-  # no PARS submission has gpsdata yet, so these are NULL until a mobile
-  # platform is submitted; the path is covered by a glider fixture in tests
-  tar_target(pars_tracks, {
+  tar_target(pars_analyses_superseded, pars_analyses_resolved$superseded),
+  tar_target(pars_tracks_resolved, {
     x <- pars_tracks_table(pars_gpsdata, pars_deployments)
 
+    pars_tracks_supersede(x, pars_submissions)
+  }),
+  tar_target(pars_tracks, {
+    x <- pars_tracks_resolved$current
+
+    # these hold only AFTER resolution now: pars_tracks_table deliberately emits
+    # one row per (deployment, submission), so a resent track duplicates both
+    # ids until the latest submission wins
     if (!is.null(x)) {
       stopifnot(
         all(x$deployment_id %in% pars_deployments$deployment_id),
@@ -192,6 +237,7 @@ targets_pars <- list(
 
     x
   }),
+  tar_target(pars_tracks_superseded, pars_tracks_resolved$superseded),
   tar_target(pars_tracks_pacm, {
     if (is.null(pars_tracks)) return(NULL)
 
@@ -227,6 +273,15 @@ targets_pars <- list(
       ) |>
       select(all_of(pacm_names$analyses))
   }),
+
+  # the review surface for supersession. read this at intake: a correct
+  # supersession removes published data without erroring, so an accidentally
+  # reused deployment_code looks exactly like an intended update
+  tar_target(pars_superseded, pars_superseded_summary(
+    pars_deployments_superseded,
+    pars_analyses_superseded,
+    pars_tracks_superseded
+  )),
 
   # integrity gate: nothing reaches the published dataset unless the submission
   # validated cleanly and every cross-table reference resolves

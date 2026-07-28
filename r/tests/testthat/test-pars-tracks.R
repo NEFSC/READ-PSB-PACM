@@ -298,3 +298,190 @@ test_that("a segment holding a single position is dropped, not fatal", {
   # the dropped vertex is absent from the nested positions too
   expect_equal(nrow(tracks$positions[[1]]), 11)
 })
+
+# per-submission grain -------------------------------------------------------
+#
+# tracks are built one submission at a time so that a deployment whose positions
+# were resent appears once per submission, rather than having two submissions'
+# positions woven into a single geometry. that is what puts tracks at the same
+# grain as deployments and analyses, and it keeps derive_tracks() unchanged:
+# within one submission a deployment still has exactly one track.
+
+test_that("the track carries the submission that supplied its positions", {
+  tracks <- pars_tracks_table(glider_positions(), glider_deployments())
+
+  expect_equal(tracks$submission_id, "GLIDER_SUB")
+})
+
+test_that("the result is still an sf frame with its geometry", {
+  tracks <- pars_tracks_table(glider_positions(), glider_deployments())
+
+  expect_s3_class(tracks, "sf")
+  # 14 positions thin to 11 hourly ones, as in the thinning test above
+  expect_equal(nrow(sf::st_coordinates(tracks)), 11)
+})
+
+test_that("two submissions for one deployment produce one track each", {
+  positions <- bind_rows(
+    glider_positions(),
+    glider_positions() |> mutate(submission_id = "GLIDER_SUB2")
+  )
+
+  tracks <- pars_tracks_table(positions, glider_deployments())
+
+  expect_equal(nrow(tracks), 2)
+  expect_setequal(tracks$submission_id, c("GLIDER_SUB", "GLIDER_SUB2"))
+  # the pre-resolution state: both claim the same track_id
+  expect_equal(length(unique(tracks$track_id)), 1)
+})
+
+test_that("one submission's positions never join another's geometry", {
+  # a resend of the same deployment two hours later. pooled, hourly thinning and
+  # gap-based segmentation would fold these into one 13-vertex geometry; per
+  # submission they stay two independent tracks of 11 and 2 vertices
+  resend <- glider_positions()[1:2, ] |>
+    mutate(
+      submission_id = "GLIDER_SUB2",
+      datetime = datetime + as.difftime(c(2, 3), units = "hours")
+    )
+  positions <- bind_rows(glider_positions(), resend)
+
+  tracks <- pars_tracks_table(positions, glider_deployments())
+
+  vertices <- function (id) {
+    nrow(sf::st_coordinates(tracks[tracks$submission_id == id, ]))
+  }
+
+  expect_equal(nrow(tracks), 2)
+  expect_equal(vertices("GLIDER_SUB"), 11)
+  expect_equal(vertices("GLIDER_SUB2"), 2)
+})
+
+test_that("two submissions for different deployments stay independent", {
+  positions <- bind_rows(
+    glider_positions(),
+    glider_positions() |>
+      mutate(submission_id = "GLIDER_SUB2", deployment_code = "WHOI_D2")
+  )
+  deployments <- bind_rows(
+    glider_deployments(),
+    tibble(
+      organization_code = "WHOI", deployment_id = "WHOI:WHOI_D2",
+      deployment_code = "WHOI_D2", deployment_type = "MOBILE"
+    )
+  )
+
+  tracks <- pars_tracks_table(positions, deployments)
+
+  expect_equal(nrow(tracks), 2)
+  expect_setequal(
+    as.character(tracks$track_id),
+    c("WHOI:WHOI_MA-RI_202210_WE16:TRACK", "WHOI:WHOI_D2:TRACK")
+  )
+})
+
+# supersession ---------------------------------------------------------------
+
+track_submissions <- function (...) {
+  dots <- c(...)
+  tibble(
+    submission_id = names(dots),
+    submission_date = as.Date(unname(dots))
+  )
+}
+
+test_that("a track resubmitted later keeps the later positions", {
+  resend <- glider_positions() |>
+    mutate(submission_id = "GLIDER_SUB2", latitude = latitude + 1)
+  tracks <- pars_tracks_table(
+    bind_rows(glider_positions(), resend), glider_deployments()
+  )
+
+  out <- pars_tracks_supersede(
+    tracks, track_submissions(GLIDER_SUB = "2025-01-01", GLIDER_SUB2 = "2025-06-01")
+  )
+
+  expect_equal(nrow(out$current), 1)
+  expect_equal(out$current$submission_id, "GLIDER_SUB2")
+  # the surviving geometry is the resend's, one degree north
+  expect_gt(min(sf::st_coordinates(out$current)[, "Y"]), 42)
+})
+
+test_that("the surviving tracks satisfy the target's uniqueness assertions", {
+  resend <- glider_positions() |> mutate(submission_id = "GLIDER_SUB2")
+  tracks <- pars_tracks_table(
+    bind_rows(glider_positions(), resend), glider_deployments()
+  )
+
+  out <- pars_tracks_supersede(
+    tracks, track_submissions(GLIDER_SUB = "2025-01-01", GLIDER_SUB2 = "2025-06-01")
+  )
+
+  expect_false(any(duplicated(out$current$track_id)))
+  expect_false(any(duplicated(out$current$deployment_id)))
+})
+
+test_that("the superseded track is reported with its id and both submissions", {
+  resend <- glider_positions() |> mutate(submission_id = "GLIDER_SUB2")
+  tracks <- pars_tracks_table(
+    bind_rows(glider_positions(), resend), glider_deployments()
+  )
+
+  out <- pars_tracks_supersede(
+    tracks, track_submissions(GLIDER_SUB = "2025-01-01", GLIDER_SUB2 = "2025-06-01")
+  )
+
+  expect_equal(nrow(out$superseded), 1)
+  expect_equal(out$superseded$entity, "track")
+  expect_equal(out$superseded$entity_id, "WHOI:WHOI_MA-RI_202210_WE16:TRACK")
+  expect_equal(out$superseded$superseded_submission_id, "GLIDER_SUB")
+  expect_equal(out$superseded$superseding_submission_id, "GLIDER_SUB2")
+})
+
+test_that("a resend with fewer positions is flagged as reducing coverage", {
+  resend <- glider_positions()[1:4, ] |> mutate(submission_id = "GLIDER_SUB2")
+  tracks <- pars_tracks_table(
+    bind_rows(glider_positions(), resend), glider_deployments()
+  )
+
+  out <- pars_tracks_supersede(
+    tracks, track_submissions(GLIDER_SUB = "2025-01-01", GLIDER_SUB2 = "2025-06-01")
+  )
+
+  expect_true(out$superseded$coverage_reduced)
+  expect_equal(out$superseded$superseded_n_positions, 11)
+  # rows 1-4 span hours 14, 14, 15 and 16, so they thin to 3 vertices
+  expect_equal(out$superseded$superseding_n_positions, 3)
+})
+
+test_that("a resend covering the same span is not flagged", {
+  resend <- glider_positions() |> mutate(submission_id = "GLIDER_SUB2")
+  tracks <- pars_tracks_table(
+    bind_rows(glider_positions(), resend), glider_deployments()
+  )
+
+  out <- pars_tracks_supersede(
+    tracks, track_submissions(GLIDER_SUB = "2025-01-01", GLIDER_SUB2 = "2025-06-01")
+  )
+
+  expect_false(out$superseded$coverage_reduced)
+})
+
+test_that("tracks with no duplicates round-trip unchanged", {
+  tracks <- pars_tracks_table(glider_positions(), glider_deployments())
+
+  out <- pars_tracks_supersede(tracks, track_submissions(GLIDER_SUB = "2025-01-01"))
+
+  expect_equal(nrow(out$current), 1)
+  expect_equal(nrow(out$superseded), 0)
+  expect_s3_class(out$current, "sf")
+})
+
+test_that("NULL gpsdata still yields NULL tracks", {
+  out <- pars_tracks_supersede(
+    pars_tracks_table(NULL, glider_deployments()), track_submissions()
+  )
+
+  expect_null(out$current)
+  expect_equal(nrow(out$superseded), 0)
+})

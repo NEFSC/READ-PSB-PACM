@@ -25,6 +25,53 @@ pars_profile_for_format <- function (format) {
 
 # functions --------------------------------------------------------------
 
+PARS_SUBMISSIONS_PATH <- "data-raw/pars/submissions.csv"
+
+PARS_SUBMISSIONS_REQUIRED <- c(
+  "submission_id", "submission_date", "format", "skip"
+)
+
+# read the submission manifest, which IS the pipeline definition: every row is a
+# submission the pipeline loads.
+#
+# `submission_date` orders supersession - when two submissions provide the same
+# deployment, analysis, or track, the later date wins - so a missing or
+# unparseable date would make "the latest wins" arbitrary. it is the date the
+# submission was RECEIVED, not the date of the data it contains.
+#
+# this is called both at pipeline-definition time (for the tar_map values) and
+# from the `pars_submissions` target, so it must not depend on packages that are
+# attached only during target execution - hence paste0() rather than glue()
+read_pars_submissions <- function (path = PARS_SUBMISSIONS_PATH) {
+  x <- read_csv(path, col_types = cols(submission_date = col_date()))
+
+  missing_columns <- setdiff(PARS_SUBMISSIONS_REQUIRED, names(x))
+  if (length(missing_columns) > 0) {
+    stop(
+      "submissions.csv is missing required column(s): ",
+      paste(missing_columns, collapse = ", ")
+    )
+  }
+
+  duplicated_ids <- unique(x$submission_id[duplicated(x$submission_id)])
+  if (length(duplicated_ids) > 0) {
+    stop(
+      "submissions.csv has duplicate submission_id(s): ",
+      paste(duplicated_ids, collapse = ", ")
+    )
+  }
+
+  undated <- x$submission_id[is.na(x$submission_date)]
+  if (length(undated) > 0) {
+    stop(
+      "submissions.csv has a missing or unparseable submission_date for: ",
+      paste(undated, collapse = ", ")
+    )
+  }
+
+  x
+}
+
 # run the `clean.R` script for a given submission ID
 clean_pars <- function (submission_id, root_dir = "data-raw/pars") {
   sub_dir <- file.path(root_dir, submission_id)
@@ -84,6 +131,40 @@ pars_deployments_table <- function (metadata) {
       recording_duration_secs,
       recording_interval_secs
     )
+}
+
+# detectiondata carries no deployment-organization column (see PARS_REQUIRED in
+# pars-validate.R), so pars_analyses_table can only join a detection row to its
+# deployment by bare deployment_code. if two organizations used the same code
+# that join fans out: one analysis becomes N, each attributed to a different
+# organization's deployment, with the same detection days duplicated across
+# them. nothing downstream notices - the copies carry distinct deployment_ids
+# and therefore distinct analysis_ids, so every uniqueness assertion passes.
+#
+# detection-only submissions resolve entirely through this key, so the ambiguity
+# is stopped here rather than allowed to reach the join. derive_tracks() shares
+# the key but guards itself with !duplicated(deployment_id).
+pars_check_deployment_codes <- function (deployments) {
+  conflicts <- deployments |>
+    summarise(
+      n_organizations = n_distinct(organization_code),
+      organizations = paste(sort(unique(organization_code)), collapse = ", "),
+      .by = deployment_code
+    ) |>
+    filter(n_organizations > 1)
+
+  if (nrow(conflicts) > 0) {
+    stop(
+      "deployment_code is used by more than one organization, so detection ",
+      "rows cannot be attributed unambiguously - ",
+      paste0(
+        conflicts$deployment_code, " (", conflicts$organizations, ")",
+        collapse = "; "
+      )
+    )
+  }
+
+  invisible(deployments)
 }
 
 # PARS only requires detection_sound_source_code when something was detected, so
@@ -203,18 +284,42 @@ pars_citation_codes <- function (analyses) {
     ungroup()
 }
 
-# build mobile-platform tracks from PARS gpsdata using the derivation shared
-# with the legacy path. gpsdata already arrives in the shape
-# derive_tracks() expects, so only the extra submission columns are dropped.
+# build mobile-platform tracks from PARS gpsdata using the shared derivation.
+#
+# derive_tracks() is called once PER SUBMISSION rather than over the pooled
+# positions, so the result is one row per (deployment, submission) - the same
+# grain as deployments and analyses, which is what lets one resolver supersede
+# all three. Pooling instead would weave two submissions' positions into a
+# single geometry, and hourly thinning and gap-based segmentation would silently
+# blend them.
+#
+# this also keeps derive_tracks() itself unchanged: within one submission a
+# deployment still has exactly one track, so its `!duplicated(deployment_id)`
+# assertion holds as written - it simply becomes a per-submission invariant.
 pars_tracks_table <- function (gpsdata, deployments) {
   if (is.null(gpsdata) || nrow(gpsdata) == 0) {
     return(NULL)
   }
 
-  positions <- gpsdata |>
-    select(deployment_code, datetime, latitude, longitude)
+  tracks <- map(unique(gpsdata$submission_id), function (id) {
+    gpsdata |>
+      filter(submission_id == id) |>
+      select(deployment_code, datetime, latitude, longitude) |>
+      derive_tracks(deployments) |>
+      mutate(submission_id = id)
+  })
 
-  derive_tracks(positions, deployments)
+  # bind_rows drops the sf class from a list of sf frames, so restore it from
+  # the geometry column the binding preserved.
+  #
+  # ordering by deployment_code is what derive_tracks' own group_by produced
+  # before this was split per submission, and the GeoJSON writer emits features
+  # in frame order - so keeping it means the published track files stay
+  # byte-identical and future diffs stay meaningful. submission_id only breaks
+  # ties, which exist just until supersession resolves them.
+  bind_rows(tracks) |>
+    st_as_sf() |>
+    arrange(deployment_code, submission_id)
 }
 
 error_frame <- function (row, name, expression, actual) {

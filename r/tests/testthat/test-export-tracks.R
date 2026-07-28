@@ -1,8 +1,8 @@
 # export_tracks_table expands each track's nested per-vertex positions
-# (datetime, latitude, longitude) into ordered vertices - cross-checked against
-# the MULTILINESTRING geometry - and joins submission_id from the deployment.
-# Two tracks - one on a Makara deployment, one on a PARS (glider) deployment -
-# exercise both attribution paths.
+# (datetime, latitude, longitude) into ordered vertices, cross-checked against
+# the MULTILINESTRING geometry. submission_id comes from the TRACK, because a
+# track may be resent by a later submission than the one that deployed the
+# recorder. Two tracks - one Makara, one PARS (glider) - exercise both paths.
 export_tracks_fixture <- function () {
   g1 <- sf::st_multilinestring(list(
     matrix(c(-70, 41, -70.5, 41.5, -71, 42), ncol = 2, byrow = TRUE)
@@ -29,6 +29,7 @@ export_tracks_fixture <- function () {
     longitude = c(-68, -68.2)
   )
   sf::st_as_sf(tibble(
+    submission_id = c("MAKARA", "USYRA_20260713"),
     deployment_organization_code = c("NEFSC", "SYRACUSE"),
     deployment_id = c("NEFSC:MOB", "SYRACUSE:GLIDER"),
     track_id = c("NEFSC:MOB:TRACK", "SYRACUSE:GLIDER:TRACK"),
@@ -45,9 +46,7 @@ export_tracks_deployments_fixture <- function () {
 }
 
 test_that("the schema is submission_id, org, deployment_id, track_id, datetime, lon, lat", {
-  x <- export_tracks_table(
-    export_tracks_fixture(), export_tracks_deployments_fixture()
-  )
+  x <- export_tracks_table(export_tracks_fixture())
 
   expect_equal(
     names(x),
@@ -58,9 +57,7 @@ test_that("the schema is submission_id, org, deployment_id, track_id, datetime, 
 })
 
 test_that("each vertex carries its datetime from the nested positions", {
-  x <- export_tracks_table(
-    export_tracks_fixture(), export_tracks_deployments_fixture()
-  )
+  x <- export_tracks_table(export_tracks_fixture())
   t1 <- x[x$track_id == "NEFSC:MOB:TRACK", ]
 
   expect_equal(t1$datetime, export_tracks_fixture()$positions[[1]]$datetime)
@@ -71,15 +68,13 @@ test_that("positions that have drifted from the geometry are rejected", {
   tracks$positions[[1]] <- tracks$positions[[1]][-2, ]
 
   expect_error(
-    export_tracks_table(tracks, export_tracks_deployments_fixture()),
+    export_tracks_table(tracks),
     "nrow"
   )
 })
 
 test_that("each track's vertex count matches its geometry", {
-  x <- export_tracks_table(
-    export_tracks_fixture(), export_tracks_deployments_fixture()
-  )
+  x <- export_tracks_table(export_tracks_fixture())
 
   expect_equal(dplyr::n_distinct(x$track_id), 2)
   expect_equal(sum(x$track_id == "NEFSC:MOB:TRACK"), 3)
@@ -87,9 +82,7 @@ test_that("each track's vertex count matches its geometry", {
 })
 
 test_that("vertices stay in vertex order, ascending by datetime", {
-  x <- export_tracks_table(
-    export_tracks_fixture(), export_tracks_deployments_fixture()
-  )
+  x <- export_tracks_table(export_tracks_fixture())
   t1 <- x[x$track_id == "NEFSC:MOB:TRACK", ]
 
   expect_false(is.unsorted(t1$datetime, strictly = TRUE))
@@ -98,10 +91,8 @@ test_that("vertices stay in vertex order, ascending by datetime", {
   expect_equal(t1$latitude[[1]], 41)
 })
 
-test_that("submission_id is joined from the deployment (MAKARA vs PARS)", {
-  x <- export_tracks_table(
-    export_tracks_fixture(), export_tracks_deployments_fixture()
-  )
+test_that("submission_id distinguishes MAKARA from PARS tracks", {
+  x <- export_tracks_table(export_tracks_fixture())
 
   expect_true(all(x$submission_id[x$track_id == "NEFSC:MOB:TRACK"] == "MAKARA"))
   expect_true(all(
@@ -110,7 +101,7 @@ test_that("submission_id is joined from the deployment (MAKARA vs PARS)", {
 })
 
 test_that("NULL or empty tracks yield a 0-row frame with the right columns", {
-  empty <- export_tracks_table(NULL, export_tracks_deployments_fixture())
+  empty <- export_tracks_table(NULL)
 
   expect_equal(nrow(empty), 0)
   expect_equal(
@@ -118,4 +109,20 @@ test_that("NULL or empty tracks yield a 0-row frame with the right columns", {
     c("submission_id", "deployment_organization_code", "deployment_id",
       "track_id", "datetime", "longitude", "latitude")
   )
+})
+
+test_that("a resent track is attributed to the submission that sent it", {
+  # supersession makes this routine: the recorder was deployed by one submission
+  # and its positions resent by a later one. joining submission_id from the
+  # deployment would report the wrong provenance
+  tracks <- export_tracks_fixture()
+  tracks$submission_id[tracks$track_id == "SYRACUSE:GLIDER:TRACK"] <-
+    "USYRA_20270301"
+
+  x <- export_tracks_table(tracks)
+
+  expect_true(all(
+    x$submission_id[x$track_id == "SYRACUSE:GLIDER:TRACK"] == "USYRA_20270301"
+  ))
+  expect_true(all(x$submission_id[x$track_id == "NEFSC:MOB:TRACK"] == "MAKARA"))
 })

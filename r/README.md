@@ -91,16 +91,22 @@ GCS tarball. Individual tables build via their file targets
 | `deployments.csv` | one row per deployment | yes |
 | `analyses.csv` | one row per analysis | yes |
 | `detections.csv` | one row per (analysis, day); `latitude`/`longitude` for mobile localizations | yes |
-| `tracks.csv` | one row per track vertex, ordered by `datetime` within each track | yes |
+| `tracks.csv` | one row per track vertex, ordered by `datetime` within each track | yes — the submission that supplied the **positions**, which supersession can make different from the one that deployed the recorder |
 | `sites.csv` | one row per site | no — join to `deployments.csv` on `site_id` |
 | `citations.csv` | one row per citation code | no — join to `analyses.csv` on `code` |
 
 **`submission_id`** identifies the source of each row: the PARS submission id, or
 the literal `MAKARA` for data from the Makara database. It is threaded through
-`pacm_names` for `deployments` and `analyses` (so it is a first-class column of
-`pacm_data`), inherited by `detections` on unnest, and joined from the deployment
-for `tracks`. `sites` and `citations` are derived/reference tables (1:1 with
-deployments/analyses), so they carry no `submission_id` — recover it by joining.
+`pacm_names` for `deployments`, `analyses` and `tracks` (so it is a first-class
+column of `pacm_data`) and inherited by `detections` on unnest. `sites` and
+`citations` are derived/reference tables (1:1 with deployments/analyses), so they
+carry no `submission_id` — recover it by joining.
+
+A track's `submission_id` is the submission that supplied its **positions**, not
+its deployment's. Supersession makes the two genuinely different: a recorder
+deployed by one submission may have its track resent by a later one. The column
+is dropped again when the theme files are written — it is provenance for the CSV
+export, and the app renders neither it nor `positions`.
 
 Because `submission_id` reaches the app files only through frames the theme
 writers build with explicit column lists (which omit it), the published
@@ -125,7 +131,7 @@ takes four steps and **no code**:
 # 1. put the files in place (shell)
 #    data-raw/pars/<submission_id>/raw/{metadata,detectiondata[,gpsdata]}.csv
 # 2. add one row to data-raw/pars/submissions.csv:
-#    <submission_id>,PARS_1.0,,
+#    <submission_id>,<YYYY-MM-DD>,PARS_1.0,,
 # 3. load it and confirm it validates clean (in R, from r/)
 make_pars("<submission_id>")
 tar_read(pars_errors)            # must be 0 rows
@@ -243,15 +249,20 @@ Append one line to
 [`data-raw/pars/submissions.csv`](data-raw/pars/submissions.csv):
 
 ```
-submission_id,format,skip,comment
+submission_id,submission_date,format,skip,comment
 ```
 
 | Column | Value |
 |---|---|
 | `submission_id` | the directory name from step 1 |
+| `submission_date` | `YYYY-MM-DD`, the date the submission was **received** — not the date of the data it contains. This orders supersession (see *Updating a submission*), so it is required and must parse |
 | `format` | `PARS_1.0` for a native PARS submission; `PARS_LEGACY` only for a submission converted from the old formats (never for new data) |
 | `skip` | **blank** to load it; any non-blank value skips it (`load_pars` warns and returns `NULL`) — use to park an incomplete submission without deleting it |
 | `comment` | free text (optional) |
+
+`read_pars_submissions()` rejects a duplicate `submission_id` or a missing or
+unparseable `submission_date` at read time, because a manifest that cannot be
+ordered makes "the latest submission wins" arbitrary.
 
 `format` selects the validation profile via `pars_profile_for_format()`:
 `PARS_1.0` is **strict**; `PARS_LEGACY` relaxes only a short, explicit list of
@@ -344,6 +355,72 @@ platform-type labels travel with the data automatically. A new *theme* still
 needs a menu entry in `../src/lib/constants.js` — the
 `../scripts/check-codes.mjs` assertion checks both.
 
+## Updating a submission
+
+A submission may contain updated data that replaces what an earlier submission
+provided. For a given **deployment**, **analysis**, or **track**, the version
+from the submission with the latest `submission_date` wins; the earlier one is
+dropped from the published dataset and reported in `pars_superseded`.
+
+The submitter re-sends only the entities that changed — **not** the whole batch —
+but must send each of those entities **complete**. There is no partial update:
+the unit of replacement is the whole entity.
+
+| Entity | Identified by | Replacing it means re-sending |
+|---|---|---|
+| Deployment | `{organization}:{deployment_code}` | the full `metadata.csv` row |
+| Analysis | `{deployment_organization}:{deployment_code}:{species}` | every `detectiondata.csv` row for that deployment and analysis, **including non-detect effort days** |
+| Track | `{deployment_id}:TRACK` | every `gpsdata.csv` position for that deployment |
+
+Two properties make this work, and neither is obvious:
+
+- **A replacement may carry only the table it changes.** Referential integrity is
+  global, so a submission with `detectiondata.csv` alone resolves against
+  metadata an earlier submission provided, and replacing a deployment's metadata
+  does not orphan the earlier submission's detections for it. `DFOCA_20220818`
+  and `DFOCA_20220825` are detections-only today; `DFOCA_20220712` is
+  metadata-only.
+- **The superseded submission stays in the manifest.** It keeps publishing every
+  entity the newer submission did *not* replace. That is what makes a partial
+  update possible. Withdrawing a whole submission is still a different operation
+  — `skip`, or a move to `_rejected/`.
+
+### Two traps
+
+**A partial analysis re-send silently shortens the published window.** PARS only
+requires a species on rows that detected something, so a `NOT_DETECTED` row is
+expanded across every code in `analysis_sound_source_codes`
+(`pars_expand_species`). Effort days are therefore shared between the species of
+one analysis. A re-send covering fewer days does not error — `pacm_data`
+gap-fills the difference as non-detect — so send every effort day, not just the
+rows that changed.
+
+**A track is replaced whole.** Sending a supplementary month of positions drops
+the earlier months rather than appending to them.
+
+Both cases set `coverage_reduced` in `pars_superseded` and raise a build warning.
+
+### Reviewing what was superseded
+
+```r
+tar_read(pars_superseded)      # one row per dropped deployment/analysis/track
+```
+
+**Read this on every intake.** A correct supersession removes published data
+without erroring, so a `deployment_code` reused by accident looks exactly like an
+intended update. This table is the only place the difference is visible.
+
+Two things do *not* resolve silently, and stop the build instead:
+
+- **Two submissions with the same `submission_date`** claiming one entity. There
+  is no winner. Fix the manifest.
+- **Two organizations analysing one deployment for one species.** `analysis_id`
+  carries the *deployment's* organization, not the analyst's, so these collide —
+  and a second analyst is a conflict, not a newer version of the same analysis.
+
+A duplicate within a *single* submission is not supersession and is still
+rejected by the uniqueness assertions on `pars_deployments` / `pars_analyses`.
+
 ### The `tar_cue(mode = "never")` pattern
 
 The per-submission load targets (`pars_sub_<id>`, built by `tar_map` over the
@@ -378,6 +455,7 @@ why editing `pars-load.R` does not silently re-parse every historical submission
 | Reload one submission | `make_pars("<id>")` |
 | Reload all submissions | `make_pars()` |
 | Inspect validation errors | `tar_read(pars_errors)` |
+| Inspect what a submission superseded | `tar_read(pars_superseded)` |
 | Inspect supplement codes in use | `tar_read(pars_codes_report)` |
 | Inspect reference-code drift (needs DB) | `tar_read(pars_codes_drift)` |
 | Regenerate the vendored snapshot (needs DB) | `refresh_reference_code_snapshot()` |

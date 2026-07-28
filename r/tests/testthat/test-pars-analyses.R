@@ -355,3 +355,198 @@ test_that("a three-species analysis with mixed results yields the exact table", 
   expect_equal(daily(a, "HUWH")$presence, c("n", "n"))
   expect_equal(daily(a, "FIWH")$presence, c("n", "n"))
 })
+
+# supersession ---------------------------------------------------------------
+
+analysis_submissions <- function (...) {
+  dots <- c(...)
+  tibble(
+    submission_id = names(dots),
+    submission_date = as.Date(unname(dots))
+  )
+}
+
+test_that("an analysis resubmitted later keeps the later version", {
+  rows <- bind_rows(
+    detection_row(submission_id = "SUB1", detection_n_validated = 1L),
+    detection_row(submission_id = "SUB2", detection_n_validated = 9L)
+  )
+
+  out <- pars_analyses_supersede(
+    pars_analyses_table(rows, analysis_deployments()),
+    analysis_submissions(SUB1 = "2025-01-01", SUB2 = "2025-06-01")
+  )
+
+  expect_equal(nrow(out$current), 1)
+  expect_equal(out$current$submission_id, "SUB2")
+  expect_equal(anyDuplicated(out$current$analysis_id), 0)
+})
+
+test_that("the superseded analysis is reported with its id and both submissions", {
+  rows <- bind_rows(
+    detection_row(submission_id = "SUB1"),
+    detection_row(submission_id = "SUB2")
+  )
+
+  out <- pars_analyses_supersede(
+    pars_analyses_table(rows, analysis_deployments()),
+    analysis_submissions(SUB1 = "2025-01-01", SUB2 = "2025-06-01")
+  )
+
+  expect_equal(nrow(out$superseded), 1)
+  expect_equal(out$superseded$entity, "analysis")
+  expect_equal(out$superseded$entity_id, "SYRACUSE:D1:RIWH")
+  expect_equal(out$superseded$superseded_submission_id, "SUB1")
+  expect_equal(out$superseded$superseding_submission_id, "SUB2")
+})
+
+test_that("only the species actually resubmitted is superseded", {
+  # the sibling species keeps its earlier analysis, because species is part of
+  # the analysis id
+  rows <- bind_rows(
+    detection_row(
+      submission_id = "SUB1", analysis_sound_source_codes = "RIWH,HUWH",
+      detection_sound_source_code = NA_character_,
+      detection_result_code = "NOT_DETECTED"
+    ),
+    detection_row(submission_id = "SUB2")
+  )
+
+  out <- pars_analyses_supersede(
+    pars_analyses_table(rows, analysis_deployments()),
+    analysis_submissions(SUB1 = "2025-01-01", SUB2 = "2025-06-01")
+  )
+
+  expect_equal(nrow(out$current), 2)
+  expect_equal(
+    out$current$submission_id[out$current$species == "HUWH"], "SUB1"
+  )
+  expect_equal(
+    out$current$submission_id[out$current$species == "RIWH"], "SUB2"
+  )
+})
+
+test_that("two organizations analysing one deployment and species is an error", {
+  # analysis_id carries the DEPLOYMENT's organization, so these collide. that is
+  # a conflict, not a newer version, and must not resolve by date
+  rows <- bind_rows(
+    detection_row(submission_id = "SUB1", analysis_organization_code = "SYRACUSE"),
+    detection_row(submission_id = "SUB2", analysis_organization_code = "NEFSC")
+  )
+
+  expect_error(
+    pars_analyses_supersede(
+      pars_analyses_table(rows, analysis_deployments()),
+      analysis_submissions(SUB1 = "2025-01-01", SUB2 = "2025-06-01")
+    ),
+    "SYRACUSE:D1:RIWH"
+  )
+})
+
+test_that("the cross-organization error names both organizations", {
+  rows <- bind_rows(
+    detection_row(submission_id = "SUB1", analysis_organization_code = "SYRACUSE"),
+    detection_row(submission_id = "SUB2", analysis_organization_code = "NEFSC")
+  )
+
+  err <- expect_error(
+    pars_analyses_supersede(
+      pars_analyses_table(rows, analysis_deployments()),
+      analysis_submissions(SUB1 = "2025-01-01", SUB2 = "2025-06-01")
+    )
+  )
+
+  expect_match(conditionMessage(err), "SYRACUSE")
+  expect_match(conditionMessage(err), "NEFSC")
+})
+
+test_that("two analyses of one deployment and species in ONE submission pass through", {
+  # the CVOWC case: a date cannot break this tie, so the resolver leaves it for
+  # the caller's uniqueness assertion to reject
+  rows <- bind_rows(
+    detection_row(submission_id = "SUB1", analysis_detector_code = "LFDCS"),
+    detection_row(submission_id = "SUB1", analysis_detector_code = "MANUAL")
+  )
+
+  out <- pars_analyses_supersede(
+    pars_analyses_table(rows, analysis_deployments()),
+    analysis_submissions(SUB1 = "2025-01-01")
+  )
+
+  expect_equal(nrow(out$current), 2)
+  expect_equal(nrow(out$superseded), 0)
+  expect_true(anyDuplicated(out$current$analysis_id) > 0)
+})
+
+test_that("a resubmission covering fewer days is flagged as reducing coverage", {
+  rows <- bind_rows(
+    detection_row(submission_id = "SUB1"),
+    detection_row(
+      submission_id = "SUB1",
+      detection_start_datetime = parse_pars_datetime("2025-04-26T00:00:00Z"),
+      detection_end_datetime = parse_pars_datetime("2025-04-27T00:00:00Z")
+    ),
+    detection_row(submission_id = "SUB2")
+  )
+
+  out <- pars_analyses_supersede(
+    pars_analyses_table(rows, analysis_deployments()),
+    analysis_submissions(SUB1 = "2025-01-01", SUB2 = "2025-06-01")
+  )
+
+  expect_true(out$superseded$coverage_reduced)
+  expect_equal(out$superseded$superseded_n_detections, 2)
+  expect_equal(out$superseded$superseding_n_detections, 1)
+})
+
+test_that("a resubmission covering the same days is not flagged", {
+  rows <- bind_rows(
+    detection_row(submission_id = "SUB1"),
+    detection_row(submission_id = "SUB2")
+  )
+
+  out <- pars_analyses_supersede(
+    pars_analyses_table(rows, analysis_deployments()),
+    analysis_submissions(SUB1 = "2025-01-01", SUB2 = "2025-06-01")
+  )
+
+  expect_false(out$superseded$coverage_reduced)
+})
+
+test_that("analyses with no duplicates round-trip unchanged", {
+  a <- pars_analyses_table(
+    detection_row(submission_id = "SUB1"), analysis_deployments()
+  )
+
+  out <- pars_analyses_supersede(a, analysis_submissions(SUB1 = "2025-01-01"))
+
+  expect_equal(nrow(out$current), nrow(a))
+  expect_equal(nrow(out$superseded), 0)
+})
+
+# ambiguous deployment_code ---------------------------------------------------
+
+test_that("two organizations sharing a deployment_code fan out the analysis join", {
+  # characterises the hazard the guard exists to prevent: one analysis becomes
+  # two, each attributed to a different organization's deployment, with the
+  # detection days duplicated across them - and every uniqueness assertion still
+  # passes, because the copies get distinct deployment_ids
+  deployments <- bind_rows(
+    tibble(
+      organization_code = "SYRACUSE", deployment_id = "SYRACUSE:D1",
+      deployment_code = "D1", recorder_depth_meters = "37",
+      instrument_type = "SOUNDTRAP", sampling_rate_hz = "48,000"
+    ),
+    tibble(
+      organization_code = "NEFSC", deployment_id = "NEFSC:D1",
+      deployment_code = "D1", recorder_depth_meters = "20",
+      instrument_type = "AMAR", sampling_rate_hz = "96,000"
+    )
+  )
+
+  a <- pars_analyses_table(detection_row(deployment_code = "D1"), deployments)
+
+  expect_equal(nrow(a), 2)
+  expect_setequal(as.character(a$deployment_id), c("SYRACUSE:D1", "NEFSC:D1"))
+  expect_equal(anyDuplicated(a$analysis_id), 0)
+})

@@ -141,6 +141,122 @@ test_that("deployments feed derive_sites and produce site ids", {
   expect_setequal(as.character(sites$site_id), c("SYRACUSE:LI01", "SYRACUSE:LI02"))
 })
 
+# supersession ---------------------------------------------------------------
+#
+# these exercise the composition the pars_deployments target performs:
+# pars_deployments_table() then pars_supersede() on deployment_id
+
+deployment_submissions <- function (...) {
+  dots <- c(...)
+  tibble(
+    submission_id = names(dots),
+    submission_date = as.Date(unname(dots))
+  )
+}
+
+test_that("a deployment redefined by a later submission keeps the later values", {
+  metadata <- bind_rows(
+    pars_metadata_row(submission_id = "SUB1", deployment_water_depth_m = 40),
+    pars_metadata_row(submission_id = "SUB2", deployment_water_depth_m = 55)
+  )
+
+  out <- pars_supersede(
+    pars_deployments_table(metadata), "deployment_id", "deployment",
+    deployment_submissions(SUB1 = "2025-01-01", SUB2 = "2025-06-01")
+  )
+
+  expect_equal(nrow(out$current), 1)
+  expect_equal(out$current$water_depth_meters, 55)
+  expect_equal(out$current$submission_id, "SUB2")
+})
+
+test_that("the superseded deployment is reported with both submissions", {
+  metadata <- bind_rows(
+    pars_metadata_row(submission_id = "SUB1"),
+    pars_metadata_row(submission_id = "SUB2")
+  )
+
+  out <- pars_supersede(
+    pars_deployments_table(metadata), "deployment_id", "deployment",
+    deployment_submissions(SUB1 = "2025-01-01", SUB2 = "2025-06-01")
+  )
+
+  expect_equal(nrow(out$superseded), 1)
+  expect_equal(out$superseded$entity, "deployment")
+  expect_equal(out$superseded$entity_id, "SYRACUSE:SYRACUSE_LI01")
+  expect_equal(out$superseded$superseded_submission_id, "SUB1")
+  expect_equal(out$superseded$superseding_submission_id, "SUB2")
+})
+
+test_that("the surviving deployments satisfy the uniqueness assertion", {
+  metadata <- bind_rows(
+    pars_metadata_row(submission_id = "SUB1", deployment_code = "D1"),
+    pars_metadata_row(submission_id = "SUB2", deployment_code = "D1"),
+    pars_metadata_row(submission_id = "SUB2", deployment_code = "D2")
+  )
+
+  out <- pars_supersede(
+    pars_deployments_table(metadata), "deployment_id", "deployment",
+    deployment_submissions(SUB1 = "2025-01-01", SUB2 = "2025-06-01")
+  )
+
+  expect_equal(nrow(out$current), 2)
+  expect_equal(anyDuplicated(out$current$deployment_id), 0)
+})
+
+test_that("deployments only in the earlier submission still survive", {
+  metadata <- bind_rows(
+    pars_metadata_row(submission_id = "SUB1", deployment_code = "D1"),
+    pars_metadata_row(submission_id = "SUB1", deployment_code = "D2"),
+    pars_metadata_row(submission_id = "SUB2", deployment_code = "D1")
+  )
+
+  out <- pars_supersede(
+    pars_deployments_table(metadata), "deployment_id", "deployment",
+    deployment_submissions(SUB1 = "2025-01-01", SUB2 = "2025-06-01")
+  )
+
+  d2 <- out$current[out$current$deployment_code == "D2", ]
+  expect_equal(nrow(d2), 1)
+  expect_equal(d2$submission_id, "SUB1")
+})
+
+test_that("two submissions claiming one deployment on the same date is an error", {
+  metadata <- bind_rows(
+    pars_metadata_row(submission_id = "SUB1"),
+    pars_metadata_row(submission_id = "SUB2")
+  )
+
+  expect_error(
+    pars_supersede(
+      pars_deployments_table(metadata), "deployment_id", "deployment",
+      deployment_submissions(SUB1 = "2025-01-01", SUB2 = "2025-01-01")
+    ),
+    "SYRACUSE:SYRACUSE_LI01"
+  )
+})
+
+test_that("a superseded deployment cannot influence site derivation", {
+  # the earlier submission put the deployment >10km away; if it survived,
+  # derive_sites would split the site into two versions
+  metadata <- bind_rows(
+    pars_metadata_row(
+      submission_id = "SUB1", deployment_latitude = 41.6,
+      deployment_longitude = -72.585167
+    ),
+    pars_metadata_row(submission_id = "SUB2")
+  )
+
+  out <- pars_supersede(
+    pars_deployments_table(metadata), "deployment_id", "deployment",
+    deployment_submissions(SUB1 = "2025-01-01", SUB2 = "2025-06-01")
+  )
+  sites <- derive_sites(out$current)
+
+  expect_equal(nrow(sites), 1)
+  expect_equal(as.character(sites$site_id), "SYRACUSE:LI01")
+})
+
 test_that("every published deployment column is present", {
   x <- pars_deployments_table(pars_metadata_row())
   published <- c(
@@ -152,4 +268,74 @@ test_that("every published deployment column is present", {
   )
 
   expect_true(all(published %in% names(x)))
+})
+
+# deployment_code ambiguity ---------------------------------------------------
+#
+# detectiondata carries no deployment-organization column (PARS_REQUIRED in
+# pars-validate.R), so pars_analyses_table can only join a detection row to its
+# deployment by bare deployment_code. two organizations using the same code make
+# that join ambiguous, and nothing downstream notices - hence the guard.
+
+test_that("a deployment_code shared by two organizations is rejected", {
+  deployments <- pars_deployments_table(bind_rows(
+    pars_metadata_row(
+      deployment_organization_code = "SYRACUSE", deployment_code = "D1"
+    ),
+    pars_metadata_row(
+      deployment_organization_code = "NEFSC", deployment_code = "D1"
+    )
+  ))
+
+  expect_error(pars_check_deployment_codes(deployments), "D1")
+})
+
+test_that("the shared-code error names both organizations", {
+  deployments <- pars_deployments_table(bind_rows(
+    pars_metadata_row(
+      deployment_organization_code = "SYRACUSE", deployment_code = "D1"
+    ),
+    pars_metadata_row(
+      deployment_organization_code = "NEFSC", deployment_code = "D1"
+    )
+  ))
+
+  err <- expect_error(pars_check_deployment_codes(deployments))
+
+  expect_match(conditionMessage(err), "SYRACUSE")
+  expect_match(conditionMessage(err), "NEFSC")
+})
+
+test_that("the same code in one organization is not a cross-org conflict", {
+  # that is a duplicate deployment_id, which anyDuplicated already rejects; this
+  # guard is only about the code being ambiguous ACROSS organizations
+  deployments <- pars_deployments_table(bind_rows(
+    pars_metadata_row(deployment_code = "D1"),
+    pars_metadata_row(deployment_code = "D1")
+  ))
+
+  expect_no_error(pars_check_deployment_codes(deployments))
+})
+
+test_that("distinct codes across organizations are fine", {
+  deployments <- pars_deployments_table(bind_rows(
+    pars_metadata_row(
+      deployment_organization_code = "SYRACUSE", deployment_code = "D1"
+    ),
+    pars_metadata_row(
+      deployment_organization_code = "NEFSC", deployment_code = "D2"
+    )
+  ))
+
+  expect_no_error(pars_check_deployment_codes(deployments))
+})
+
+test_that("the real PARS deployments have no ambiguous codes", {
+  skip_if_not(file.exists(file.path("..", "..", "_targets", "objects", "pars_deployments")))
+
+  expect_no_error(
+    pars_check_deployment_codes(targets::tar_read(
+      pars_deployments, store = file.path("..", "..", "_targets")
+    ))
+  )
 })

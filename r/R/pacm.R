@@ -174,6 +174,11 @@ targets_pacm <- list(
         "locations"
       ),
       tracks = c(
+        # the submission that supplied the POSITIONS, which supersession can
+        # make different from the one that deployed the recorder. dropped at the
+        # GeoJSON write with `positions` - it is provenance for the CSV export,
+        # not something the app renders
+        "submission_id",
         "deployment_organization_code",
         "deployment_id",
         "track_id",
@@ -330,6 +335,8 @@ targets_pacm <- list(
 
       # tracks
       all(tracks$deployment_id %in% deployments$deployment_id),
+      # every published track carries the submission that supplied its positions
+      all(!is.na(tracks$submission_id)),
 
       # analyses
       all(analyses$deployment_id %in% deployments$deployment_id),
@@ -591,8 +598,10 @@ targets_pacm <- list(
           if (!is.null(tracks)) {
             tracks |>
               # the per-vertex positions stop here: GeoJSON linestrings carry
-              # only coordinates, and GDAL cannot serialize a list-column
-              select(-any_of("positions")) |>
+              # only coordinates, and GDAL cannot serialize a list-column.
+              # submission_id stops here too - it is provenance for the CSV
+              # export, and the app renders neither
+              select(-any_of(c("positions", "submission_id"))) |>
               write_sf(
                 tracks_file,
                 driver = "GeoJSON", 
