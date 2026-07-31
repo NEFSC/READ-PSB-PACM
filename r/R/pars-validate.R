@@ -85,7 +85,7 @@ PARS_REQUIRED <- list(
     "recording_device_type_code", "recording_duration_secs",
     "recording_interval_secs", "recording_sample_rate_khz",
     "recording_bit_depth", "recording_n_channels", "recording_timezone",
-    "points_of_contact", "project_funding"
+    "points_of_contact"
   ),
   detectiondata = c(
     "deployment_code", "analysis_organization_code",

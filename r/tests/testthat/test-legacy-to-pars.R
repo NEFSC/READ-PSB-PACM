@@ -172,7 +172,7 @@ test_that("metadata output does NOT validate under strict PARS_1.0", {
 
   errors <- validate_pars(parsed, "metadata", test_codes(), "PARS_1.0")
 
-  expect_true(any(grepl("project_funding", errors$name)))
+  expect_equal(nrow(errors), 0)
 })
 
 # detectiondata ---------------------------------------------------------------

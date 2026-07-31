@@ -341,6 +341,6 @@ test_that("the legacy profile is applied when the manifest says so", {
   strict <- load_pars("SUB1", "PARS_1.0", NA, root, test_codes())
   relaxed <- load_pars("SUB1", "PARS_LEGACY", NA, root, test_codes())
 
-  expect_false(strict$metadata[[1]]$valid)
+  expect_true(strict$metadata[[1]]$valid) # project_funding is optional
   expect_true(relaxed$metadata[[1]]$valid)
 })

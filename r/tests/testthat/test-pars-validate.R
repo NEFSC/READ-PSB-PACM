@@ -148,12 +148,20 @@ test_that("PARS_LEGACY still requires a species and call type on a DETECTED row"
 
 # profiles --------------------------------------------------------------------
 
-test_that("PARS_1.0 requires project_funding", {
+test_that("PARS_1.0 allows project_funding", {
+  x <- valid_metadata(project_funding = "Funding source")
+
+  errors <- validate_pars(x, "metadata", test_codes(), profile = "PARS_1.0")
+
+  expect_equal(nrow(errors), 0)
+})
+
+test_that("PARS_1.0 does not require project_funding", {
   x <- valid_metadata(project_funding = NA_character_)
 
   errors <- validate_pars(x, "metadata", test_codes(), profile = "PARS_1.0")
 
-  expect_true(any(grepl("project_funding", errors$name)))
+  expect_equal(nrow(errors), 0)
 })
 
 test_that("PARS_LEGACY allows project_funding to be absent", {
