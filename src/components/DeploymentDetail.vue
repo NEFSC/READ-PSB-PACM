@@ -73,7 +73,6 @@
             </div>
           </div>
         </v-col>
-
         <v-col
           v-if="!activeTheme.deploymentsOnly || activeCitations.length > 0"
           cols="12"
@@ -102,6 +101,19 @@
                   {{ citation.reference }}
                 </li>
               </ul>
+            </section>
+          </template>
+
+          <template v-if="hasProjectFunding">
+            <v-divider class="my-5"></v-divider>
+            <section class="deployment-detail-project-funding">
+              <div class="heading font-weight-bold mb-1">Funding Sources</div>
+              <div v-if="isSiteView" class="deployment-detail-project-funding__value text-body-2 text-grey-darken-3">
+                {{ siteMetadata.projectFunding }}
+              </div>
+              <div v-else class="deployment-detail-project-funding__value text-body-2 text-grey-darken-3">
+                {{ selectedDeployment.project_funding || 'N/A' }}
+              </div>
             </section>
           </template>
         </v-col>
@@ -189,6 +201,10 @@ export default {
       const siteId = this.selectedDeployments[0].site_id
       return isStationary && siteId && this.selectedDeployments.every(d => d.site_id === siteId)
     },
+    hasProjectFunding () {
+      return true
+      // return this.siteMetadata?.projectFunding && this.siteMetadata.projectFunding !== 'N/A'
+    },
     siteMetadata () {
       if (!this.isSiteView) return null
       const deps = this.selectedDeployments
@@ -271,7 +287,6 @@ export default {
         showAnalysis && { label: 'Detection Method', value: m.detectionMethod },
         showAnalysis && m.detectorVersion !== 'N/A' && { label: 'Detector Version', value: m.detectorVersion },
         showAnalysis && { label: 'Analysis QAQC', value: m.qcData },
-        m.projectFunding !== 'N/A' && { label: 'Project Funding', value: m.projectFunding },
         { label: 'Recorder Depth', value: m.recorderDepth },
         { label: 'Water Depth', value: m.waterDepth },
         { label: 'Monitoring Period', value: `${m.monitoringStart} to ${m.monitoringEnd}` },
@@ -309,7 +324,6 @@ export default {
         { label: 'Deployed', value: `${period.start || 'N/A'} to ${period.end || 'N/A'}` },
         { label: 'Duration', value: isFinite(period.duration) ? period.duration.toLocaleString() + ' days' : 'N/A' },
         hasDmp && { label: 'Dynamic Mgmt Platform', value: d.dynamic_management_platform ? 'Yes' : 'No' },
-        d.project_funding && { label: 'Project Funding', value: d.project_funding },
         d.deployment_url && { label: 'Data URL', value: d.deployment_url },
         { label: 'Point of Contact', value: d.data_poc },
         showAnalysis && { label: 'Protocol', value: d.protocol_reference }

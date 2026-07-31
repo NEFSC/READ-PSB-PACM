@@ -317,6 +317,7 @@ targets_makara <- list(
             makara_project_id,
             project_id,
             project_code,
+            project_funding,
             project_contacts
           ),
         by = c("makara_project_id")
@@ -336,6 +337,7 @@ targets_makara <- list(
 
         # project
         project = project_code,
+        project_funding,
         data_poc = project_contacts,
 
         # deployment
@@ -348,6 +350,7 @@ targets_makara <- list(
         deployment_type = if_else(platform_type_mobile, "MOBILE", "STATIONARY"),
         water_depth_meters = deployment_water_depth_m,
         dynamic_management_platform = dynamic_management_platform,
+        deployment_url,
 
         # recording
         recorder_depth_meters = map_chr(recordings, ~ format_range(.x$recorder_depth_meters)),
@@ -773,8 +776,6 @@ targets_makara <- list(
         submission_id = "MAKARA",
         source = "MAKARA",
         # PARS-only fields; NA here so every source shares one shape
-        deployment_url = NA_character_,
-        project_funding = NA_character_,
         recording_duration_secs = NA_real_,
         recording_interval_secs = NA_real_
       ) |>

@@ -105,28 +105,20 @@
       <h2 class="text-h6 mb-2">Latest Updates</h2>
 
       <div class="text-subtitle-1 font-weight-bold text-medium-emphasis">
+        v1.3.6 | July 31, 2026
+      </div>
+      <div class="mt-2">Features:</div>
+      <ul class="ml-4">
+        <li>Project funding section now always shown in the popup window when user clicks on a deployment or track.</li>
+      </ul>
+
+      <div class="text-subtitle-1 font-weight-bold text-medium-emphasis">
         v1.3.4 | June 11, 2026
       </div>
       <div class="mt-2">Features:</div>
       <ul class="ml-4">
         <li>Updated auto-generated citation list formats and added analysis-specific preferred citations.</li>
         <li>Metadata now distinguishes between monitoring organizations (who collected the recordings) and analysis organizations (who processed the data). The advanced filters window was updated accordingly.</li>
-      </ul>
-
-      <div class="text-subtitle-1 font-weight-bold text-medium-emphasis">
-        v1.3.3 | June 3, 2026
-      </div>
-      <div class="mt-2">Features:</div>
-      <ul class="ml-4">
-        <li>Added dynamic attribution list of data contributors to map and Generate Citations button.</li>
-        <li>Updated about text in this welcome dialog and clarified submission, data request, and citation processes.</li>
-      </ul>
-      <div class="mt-2">
-        Bug Fixes:
-      </div>
-      <ul class="ml-4">
-        <li>Data processing pipeline had previously excluded some datasets from Makara erroneously, those datasets have been added back.</li>
-        <li>Fixed minor bug fix in legend to correctly display the total recorded day tallies when switching species.</li>
       </ul>
 
       <v-btn
@@ -142,6 +134,22 @@
       </v-btn>
 
       <div v-show="showAllUpdates" id="about-update-history">
+        <div class="text-subtitle-1 font-weight-bold text-medium-emphasis">
+          v1.3.3 | June 3, 2026
+        </div>
+        <div class="mt-2">Features:</div>
+        <ul class="ml-4">
+          <li>Added dynamic attribution list of data contributors to map and Generate Citations button.</li>
+          <li>Updated about text in this welcome dialog and clarified submission, data request, and citation processes.</li>
+        </ul>
+        <div class="mt-2">
+          Bug Fixes:
+        </div>
+        <ul class="ml-4">
+          <li>Data processing pipeline had previously excluded some datasets from Makara erroneously, those datasets have been added back.</li>
+          <li>Fixed minor bug fix in legend to correctly display the total recorded day tallies when switching species.</li>
+        </ul>
+
         <div class="text-subtitle-1 font-weight-bold text-medium-emphasis mt-4">
           v1.3.2 | May 14, 2026
         </div>
