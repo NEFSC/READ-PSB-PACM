@@ -104,27 +104,35 @@
 
       <h2 class="text-h6 mb-2">Latest Updates</h2>
 
-      <div class="text-subtitle-1 font-weight-bold text-medium-emphasis">
+      <div class="text-subtitle-1 font-weight-bold text-medium-emphasis mt-4">
+        v1.3.8 | August 24, 2026
+      </div>
+      <div>Bug Fixes:</div>
+      <ul class="ml-4">
+        <li>Generated citations correctly reflect currently filtered data.</li>
+      </ul>
+
+      <div class="text-subtitle-1 font-weight-bold text-medium-emphasis mt-4">
         v1.3.6 | July 31, 2026
       </div>
-      <div class="mt-2">Features:</div>
+      <div>Features:</div>
       <ul class="ml-4">
         <li>Project funding section now always shown in the popup window when user clicks on a deployment or track.</li>
       </ul>
 
-      <div class="text-subtitle-1 font-weight-bold text-medium-emphasis">
+      <div class="text-subtitle-1 font-weight-bold text-medium-emphasis mt-4">
         v1.3.4 | June 11, 2026
       </div>
-      <div class="mt-2">Features:</div>
+      <div>Features:</div>
       <ul class="ml-4">
         <li>Updated auto-generated citation list formats and added analysis-specific preferred citations.</li>
         <li>Metadata now distinguishes between monitoring organizations (who collected the recordings) and analysis organizations (who processed the data). The advanced filters window was updated accordingly.</li>
       </ul>
 
       <v-btn
-        color="primary"
-        variant="text"
-        class="px-0 mb-4"
+        class="mt-4"
+        color="default"
+        variant="tonal"
         :aria-expanded="showAllUpdates.toString()"
         aria-controls="about-update-history"
         @click="showAllUpdates = !showAllUpdates"
@@ -137,7 +145,7 @@
         <div class="text-subtitle-1 font-weight-bold text-medium-emphasis">
           v1.3.3 | June 3, 2026
         </div>
-        <div class="mt-2">Features:</div>
+        <div>Features:</div>
         <ul class="ml-4">
           <li>Added dynamic attribution list of data contributors to map and Generate Citations button.</li>
           <li>Updated about text in this welcome dialog and clarified submission, data request, and citation processes.</li>

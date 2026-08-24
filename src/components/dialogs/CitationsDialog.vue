@@ -55,6 +55,11 @@ export default {
     }
   },
   emits: ['update:modelValue'],
+  data () {
+    return {
+      visibleDeploymentIds: []
+    }
+  },
   computed: {
     ...mapGetters(['organizations', 'citations', 'deployments']),
     open: {
@@ -108,6 +113,14 @@ export default {
       ].sort((a, b) => a.text.localeCompare(b.text))
     }
   },
+  watch: {
+    modelValue: {
+      immediate: true,
+      handler (isOpen) {
+        if (isOpen) this.refreshVisibleDeployments()
+      }
+    }
+  },
   methods: {
     normalizeOrganizationCode (code) {
       return code || 'UNKNOWN'
@@ -116,11 +129,15 @@ export default {
       const normalizedSource = String(source || 'PARS').toUpperCase()
       return ['MAKARA', 'PARS'].includes(normalizedSource) ? normalizedSource : 'PARS'
     },
+    refreshVisibleDeployments () {
+      this.visibleDeploymentIds = Array.from(new Set(
+        xf.allFiltered().map(detection => detection.id)
+      ))
+    },
     getVisibleCitationCodes () {
       const codes = new Set()
-      const deploymentIds = new Set(xf.allFiltered().map(detection => detection.id))
 
-      deploymentIds.forEach(id => {
+      this.visibleDeploymentIds.forEach(id => {
         parseCitationCodes(this.deploymentById.get(id)?.citations)
           .forEach(code => codes.add(code))
       })
@@ -129,9 +146,8 @@ export default {
     },
     getVisibleOrganizationSources () {
       const organizationSources = new Map()
-      const deploymentIds = new Set(xf.allFiltered().map(detection => detection.id))
 
-      deploymentIds.forEach(id => {
+      this.visibleDeploymentIds.forEach(id => {
         const deployment = this.deploymentById.get(id)
         if (!deployment) return
 
