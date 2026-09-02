@@ -351,8 +351,24 @@ test_that("PARS_LEGACY rejects an invalid code inside a recording_device_type_co
   expect_true(any(grepl("recording_device_type_code", errors$name)))
 })
 
-test_that("PARS_1.0 rejects a comma-separated analysis_detector_code", {
+test_that("PARS_1.0 accepts comma-separated analysis detector codes", {
   x <- valid_detectiondata(analysis_detector_code = "LFDCS,MANUAL")
+
+  errors <- validate_pars(x, "detectiondata", test_codes(), profile = "PARS_1.0")
+
+  expect_equal(nrow(errors), 0)
+})
+
+test_that("PARS_1.0 trims spaces in comma-separated analysis detector codes", {
+  x <- valid_detectiondata(analysis_detector_code = "LFDCS, MANUAL")
+
+  errors <- validate_pars(x, "detectiondata", test_codes(), profile = "PARS_1.0")
+
+  expect_equal(nrow(errors), 0)
+})
+
+test_that("PARS_1.0 rejects an invalid analysis detector code inside a list", {
+  x <- valid_detectiondata(analysis_detector_code = "LFDCS, NOT_A_DETECTOR")
 
   errors <- validate_pars(x, "detectiondata", test_codes(), profile = "PARS_1.0")
 

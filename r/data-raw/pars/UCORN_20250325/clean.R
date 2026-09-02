@@ -63,11 +63,11 @@ detections_2019 <- raw_detections_2019 |>
     CALL_TYPE_CODE = case_when(
       CALL_TYPE_CODE == "Upcall" ~ "RW_UPCALL",
       TRUE ~ CALL_TYPE_CODE
-    ),
-    DETECTION_METHOD = case_when(
-      DETECTION_METHOD == "Gillespie edge detector" ~ "GILLESPIE_EDGE",
-      TRUE ~ DETECTION_METHOD
     )
+    # DETECTION_METHOD = case_when(
+    #   DETECTION_METHOD == "Gillespie edge detector" ~ "GILLESPIE_EDGE",
+    #   TRUE ~ DETECTION_METHOD
+    # )
   ) |> 
   select(-NARW_PRESENCE)
 

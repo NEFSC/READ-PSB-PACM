@@ -522,7 +522,7 @@ targets_makara <- list(
         recorder_depth_meters = map_chr(recordings, ~ format_range(.x$recorder_depth_meters)),
         instrument_type = map_chr(recordings, ~ format_list(unlist(.x$device_type_codes))),
         sampling_rate_hz = map_chr(recordings, ~ format_range(.x$sampling_rate_hz)),
-        detection_method = map_chr(detector_codes, ~ paste(unique(.x), collapse = ",")),
+        detection_method = map_chr(detector_codes, ~ paste(sort(unique(.x)), collapse = ",")),
 
         analyzed = TRUE,
         call_type = NA_character_,

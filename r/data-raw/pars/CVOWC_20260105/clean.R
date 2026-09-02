@@ -17,10 +17,10 @@ analyses <- read_csv(file.path(dir, "raw", "CVOW-C_20260105_analyses.csv"), col_
   mutate(
     analysis_organization_code = organization_code,
     deployment_organization_code = organization_code,
-    detector_codes = case_when(
-      detector_codes == "CHORUS BioSound" ~ "CHORUS_BIOSOUND",
-      TRUE ~ detector_codes
-    ),
+    # detector_codes = case_when(
+    #   detector_codes == "CHORUS BioSound" ~ "CHORUS_BIOSOUND",
+    #   TRUE ~ detector_codes
+    # ),
     analysis_sound_source_codes = "BLWH,FIWH,HUWH,MIWH,SEWH,RIWH,BODO,UNDO,UNWH"
   ) |> 
   select(-organization_code)

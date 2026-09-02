@@ -158,11 +158,11 @@ analyses <- raw_detections |>
     }),
     DETECTION_LONGITUDE = map2_dbl(UNIQUE_ID, ANALYSIS_PERIOD_START_DATETIME, function (x, y) {
       gps_interp[[x]]$lon(as.numeric(y))
-    }),
-    DETECTION_METHOD = case_when(
-      DETECTION_METHOD == "PAMGuard Whistle and Moan Detector; PAMGuard Right Whale Edge Detector Decimator 2kHz" ~ "PAMGuard Whistle and Moan Detector; PAMGuard Right Whale Edge Detector",
-      TRUE ~ DETECTION_METHOD
-    )
+    })
+    # DETECTION_METHOD = case_when(
+    #   DETECTION_METHOD == "PAMGuard Whistle and Moan Detector; PAMGuard Right Whale Edge Detector Decimator 2kHz" ~ "PAMGuard Whistle and Moan Detector; PAMGuard Right Whale Edge Detector",
+    #   TRUE ~ DETECTION_METHOD
+    # )
   ) |> 
   filter(SPECIES_CODE != "D; D") |> 
   select(-`$file`) |> 

@@ -13,6 +13,9 @@ source("R/functions.R")
 
 dir <- "data-raw/pars/DFOCA_20230322"
 
+# replaced by DFOCA_20260824
+EXCLUDE_DEPLOYMENTS <- c("DAC_2017_11_LF", "DAC_2017_11_HF", "GLD_2017_11_LF", "GLD_2017_11_HF")
+
 metadata <- read_csv(file.path(dir, "raw/DFOCA_METADATA_20230323.csv"), col_types = cols(.default = col_character()))
 detections <- list.files(file.path(dir, "raw"), pattern = "DETECTIONDATA", full.names = TRUE) |>
   map_dfr(read_csv, col_types = cols(.default = col_character()))
@@ -24,7 +27,8 @@ metadata <- metadata |>
       UNIQUE_ID == "SFD_2020_09" ~ "SFD_2020_09_HF",
       TRUE ~ UNIQUE_ID
     )
-  )
+  ) |> 
+  filter(!UNIQUE_ID %in% EXCLUDE_DEPLOYMENTS)
 
 detections <- detections |>
   mutate(
@@ -32,7 +36,8 @@ detections <- detections |>
       UNIQUE_ID == "WSS_2019_10" ~ "WSS_2019_HF",
       TRUE ~ UNIQUE_ID
     )
-  )
+  ) |> 
+  filter(!UNIQUE_ID %in% EXCLUDE_DEPLOYMENTS)
 
 
 convert_legacy_submission(

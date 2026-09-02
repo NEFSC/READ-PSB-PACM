@@ -103,6 +103,7 @@ parse_gpsdata <- function (x) {
 
 
 # cleaners ---------------------------------------------------------------
+# fixes common value mapping
 
 clean_metadata <- function (x) {
   x |>
@@ -113,7 +114,6 @@ clean_metadata <- function (x) {
       )),
       INSTRUMENT_TYPE = remap(INSTRUMENT_TYPE, c(
         "COLMAR GP1190 HYDROPHONE" = "COLMAR",
-        "OBSERVER" = "OBSERVER",
         "RSA-ORCA" = "RSA_ORCA"
       ))
     )
@@ -361,40 +361,45 @@ legacy_stamp_utc <- function (x) {
 # supplement codes rather than collapsing to OTHER - so the published
 # detection_method keeps the granularity the legacy dataset had (the detectors
 # below survive pacm_data's normalisation untouched, matching the baseline)
-LEGACY_DETECTOR_CODES <- c(
-  "RPS" = "RPS",
-  "JASCO" = "JASCO_CONTOUR_CLICK",
-  "CHORUS_BIOSOUND" = "CHORUS_BIOSOUND",
-  "PAMLAB/MANUAL" = "JASCO_PAMLAB",
-  "MANUAL" = "MANUAL",
-  # preserved legacy detectors (no official PARS code); kept distinct,
-  # mirroring the device_type supplements
-  "AUTOMATIC" = "AUTOMATIC",
-  "AUTOMATIC/MANUAL" = "AUTOMATIC/MANUAL",
-  "MATLAB" = "MATLAB",
-  "MATCHED_FILTER" = "MATCHED_FILTER",
-  "GILLESPIE_EDGE" = "GILLESPIE_EDGE",
-  "TRITON/DFO TWD" = "TRITON/DFO TWD"
-)
+# LEGACY_DETECTOR_CODES <- c(
+#   "RPS" = "RPS",
+#   "JASCO" = "JASCO_CONTOUR_CLICK",
+#   "CHORUS_BIOSOUND" = "CHORUS_BIOSOUND",
+#   "PAMLAB/MANUAL" = "JASCO_PAMLAB",
+#   "MANUAL" = "MANUAL",
+#   # preserved legacy detectors (no official PARS code); kept distinct,
+#   # mirroring the device_type supplements
+#   "AUTOMATIC" = "AUTOMATIC",
+#   "AUTOMATIC/MANUAL" = "AUTOMATIC/MANUAL",
+#   "MATLAB" = "MATLAB",
+#   "MATCHED_FILTER" = "MATCHED_FILTER",
+#   "GILLESPIE_EDGE" = "GILLESPIE_EDGE",
+#   "TRITON/DFO TWD" = "TRITON/DFO TWD"
+# )
 
 legacy_detector_code <- function (detection_method) {
   dm <- iconv(detection_method, "UTF-8", "UTF-8", sub = "")
   dm <- toupper(dm)
   published <- case_when(
-    str_detect(dm, "JASCO") ~ "JASCO",
-    dm == "AUTOMATIC AND MANUAL" ~ "AUTOMATIC/MANUAL",
+    str_starts(dm, "MANUAL REVIEW OF PITCH TRACKS/CONTOURS USING JASCO") ~ "JASCO_CONTOUR_CLICK",
+    str_detect(dm, "RPS CONTOUR AND CLICK DETECTORS") ~ "RPS_CONTOUR_CLICK",
+    dm == "CHORUS BIOSOUND" ~ "CHORUS_BIOSOUND",
+    dm == "TRITON/DFO TWD" ~ "TRITON_DFO_TWD",
+    dm == "JASCO AA" ~ "JASCO_AA",
+    dm == "PAMLAB, MANUAL" ~ "JASCO_PAMLAB,MANUAL",
+    dm == "AUTOMATIC AND MANUAL" ~ "AUTOMATIC,MANUAL",
+    str_detect(dm, "MATLAB-BASED AUTOMATED DETECTOR ALGORITHM") ~ "AUTOMATIC",
+    str_detect(dm, "MATCHED-FILTER DATA-TEMPLATE DETECTION ALGORITHM") ~ "CORNELL_MATCHED_FILTER",
     dm == "CUSTOM AUTOMATIC DETECTOR" ~ "AUTOMATIC",
-    str_starts(dm, "PAMGUARD WHISTLE") ~ "PAMGUARD",
-    dm == "PAMLAB, MANUAL" ~ "PAMLAB/MANUAL",
-    dm == "PAMGUARD,MANUAL" ~ "PAMGUARD/MANUAL",
-    str_detect(dm, "RPS CONTOUR AND CLICK DETECTORS") ~ "RPS",
-    str_detect(dm, "MATLAB-BASED AUTOMATED DETECTOR ALGORITHM") ~ "MATLAB",
-    str_detect(dm, "MATCHED-FILTER DATA-TEMPLATE DETECTION ALGORITHM") ~ "MATCHED_FILTER",
+    dm == "GILLESPIE EDGE DETECTOR" ~ "GILLESPIE_EDGE",    
+  #   dm == "AUTOMATIC AND MANUAL" ~ "AUTOMATIC/MANUAL",
+  #   str_starts(dm, "PAMGUARD WHISTLE") ~ "PAMGUARD",
+  #   dm == "PAMLAB, MANUAL" ~ "PAMLAB/MANUAL",
+  #   dm == "PAMGUARD,MANUAL" ~ "PAMGUARD/MANUAL",
     TRUE ~ dm
   )
-  # anything still not recognised -> OTHER (supplement), to be hand-remapped in a
-  # submission's clean.R later
-  unname(coalesce(LEGACY_DETECTOR_CODES[published], "OTHER"))
+  # unname(coalesce(LEGACY_DETECTOR_CODES[published], "OTHER"))
+  published
 }
 
 # CALL_TYPE_CODE elements that legacy abbreviated; every other value is already

@@ -93,15 +93,15 @@ PARS_REQUIRED <- list(
     "analysis_end_datetime", "analysis_sample_rate_khz",
     "analysis_min_frequency_khz", "analysis_max_frequency_khz",
     "analysis_processing_code", "analysis_protocol_reference",
-    "analysis_detector_code", "analysis_detector_version",
+    "analysis_detector_code",
     "detection_start_datetime", "detection_end_datetime",
     "detection_effort_secs", "detection_result_code"
   ),
   gpsdata = c("deployment_code", "datetime", "latitude", "longitude")
 )
 
-# column -> reference table. detection_call_type_code accepts a comma-separated
-# list under PARS_LEGACY; every element is still validated
+# column -> reference table. list-valued fields are split by
+# pars_vocabulary_errors(); every element is still validated
 PARS_VOCABULARY <- list(
   metadata = list(
     deployment_organization_code = "organizations",
@@ -124,14 +124,13 @@ PARS_VOCABULARY <- list(
 # a cardinality relaxation, not a presence one: every element is still checked
 # against its vocabulary, so this widens the shape without weakening the check
 pars_list_valued <- function (profile) {
-  listed <- "analysis_sound_source_codes"
+  listed <- c("analysis_sound_source_codes", "analysis_detector_code")
   if (profile == "PARS_LEGACY") {
     listed <- c(
       listed,
       "detection_call_type_code",
-      # towed HB1603 towed two hydrophone models and ran two detectors
-      "recording_device_type_code",
-      "analysis_detector_code"
+      # towed HB1603 towed two hydrophone models
+      "recording_device_type_code"
     )
   }
   listed
