@@ -269,11 +269,21 @@ export default {
     },
     setBounds (bounds) {
       this.map.invalidateSize()
+      let xmin = bounds[0][0]
+      let xmax = bounds[1][0]
+      const ymin = bounds[0][1]
+      const ymax = bounds[1][1]
+      if (xmin > 0) {
+        xmin = xmin - 360
+      }
+      if (xmax > 180) {
+        xmax = xmax - 360
+      }
       const latLngBounds = new L.latLngBounds([
-        [bounds[0][1], bounds[0][0]],
-        [bounds[1][1], bounds[1][0]]
+        [ymin, xmin],
+        [ymax, xmax]
       ])
-      this.map.fitBounds(latLngBounds, { maxZoom: 10 })
+      this.map.fitBounds(latLngBounds)
       this.zoomMinControl.options.minBounds = this.map.getBounds()
     },
     onZoom () {
@@ -286,7 +296,9 @@ export default {
       const codes = new Set()
       xf.allFiltered().forEach(detection => {
         codes.add(this.normalizeOrganizationCode(detection.deployment_organization_code))
-        codes.add(this.normalizeOrganizationCode(detection.analysis_organization_code))
+        if (detection.analysis_organization_code) {
+          codes.add(this.normalizeOrganizationCode(detection.analysis_organization_code))
+        }
       })
       return Array.from(codes).sort()
     },
