@@ -230,7 +230,8 @@ targets_pacm <- list(
     sites <- bind_rows(pacm_data_raw$sites) |> 
       filter(site_id %in% deployments$site_id)
     tracks <- bind_rows(pacm_data_raw$tracks) |> 
-      filter(deployment_id %in% deployments$deployment_id)
+      filter(deployment_id %in% deployments$deployment_id) |> 
+      st_shift_longitude()
     citations <- bind_rows(pacm_data_raw$citations)
     
     analyses_data <- bind_rows(pacm_data_raw$analyses) |> 

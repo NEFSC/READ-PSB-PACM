@@ -74,13 +74,6 @@ export_detections_table <- function (analyses) {
 # datetime taken from the nested `positions` the pipeline carries alongside the
 # geometry. datetime orders the vertices within a track (positions are thinned
 # to one per hour, so it is unique per track).
-#
-# submission_id comes from the TRACK, not from its deployment. Supersession
-# makes the difference real: a recorder deployed by one submission may have its
-# positions resent by a later one, and attributing the track to the deployment's
-# submission would then report the wrong provenance.
-#
-# Returns a plain tibble (no sf geometry).
 export_tracks_table <- function (tracks) {
   empty <- tibble(
     submission_id = character(),
@@ -103,14 +96,15 @@ export_tracks_table <- function (tracks) {
     ) |>
     unnest(positions)
 
-  # the nested positions must mirror the geometry vertex-for-vertex; compare
-  # against the line coordinates so any drift fails here rather than pairing
-  # a datetime with the wrong vertex
   coords <- st_coordinates(tracks)
+  X <- coords[, "X"]
+  Y <- coords[, "Y"]
+  longitude <- if_else(vertices$longitude < 0, vertices$longitude + 360, vertices$longitude)
+  latitude <- vertices$latitude
   stopifnot(
     nrow(coords) == nrow(vertices),
-    all(coords[, "X"] == vertices$longitude),
-    all(coords[, "Y"] == vertices$latitude)
+    all(abs(X - longitude) < 1e-8),
+    all(abs(Y - latitude) < 1e-8)
   )
 
   vertices |>

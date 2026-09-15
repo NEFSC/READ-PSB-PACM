@@ -288,11 +288,12 @@ targets_makara <- list(
         recording_end_datetime = ymd_hms(recording_end_datetime)
       )
     
-    makara_db$deployments |> 
+    x <- makara_db$deployments |> 
       filter(!organization_code %in% makara_exclude_organizations) |> 
       bind_rows(makara_jasco$deployments) |>
       rename(
         makara_deployment_id = id,
+        makara_parent_deployment_id = parent_deployment_id,
         makara_site_id = site_id,
         makara_project_id = project_id
       ) |> 
@@ -328,6 +329,7 @@ targets_makara <- list(
       ) |> 
       transmute(
         makara_deployment_id,
+        makara_parent_deployment_id,
         deployment_id = glue("{organization_code}:{deployment_code}"),
         deployment_organization_code = organization_code,
         deployment_code,
@@ -358,6 +360,10 @@ targets_makara <- list(
         sampling_rate_hz = map_chr(recordings, ~ format_range(.x$sampling_rate_hz)),
         recording_device_lost = map_lgl(recordings, ~ any(.x$recording_device_lost))
       )
+    
+    # remove parent deployments, only keep children
+    x |> 
+      filter(!(makara_deployment_id %in% x$makara_parent_deployment_id))
   }),
   tar_target(makara_recordings, {
     device_type_codes <- makara_db$recordings |> 
@@ -604,7 +610,7 @@ targets_makara <- list(
         makara_deployment_id = deployment_id,
         makara_track_id = track_id
       ) |> 
-      left_join(
+      inner_join(
         makara_deployments |> 
           select(makara_deployment_id, deployment_id),
         by = "makara_deployment_id"

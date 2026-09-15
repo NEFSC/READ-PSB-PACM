@@ -35,7 +35,8 @@ export_tracks_fixture <- function () {
     track_id = c("NEFSC:MOB:TRACK", "SYRACUSE:GLIDER:TRACK"),
     positions = list(p1, p2),
     geometry = sf::st_sfc(g1, g2, crs = 4326)
-  ))
+  )) |> 
+    st_shift_longitude()
 }
 
 export_tracks_deployments_fixture <- function () {
