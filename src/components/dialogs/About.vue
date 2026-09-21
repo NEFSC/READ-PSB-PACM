@@ -105,6 +105,14 @@
       <h2 class="text-h6 mb-2">Latest Updates</h2>
 
       <div class="text-subtitle-1 font-weight-bold text-medium-emphasis mt-4">
+        v1.3.10 | September 21, 2026
+      </div>
+      <div>Fix:</div>
+      <ul class="ml-4">
+        <li>Fixed bug related to displaying empty metadata fields that caused application to crash.</li>
+      </ul>
+
+      <div class="text-subtitle-1 font-weight-bold text-medium-emphasis mt-4">
         v1.3.9 | September 15, 2026
       </div>
       <div>Enhancements:</div>

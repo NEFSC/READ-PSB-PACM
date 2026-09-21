@@ -213,7 +213,8 @@ export default {
         return vals.length > 0 ? vals.join(', ') : 'N/A'
       }
       const uniqueArray = (key) => {
-        const vals = [...new Set(deps.map(d => d[key].split(',').map(v => v.trim())).flat())]
+        const strings = deps.map(d => d[key] || '')
+        const vals = [...new Set(strings.map(s => s.split(',').map(v => v.trim())).flat())]
         return vals.length > 0 ? vals.join(', ') : 'N/A'
       }
       const range = (key, suffix) => {
@@ -225,6 +226,8 @@ export default {
       }
       const starts = deps.map(d => moment.utc(d.monitoring_start_datetime)).filter(m => m.isValid())
       const ends = deps.map(d => moment.utc(d.monitoring_end_datetime)).filter(m => m.isValid())
+      console.log('Monitoring start dates:', starts)
+      console.log('Monitoring end dates:', ends)
       return {
         organizationCode: unique('deployment_organization_code'),
         analysisOrganizationCode: unique('analysis_organization_code'),

@@ -99,7 +99,8 @@ const uniqueStrings = (deployments, key) => {
 }
 
 export const uniqueStringsArray = (deployments, key) => {
-  const values = [...new Set(deployments.map(d => d[key].split(',').map(v => v.trim())).flat())]
+  const strings = deployments.map(d => d[key] || '')
+  const values = [...new Set(strings.map(s => s.split(',').map(v => v.trim())).flat())]
   return values.length > 0 ? values.join(',') : ['N/A']
 }
 
