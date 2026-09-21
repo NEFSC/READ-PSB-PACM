@@ -113,6 +113,32 @@ writers build with explicit column lists (which omit it), the published
 `output/www/**` output is unchanged by these exports — see the export functions in
 [`R/export.R`](R/export.R).
 
+### Exporting one organization's PARS data
+
+`export_pars_organization()` ([`R/pars-export.R`](R/pars-export.R)) writes one
+organization's PARS data back out in the **PARS template format** — `metadata.csv`,
+`detectiondata.csv` and, for mobile deployments, `gpsdata.csv` — with the same
+columns as a submission plus a leading `submission_id` column (the submission
+each row came from); datetimes are ISO 8601 with a `+00:00` offset. It reads the parsed submission tables (`pars_metadata`,
+`pars_detectiondata`, `pars_gpsdata`), not `pacm_data`.
+
+A row belongs to the organization if it **deployed** the recorder
+(`deployment_organization_code`) **or** ran the **analysis**
+(`analysis_organization_code`). Metadata for another organization's deployments
+is included when the organization analyzed them, so every detection row has its
+deployment. Only the **current** version of each deployment, analysis and track is
+exported; rows a later submission superseded are dropped.
+
+```r
+# in R, from r/
+tar_make(pars)                           # make sure the PARS tables are current
+export_pars_organization("DFO")          # writes output/export/DFO/{metadata,detectiondata[,gpsdata]}.csv
+export_pars_organization("JASCO", dir = "/tmp/jasco-export")
+```
+
+It is not a target — call it interactively; it reads the PARS targets via
+`tar_read()` unless you pass them yourself.
+
 ---
 
 ## Adding a submission

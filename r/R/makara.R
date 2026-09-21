@@ -56,7 +56,7 @@ targets_makara <- list(
     analyses_n_detections <- tbl(con, "detections") |> 
       count(analysis_id) |> 
       collect()
-    detections_daily <- tbl(con, "daily_presence_detections") |> 
+    detections_daily <- tbl(con, "v_detections_daily") |> 
       collect()
     detections_mobile <- tbl(con, "detections") |> 
       left_join(
