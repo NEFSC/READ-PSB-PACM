@@ -90,3 +90,37 @@ export_pars_organization <- function (organization_code,
 
   paths
 }
+
+# export every organization in the PARS dataset into <dir>/<organization_code>/
+# using export_pars_organization(). an organization is any code that appears as
+# a deployment organization in metadata or an analysis organization in
+# detectiondata. returns a named list of file paths, one entry per organization.
+export_pars_organization_all <- function (dir = "output/export") {
+  metadata <- tar_read(pars_metadata)
+  detectiondata <- tar_read(pars_detectiondata)
+  gpsdata <- tar_read(pars_gpsdata)
+  deployments <- tar_read(pars_deployments)
+  analyses <- tar_read(pars_analyses)
+  tracks <- tar_read(pars_tracks)
+
+  organization_codes <- sort(unique(c(
+    metadata$deployment_organization_code,
+    detectiondata$analysis_organization_code
+  )))
+  organization_codes <- organization_codes[!is.na(organization_codes)]
+
+  paths <- list()
+  for (organization_code in organization_codes) {
+    paths[[organization_code]] <- export_pars_organization(
+      organization_code,
+      metadata = metadata,
+      detectiondata = detectiondata,
+      gpsdata = gpsdata,
+      deployments = deployments,
+      analyses = analyses,
+      tracks = tracks,
+      dir = file.path(dir, organization_code)
+    )
+  }
+  paths
+}

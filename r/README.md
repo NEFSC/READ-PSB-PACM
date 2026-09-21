@@ -134,6 +134,8 @@ exported; rows a later submission superseded are dropped.
 tar_make(pars)                           # make sure the PARS tables are current
 export_pars_organization("DFO")          # writes output/export/DFO/{metadata,detectiondata[,gpsdata]}.csv
 export_pars_organization("JASCO", dir = "/tmp/jasco-export")
+export_pars_organization_all()           # every organization, into output/export/<org>/
+export_pars_organization_all("/tmp/pars-export")
 ```
 
 It is not a target — call it interactively; it reads the PARS targets via
