@@ -38,6 +38,21 @@ detections <- detections |>
     )
   )
 
+# detection data with matching metadata
+detections |> 
+  distinct(UNIQUE_ID) |> 
+  semi_join(metadata, by = c("UNIQUE_ID" = "UNIQUE_ID"))
+
+# detection data without matching metadata references DFO metadata
+# now removed at request of Joy Stanistreet (9/4/2026)
+detections |> 
+  distinct(UNIQUE_ID) |> 
+  anti_join(metadata, by = c("UNIQUE_ID" = "UNIQUE_ID"))
+
+detections <- detections |> 
+  semi_join(metadata, by = c("UNIQUE_ID" = "UNIQUE_ID"))
+
+stopifnot(all(detections$UNIQUE_ID %in% metadata$UNIQUE_ID))
 
 convert_legacy_submission(
   dir,
