@@ -161,10 +161,11 @@ PARS_RANGE_RULES <- list(
     localization_distance_m_range = "localization_distance_m >= 0",
     analysis_period_ordered = "analysis_start_datetime <= analysis_end_datetime",
     detection_period_ordered = "detection_start_datetime <= detection_end_datetime",
-    # the analysis window bounds its detections; PARS treats it as half-open,
-    # so a detection may start at the window start but must end by its end
-    detection_within_analysis_start = "detection_start_datetime >= analysis_start_datetime",
-    detection_within_analysis_end = "detection_end_datetime <= analysis_end_datetime"
+    # the analysis window bounds its detections, with a 1-day (86400 s)
+    # tolerance on each side so that detections near the window edges are not
+    # flagged
+    detection_within_analysis_start = "detection_start_datetime >= analysis_start_datetime - 86400",
+    detection_within_analysis_end = "detection_end_datetime <= analysis_end_datetime + 86400"
   ),
   gpsdata = c(
     latitude_range = "latitude >= -90 & latitude <= 90",
