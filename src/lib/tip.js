@@ -125,6 +125,7 @@ const siteHtml = (d, siteDeployments, deploymentsOnly) => {
 
   const deps = siteDeployments || []
 
+  const nDeployments = new Set(deps.map(d => d.deployment_id)).size
   const monitoringStarts = deps.map(dep => moment.utc(dep.monitoring_start_datetime)).filter(m => m.isValid())
   const monitoringEnds = deps.map(dep => moment.utc(dep.monitoring_end_datetime)).filter(m => m.isValid())
   const earliest = monitoringStarts.length > 0 ? moment.min(monitoringStarts).format('ll') : 'N/A'
@@ -140,7 +141,7 @@ const siteHtml = (d, siteDeployments, deploymentsOnly) => {
     ['Recorder Depth', numericRange(deps, 'recorder_depth_meters', 'm')],
     ['Water Depth', numericRange(deps, 'water_depth_meters', 'm')],
     ['Monitoring Period', `${earliest} to ${latest}`],
-    ['# Deployments', `${deps.length}`]
+    ['# Deployments', `${nDeployments}`]
   ]
 
   if (!deploymentsOnly) {

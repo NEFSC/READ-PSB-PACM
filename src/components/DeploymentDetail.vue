@@ -10,7 +10,7 @@
   <v-card class="deployment-detail-dialog">
     <v-toolbar color="grey-darken-2" density="compact" theme="dark" class="pl-2">
       <div v-if="isSiteView" class="text-subtitle-1 font-weight-bold">
-        Selected Site ({{ selectedDeployments.length }} deployments)
+        Selected Site ({{ siteMetadata.nDeployments }} deployment{{ siteMetadata.nDeployments !== 1 ? 's' : '' }})
       </div>
       <div v-else class="text-subtitle-1 font-weight-bold">
         Selected Deployments
@@ -203,7 +203,6 @@ export default {
     },
     hasProjectFunding () {
       return true
-      // return this.siteMetadata?.projectFunding && this.siteMetadata.projectFunding !== 'N/A'
     },
     siteMetadata () {
       if (!this.isSiteView) return null
@@ -244,7 +243,7 @@ export default {
         waterDepth: range('water_depth_meters', 'm'),
         monitoringStart: starts.length > 0 ? moment.min(starts).format('ll') : 'N/A',
         monitoringEnd: ends.length > 0 ? moment.max(ends).format('ll') : 'N/A',
-        nDeployments: deps.length,
+        nDeployments: new Set(deps.map(d => d.deployment_id)).size,
         dataPoc: unique('data_poc')
       }
     },
