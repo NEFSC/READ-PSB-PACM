@@ -22,13 +22,14 @@ window.type = true // https://github.com/Leaflet/Leaflet.draw/issues/1026
 // be ready before any component renders
 initConstants()
   .then(() => {
-    createApp(App)
+    const app = createApp(App)
       .use(store)
       .use(router)
       .use(vuetify)
       .use(HighchartsVue)
       .use(Vue3Tour)
-      .mount('#app')
+
+      return router.isReady().then(() => app.mount('#app'))
   })
   .catch(err => {
     console.error('Failed to load reference data (species/platform_types)', err)
