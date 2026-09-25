@@ -105,6 +105,19 @@
       <h2 class="text-h6 mb-2">Latest Updates</h2>
 
       <div class="text-subtitle-1 font-weight-bold text-medium-emphasis mt-4">
+        v1.3.11 | September 25, 2026
+      </div>
+      <div>Fix:</div>
+      <ul class="ml-4">
+        <li>Fixed routing issue so application loads initial theme when present in URL</li>
+        <li>Fixed deployment counts per site when multiple species are present.</li>
+      </ul>
+      <div>Data:</div>
+      <ul class="ml-4">
+        <li>Added False Killer Whale and Melon-Headed Whale to Killer Whale (Blackfish) theme</li>
+      </ul>
+
+      <div class="text-subtitle-1 font-weight-bold text-medium-emphasis mt-4">
         v1.3.10 | September 21, 2026
       </div>
       <div>Fix:</div>
