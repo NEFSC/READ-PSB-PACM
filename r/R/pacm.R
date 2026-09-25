@@ -516,7 +516,7 @@ targets_pacm <- list(
       minke = "MIWH",
       narw = "RIWH",
       nbhf = "NBHF",
-      pilot = "PIWH",
+      pilot = c("PIWH", "SFPW"),
       pwdo = "PWDO",
       risso = "GRAM",
       sei = "SEWH",
@@ -525,7 +525,7 @@ targets_pacm <- list(
       unid = "UNWH",
       bodo = "BODO",
       brwh = "BRWH",
-      kiwh = c("KIWH", "KIWHTR", "KIWHOF", "KIWHRE")
+      kiwh = c("KIWH", "KIWHTR", "KIWHOF", "KIWHRE", "FKWH", "PYKW", "MEWH")
     )
 
     # confirm all codes in sound_sources table

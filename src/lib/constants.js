@@ -58,7 +58,7 @@ export const themes = [
   },
   {
     id: 'kiwh',
-    label: 'Killer Whale',
+    label: 'Killer Whale (Blackfish)',
     showSpeciesFilter: true
   },
   {
